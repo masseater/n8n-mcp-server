@@ -16,6 +16,13 @@ import type {
 } from "../types/n8n-types.js";
 import { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js";
+import {
+  createListWorkflowsTool,
+  createGetWorkflowTool,
+  createCreateWorkflowTool,
+  createUpdateWorkflowTool,
+  createDeleteWorkflowTool,
+} from "../tools/index.js";
 
 /**
  * MCP server implementation
@@ -399,225 +406,32 @@ export class MCPServerImpl implements MCPServer {
    * Setup tool handlers
    */
   private setupToolHandlers(): void {
-    // Define lazy recursive types for node parameters to avoid any/unknown
-    type NodeParameterValue = string | number | boolean | NodeParameterValue[] | { [key: string]: NodeParameterValue };
+    // Create tool context
+    const context = {
+      n8nClient: this.n8nClient,
+      optimizer: this.optimizer,
+    };
 
-    const nodeParameterValueSchema: z.ZodType<NodeParameterValue> = z.lazy(() =>
-      z.union([
-        z.string(),
-        z.number(),
-        z.boolean(),
-        z.array(nodeParameterValueSchema),
-        z.record(z.string(), nodeParameterValueSchema),
-      ])
-    );
+    // Create all tools
+    const tools = [
+      createListWorkflowsTool(context),
+      createGetWorkflowTool(context),
+      createCreateWorkflowTool(context),
+      createUpdateWorkflowTool(context),
+      createDeleteWorkflowTool(context),
+    ];
 
-    // Define node schema based on n8n's INode interface
-    const nodeSchema = z.object({
-      id: z.string(),
-      name: z.string(),
-      type: z.string(),
-      typeVersion: z.number(),
-      position: z.tuple([z.number(), z.number()]),
-      parameters: z.record(z.string(), nodeParameterValueSchema),
-      credentials: z.record(z.string(), z.object({
-        id: z.string(),
-        name: z.string(),
-      })).optional(),
-      disabled: z.boolean().optional(),
+    // Register all tools
+    tools.forEach((tool) => {
+      this.server.registerTool(
+        tool.name,
+        {
+          description: tool.description,
+          inputSchema: tool.inputSchema as Record<string, never>,
+        },
+        tool.handler as never
+      );
+      this.registeredTools.push(tool.name);
     });
-
-    // Define connections schema based on n8n's IConnections interface
-    const connectionsSchema = z.record(
-      z.string(),
-      z.record(
-        z.string(),
-        z.array(z.array(z.object({
-          node: z.string(),
-          type: z.string(),
-          index: z.number(),
-        })))
-      )
-    );
-
-    // Define settings schema based on n8n's IWorkflowSettings interface
-    const settingsSchema = z.object({
-      timezone: z.string().optional(),
-      errorWorkflow: z.string().optional(),
-      callerIds: z.string().optional(),
-      callerPolicy: z.string().optional(),
-      saveDataErrorExecution: z.string().optional(),
-      saveDataSuccessExecution: z.string().optional(),
-      saveManualExecutions: z.boolean().optional(),
-      saveExecutionProgress: z.boolean().optional(),
-      executionOrder: z.string().optional(),
-    }).optional();
-
-    // Define reusable schemas based on n8n's WorkflowEntity
-    const createWorkflowSchema = z.object({
-      name: z.string(),
-      active: z.boolean(),
-      nodes: z.array(nodeSchema),
-      connections: connectionsSchema,
-      settings: settingsSchema,
-      tags: z.array(z.string()).optional(),
-    });
-
-    const updateWorkflowSchema = z.object({
-      id: z.string(),
-      name: z.string().optional(),
-      active: z.boolean().optional(),
-      nodes: z.array(nodeSchema).optional(),
-      connections: connectionsSchema.optional(),
-      settings: settingsSchema,
-      tags: z.array(z.string()).optional(),
-    });
-
-    // Register list_workflows tool
-    this.server.registerTool(
-      "list_workflows",
-      {
-        description: "List n8n workflows with optional filtering",
-        inputSchema: {
-          active: z.boolean().optional(),
-          tags: z.array(z.string()).optional(),
-          limit: z.number().min(1).max(100).optional(),
-          offset: z.number().min(0).optional(),
-        },
-      },
-      async (args) => {
-        // Filter out undefined values for exactOptionalPropertyTypes compatibility
-        const filteredArgs = Object.fromEntries(
-          Object.entries(args).filter(([_, v]) => v !== undefined)
-        );
-        const workflows = await this.n8nClient.getWorkflows(filteredArgs);
-        const optimizedWorkflows = workflows.map((workflow) =>
-          this.optimizer.optimizeWorkflowSummary(workflow)
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(optimizedWorkflows, null, 2),
-            },
-          ],
-        };
-      },
-    );
-    this.registeredTools.push("list_workflows");
-
-    // Register get_workflow tool
-    this.server.registerTool(
-      "get_workflow",
-      {
-        description: "Get detailed information about a specific workflow",
-        inputSchema: {
-          id: z.string(),
-        },
-      },
-      async (args) => {
-        const workflow = await this.n8nClient.getWorkflow(args.id);
-        const optimizedWorkflow = this.optimizer.optimizeWorkflowDetail(
-          workflow,
-        );
-        const minimizedWorkflow = this.optimizer.minimizeContext(
-          optimizedWorkflow,
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(minimizedWorkflow, null, 2),
-            },
-          ],
-        };
-      },
-    );
-    this.registeredTools.push("get_workflow");
-
-    // Register create_workflow tool
-    this.server.registerTool(
-      "create_workflow",
-      {
-        description: "Create a new workflow",
-        inputSchema: {
-          name: z.string(),
-          active: z.boolean().optional(),
-          nodes: z.array(nodeSchema),
-          connections: connectionsSchema,
-          settings: settingsSchema,
-          tags: z.array(z.string()).optional(),
-        },
-      },
-      async (args) => {
-        const workflow = await this.n8nClient.createWorkflow(args as WorkflowDefinition);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(workflow, null, 2),
-            },
-          ],
-        };
-      },
-    );
-    this.registeredTools.push("create_workflow");
-
-    // Register update_workflow tool
-    this.server.registerTool(
-      "update_workflow",
-      {
-        description: "Update an existing workflow by ID",
-        inputSchema: {
-          id: z.string(),
-          name: z.string().optional(),
-          active: z.boolean().optional(),
-          nodes: z.array(nodeSchema).optional(),
-          connections: connectionsSchema.optional(),
-          settings: settingsSchema.optional(),
-          tags: z.array(z.string()).optional(),
-        },
-      },
-      async (args) => {
-        const { id, ...workflowData } = args;
-        const workflow = await this.n8nClient.updateWorkflow(
-          id,
-          workflowData as WorkflowDefinition,
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(workflow, null, 2),
-            },
-          ],
-        };
-      },
-    );
-    this.registeredTools.push("update_workflow");
-
-    // Register delete_workflow tool
-    this.server.registerTool(
-      "delete_workflow",
-      {
-        description: "Delete a workflow",
-        inputSchema: {
-          id: z.string(),
-        },
-      },
-      async (args) => {
-        await this.n8nClient.deleteWorkflow(args.id);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Workflow ${args.id} deleted successfully`,
-            },
-          ],
-        };
-      },
-    );
-    this.registeredTools.push("delete_workflow");
-
   }
 }

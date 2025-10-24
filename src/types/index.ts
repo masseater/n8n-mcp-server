@@ -113,3 +113,6 @@ export interface TransportConfig {
   type: TransportType;
   port?: number | undefined;
 }
+
+// Re-export MCP response types
+export * from './mcp-response.js';
