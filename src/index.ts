@@ -1,0 +1,145 @@
+#!/usr/bin/env node
+
+/**
+ * n8n MCP Server - Main entry point
+ *
+ * Provides Model Context Protocol access to n8n workflow automation platform
+ * with optimized context output and support for both stdio and http transports.
+ */
+
+import { Command } from "commander";
+import { createLogger, format, transports } from "winston";
+import type { TransportType } from "./types/index.js";
+
+const program = new Command();
+
+// Configure CLI
+program
+  .name("n8n-mcp-server")
+  .description("Model Context Protocol server for n8n workflow automation")
+  .version("1.0.0");
+
+program
+  .option("-t, --transport <type>", "Transport type (stdio|http)", "stdio")
+  .option("-p, --port <number>", "Port for HTTP transport", "3000")
+  .option("--n8n-url <url>", "n8n instance URL")
+  .option("--api-key <key>", "n8n API key")
+  .option("--log-level <level>", "Log level (error|warn|info|debug)", "info")
+  .action(async (options) => {
+    try {
+      // Validate transport type
+      const transport = options.transport as TransportType;
+      if (!["stdio", "http"].includes(transport)) {
+        console.error('Error: Transport must be either "stdio" or "http"');
+        process.exit(1);
+      }
+
+      // Create logger with file output
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const logDir = "logs";
+      const logFileName = `${logDir}/n8n-mcp-server-${timestamp}.log`;
+
+      // Ensure log directory exists
+      const fs = await import("fs");
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+
+      const logger = createLogger({
+        level: options.logLevel,
+        format: format.combine(
+          format.timestamp(),
+          format.json(),
+        ),
+        transports: [
+          new transports.File({
+            filename: logFileName,
+            level: options.logLevel,
+            maxsize: 10 * 1024 * 1024, // 10MB
+            maxFiles: 5,
+            tailable: true,
+          }),
+          ...(transport === "http" ? [new transports.Console()] : []),
+        ],
+      });
+
+      logger.info("Starting n8n MCP Server", {
+        transport,
+        port: transport === "http" ? parseInt(options.port) : undefined,
+        n8nUrl: options.n8nUrl,
+      });
+
+      // Load configuration
+      const { loadConfig, validateConfig } = await import("./config/index.js");
+      const config = loadConfig();
+
+      // Override config with CLI options
+      if (options.n8nUrl) {
+        config.n8n.baseUrl = options.n8nUrl;
+        config.n8n.credentials.baseUrl = options.n8nUrl;
+      }
+      if (options.apiKey) {
+        config.n8n.credentials.apiKey = options.apiKey;
+      }
+
+      // Validate configuration
+      if (!validateConfig(config)) {
+        console.error("Invalid configuration");
+        process.exit(1);
+      }
+
+      // Initialize and start MCP server
+      const { MCPServerImpl } = await import("./server/mcp-server.js");
+      const mcpServer = new MCPServerImpl();
+
+      await mcpServer.initialize(config);
+      await mcpServer.start({
+        type: transport,
+        port: transport === "http" ? parseInt(options.port) : undefined,
+      });
+
+      // Keep process alive for stdio transport
+      if (transport === "stdio") {
+        process.stdin.resume();
+        // Don't log to stdout for stdio transport as it interferes with MCP protocol
+      } else if (transport === "http") {
+        // HTTP transport keeps process alive automatically
+        logger.info("n8n MCP Server started successfully");
+        console.log("HTTP MCP Server is running. Press Ctrl+C to stop.");
+
+        // Keep the process alive for HTTP transport
+        return new Promise<void>((resolve) => {
+          // Don't resolve the promise to keep the process alive
+          // The process will be kept alive by the HTTP server
+        });
+      }
+    } catch (error) {
+      console.error("Failed to start server:", error);
+      process.exit(1);
+    }
+  });
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on("SIGINT", () => {
+  console.log("Received SIGINT, shutting down gracefully...");
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  console.log("Received SIGTERM, shutting down gracefully...");
+  process.exit(0);
+});
+
+// Parse command line arguments
+program.parse();
