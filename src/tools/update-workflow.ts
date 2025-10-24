@@ -13,7 +13,7 @@ export function createUpdateWorkflowTool(
 ): ToolDefinition {
   return {
     name: "update_workflow",
-    description: "Update an existing workflow by ID",
+    description: "Update an existing workflow by ID. Use raw=true to get full workflow details in response.",
     inputSchema: {
       id: z.string(),
       name: z.string().optional(),
@@ -22,14 +22,19 @@ export function createUpdateWorkflowTool(
       connections: connectionsSchema.optional(),
       settings: settingsSchema.optional(),
       tags: z.array(z.string()).optional(),
+      raw: z.boolean().optional(),
     },
     handler: async (args) => {
-      const { id, ...workflowData } = args;
+      const { id, raw, ...workflowData } = args as { id: string; raw?: boolean; [key: string]: unknown };
       const workflow = await context.n8nClient.updateWorkflow(
-        id as string,
+        id,
         workflowData as unknown as WorkflowDefinition
       );
-      return createToolResponse(workflow);
+      const response = context.optimizer.createUpdateWorkflowResponse(
+        workflow,
+        raw || false
+      );
+      return createToolResponse(response);
     },
   };
 }

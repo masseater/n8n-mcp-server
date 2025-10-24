@@ -11,6 +11,7 @@ interface ListWorkflowsArgs {
   tags?: string[];
   limit?: number;
   offset?: number;
+  raw?: boolean;
 }
 
 export function createListWorkflowsTool(
@@ -18,23 +19,29 @@ export function createListWorkflowsTool(
 ): ToolDefinition<ListWorkflowsArgs> {
   return {
     name: "list_workflows",
-    description: "List n8n workflows with optional filtering",
+    description: "List n8n workflows with optional filtering. Use raw=true to get full workflow details.",
     inputSchema: {
       active: z.boolean().optional(),
       tags: z.array(z.string()).optional(),
       limit: z.number().min(1).max(100).optional(),
       offset: z.number().min(0).optional(),
+      raw: z.boolean().optional(),
     },
     handler: async (args) => {
+      const { raw, ...apiArgs } = args;
+
       // Filter out undefined values for exactOptionalPropertyTypes compatibility
       const filteredArgs = Object.fromEntries(
-        Object.entries(args).filter(([_, v]) => v !== undefined)
+        Object.entries(apiArgs).filter(([_, v]) => v !== undefined)
       );
+
       const workflows = await context.n8nClient.getWorkflows(filteredArgs);
-      const optimizedWorkflows = workflows.map((workflow: unknown) =>
-        context.optimizer.optimizeWorkflowSummary(workflow)
+      const response = context.optimizer.createListWorkflowsResponse(
+        workflows,
+        raw || false
       );
-      return createToolResponse(optimizedWorkflows);
+
+      return createToolResponse(response);
     },
   };
 }

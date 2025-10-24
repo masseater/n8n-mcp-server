@@ -3,12 +3,18 @@
  */
 
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import type { 
-  ServerConfig, 
+import type {
+  ServerConfig,
   TransportConfig,
   WorkflowSummary,
   WorkflowDetail,
-  WorkflowDefinition 
+  WorkflowDefinition,
+  MCPToolResponse,
+  WorkflowListResponse,
+  WorkflowDetailResponse,
+  WorkflowCreateResponse,
+  WorkflowUpdateResponse,
+  WorkflowDeleteResponse,
 } from '../types/index.js';
 
 /**
@@ -43,12 +49,12 @@ export interface ResponseOptimizer {
   /**
    * Optimize workflow summary for context efficiency
    */
-  optimizeWorkflowSummary(workflow: any): WorkflowSummary;
+  optimizeWorkflowSummary(workflow: unknown): WorkflowSummary;
 
   /**
    * Optimize workflow detail for context efficiency
    */
-  optimizeWorkflowDetail(workflow: any): WorkflowDetail;
+  optimizeWorkflowDetail(workflow: unknown): WorkflowDetail;
 
   /**
    * Minimize context size by removing unnecessary fields
@@ -67,6 +73,45 @@ export interface ResponseOptimizer {
       hasMore: boolean;
     };
   };
+
+  /**
+   * Create response for list_workflows tool
+   */
+  createListWorkflowsResponse(
+    workflows: unknown[],
+    raw?: boolean
+  ): MCPToolResponse<WorkflowListResponse | WorkflowSummary[]>;
+
+  /**
+   * Create response for get_workflow tool
+   */
+  createGetWorkflowResponse(
+    workflow: unknown,
+    raw?: boolean
+  ): MCPToolResponse<WorkflowDetailResponse | WorkflowDetail>;
+
+  /**
+   * Create response for create_workflow tool
+   */
+  createCreateWorkflowResponse(
+    workflow: unknown,
+    raw?: boolean
+  ): MCPToolResponse<WorkflowCreateResponse | unknown>;
+
+  /**
+   * Create response for update_workflow tool
+   */
+  createUpdateWorkflowResponse(
+    workflow: unknown,
+    raw?: boolean
+  ): MCPToolResponse<WorkflowUpdateResponse | unknown>;
+
+  /**
+   * Create response for delete_workflow tool
+   */
+  createDeleteWorkflowResponse(
+    workflowId: string
+  ): MCPToolResponse<WorkflowDeleteResponse>;
 }
 
 /**

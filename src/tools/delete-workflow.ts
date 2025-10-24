@@ -21,7 +21,8 @@ export function createDeleteWorkflowTool(
     },
     handler: async (args) => {
       await context.n8nClient.deleteWorkflow(args.id);
-      return createToolResponse(`Workflow ${args.id} deleted successfully`);
+      const response = context.optimizer.createDeleteWorkflowResponse(args.id);
+      return createToolResponse(response);
     },
   };
 }

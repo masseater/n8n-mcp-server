@@ -8,6 +8,7 @@ import { createToolResponse } from "./base-tool.js";
 
 interface GetWorkflowArgs {
   id: string;
+  raw?: boolean;
 }
 
 export function createGetWorkflowTool(
@@ -15,19 +16,18 @@ export function createGetWorkflowTool(
 ): ToolDefinition<GetWorkflowArgs> {
   return {
     name: "get_workflow",
-    description: "Get detailed information about a specific workflow",
+    description: "Get detailed information about a specific workflow. Use raw=true to get full workflow details including nodes and connections.",
     inputSchema: {
       id: z.string(),
+      raw: z.boolean().optional(),
     },
     handler: async (args) => {
       const workflow = await context.n8nClient.getWorkflow(args.id);
-      const optimizedWorkflow = context.optimizer.optimizeWorkflowDetail(
-        workflow
+      const response = context.optimizer.createGetWorkflowResponse(
+        workflow,
+        args.raw || false
       );
-      const minimizedWorkflow = context.optimizer.minimizeContext(
-        optimizedWorkflow
-      );
-      return createToolResponse(minimizedWorkflow);
+      return createToolResponse(response);
     },
   };
 }

@@ -3,7 +3,16 @@
  */
 
 import type { ResponseOptimizer } from "../interfaces/mcp-server.js";
-import type { WorkflowDetail, WorkflowSummary } from "../types/index.js";
+import type {
+  WorkflowDetail,
+  WorkflowSummary,
+  MCPToolResponse,
+  WorkflowListResponse,
+  WorkflowDetailResponse,
+  WorkflowCreateResponse,
+  WorkflowUpdateResponse,
+  WorkflowDeleteResponse,
+} from "../types/index.js";
 
 /**
  * Response optimizer implementation
@@ -218,5 +227,146 @@ export class ResponseOptimizerImpl implements ResponseOptimizer {
     }
 
     return data;
+  }
+
+  /**
+   * Create response for list_workflows tool
+   */
+  createListWorkflowsResponse(
+    workflows: unknown[],
+    raw: boolean = false
+  ): MCPToolResponse<WorkflowListResponse | WorkflowSummary[]> {
+    if (raw) {
+      // Return optimized workflow summaries (current behavior)
+      const optimizedWorkflows = workflows.map((workflow: unknown) =>
+        this.optimizeWorkflowSummary(workflow)
+      );
+      return {
+        success: true,
+        message: `${workflows.length}件のワークフローを取得しました`,
+        data: optimizedWorkflows,
+      };
+    }
+
+    // Default: minimal response
+    const minimalWorkflows = workflows.map((workflow: any) => ({
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active || false,
+    }));
+
+    return {
+      success: true,
+      message: `${workflows.length}件のワークフローを取得しました`,
+      data: {
+        count: workflows.length,
+        workflows: minimalWorkflows,
+      },
+    };
+  }
+
+  /**
+   * Create response for get_workflow tool
+   */
+  createGetWorkflowResponse(
+    workflow: unknown,
+    raw: boolean = false
+  ): MCPToolResponse<WorkflowDetailResponse | WorkflowDetail> {
+    if (raw) {
+      // Return optimized workflow detail (current behavior)
+      const optimizedWorkflow = this.optimizeWorkflowDetail(workflow);
+      const minimizedWorkflow = this.minimizeContext(optimizedWorkflow);
+      return {
+        success: true,
+        message: "ワークフローを取得しました",
+        data: minimizedWorkflow,
+      };
+    }
+
+    // Default: minimal response
+    const wf = workflow as any;
+    return {
+      success: true,
+      message: "ワークフローを取得しました",
+      data: {
+        id: wf.id,
+        name: wf.name,
+        active: wf.active || false,
+        nodeCount: wf.nodes?.length || 0,
+        tags: wf.tags || [],
+      },
+    };
+  }
+
+  /**
+   * Create response for create_workflow tool
+   */
+  createCreateWorkflowResponse(
+    workflow: unknown,
+    raw: boolean = false
+  ): MCPToolResponse<WorkflowCreateResponse | unknown> {
+    if (raw) {
+      // Return full workflow data
+      return {
+        success: true,
+        message: "ワークフローを作成しました",
+        data: workflow,
+      };
+    }
+
+    // Default: minimal response
+    const wf = workflow as any;
+    return {
+      success: true,
+      message: "ワークフローを作成しました",
+      data: {
+        id: wf.id,
+        name: wf.name,
+        active: wf.active || false,
+      },
+    };
+  }
+
+  /**
+   * Create response for update_workflow tool
+   */
+  createUpdateWorkflowResponse(
+    workflow: unknown,
+    raw: boolean = false
+  ): MCPToolResponse<WorkflowUpdateResponse | unknown> {
+    if (raw) {
+      // Return full workflow data
+      return {
+        success: true,
+        message: "ワークフローを更新しました",
+        data: workflow,
+      };
+    }
+
+    // Default: minimal response
+    const wf = workflow as any;
+    return {
+      success: true,
+      message: "ワークフローを更新しました",
+      data: {
+        id: wf.id,
+        name: wf.name,
+      },
+    };
+  }
+
+  /**
+   * Create response for delete_workflow tool
+   */
+  createDeleteWorkflowResponse(
+    workflowId: string
+  ): MCPToolResponse<WorkflowDeleteResponse> {
+    return {
+      success: true,
+      message: "ワークフローを削除しました",
+      data: {
+        id: workflowId,
+      },
+    };
   }
 }

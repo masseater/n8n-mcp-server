@@ -13,7 +13,7 @@ export function createCreateWorkflowTool(
 ): ToolDefinition {
   return {
     name: "create_workflow",
-    description: "Create a new workflow",
+    description: "Create a new workflow. Use raw=true to get full workflow details in response.",
     inputSchema: {
       name: z.string(),
       active: z.boolean().optional(),
@@ -21,12 +21,18 @@ export function createCreateWorkflowTool(
       connections: connectionsSchema,
       settings: settingsSchema,
       tags: z.array(z.string()).optional(),
+      raw: z.boolean().optional(),
     },
     handler: async (args) => {
+      const { raw, ...workflowData } = args as { raw?: boolean; [key: string]: unknown };
       const workflow = await context.n8nClient.createWorkflow(
-        args as unknown as WorkflowDefinition
+        workflowData as unknown as WorkflowDefinition
       );
-      return createToolResponse(workflow);
+      const response = context.optimizer.createCreateWorkflowResponse(
+        workflow,
+        raw || false
+      );
+      return createToolResponse(response);
     },
   };
 }
