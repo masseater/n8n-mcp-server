@@ -246,59 +246,41 @@ export class MCPServerImpl implements MCPServer {
               console.log(`🔧 Tool call: ${toolName}`, args);
 
               try {
-                let result: any;
+                // Find the registered tool
+                const toolContext = {
+                  n8nClient: this.n8nClient,
+                  optimizer: this.optimizer,
+                };
 
-                // Call the appropriate tool based on the name
-                switch (toolName) {
-                  case "list_workflows":
-                    const workflows = await this.n8nClient.getWorkflows(args);
-                    result = this.optimizer.optimizeWorkflows(workflows);
+                // Get the tool definition
+                let tool;
+                const tools = this.getTools(toolContext);
+                for (const t of tools) {
+                  if (t.name === toolName) {
+                    tool = t;
                     break;
-
-                  case "get_workflow":
-                    const workflow = await this.n8nClient.getWorkflow(args.id);
-                    result = this.optimizer.optimizeWorkflowDetail(workflow);
-                    break;
-
-                  case "create_workflow":
-                    result = await this.n8nClient.createWorkflow(args);
-                    break;
-
-                  case "update_workflow":
-                    result = await this.n8nClient.updateWorkflow(args.id, args);
-                    break;
-
-                  case "delete_workflow":
-                    await this.n8nClient.deleteWorkflow(args.id);
-                    result = {
-                      success: true,
-                      message: `Workflow ${args.id} deleted successfully.`,
-                    };
-                    break;
-
-                  default:
-                    res.json({
-                      jsonrpc: "2.0",
-                      id: request.id,
-                      error: {
-                        code: -32601,
-                        message: `Unknown tool: ${toolName}`,
-                      },
-                    });
-                    return;
+                  }
                 }
+
+                if (!tool) {
+                  res.json({
+                    jsonrpc: "2.0",
+                    id: request.id,
+                    error: {
+                      code: -32601,
+                      message: `Unknown tool: ${toolName}`,
+                    },
+                  });
+                  return;
+                }
+
+                // Execute the tool handler
+                const result = await tool.handler(args);
 
                 res.json({
                   jsonrpc: "2.0",
                   id: request.id,
-                  result: {
-                    content: [
-                      {
-                        type: "text",
-                        text: JSON.stringify(result, null, 2),
-                      },
-                    ],
-                  },
+                  result,
                 });
               } catch (error) {
                 console.error(`Error executing tool ${toolName}:`, error);
@@ -403,6 +385,19 @@ export class MCPServerImpl implements MCPServer {
   }
 
   /**
+   * Get all tool definitions
+   */
+  private getTools(context: any): any[] {
+    return [
+      createListWorkflowsTool(context),
+      createGetWorkflowTool(context),
+      createCreateWorkflowTool(context),
+      createUpdateWorkflowTool(context),
+      createDeleteWorkflowTool(context),
+    ];
+  }
+
+  /**
    * Setup tool handlers
    */
   private setupToolHandlers(): void {
@@ -413,13 +408,7 @@ export class MCPServerImpl implements MCPServer {
     };
 
     // Create all tools
-    const tools = [
-      createListWorkflowsTool(context),
-      createGetWorkflowTool(context),
-      createCreateWorkflowTool(context),
-      createUpdateWorkflowTool(context),
-      createDeleteWorkflowTool(context),
-    ];
+    const tools = this.getTools(context);
 
     // Register all tools
     tools.forEach((tool) => {
