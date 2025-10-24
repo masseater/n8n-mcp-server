@@ -101,3 +101,4 @@ jspm_packages/
 
 logs/
 .cursor/
+.temp/
