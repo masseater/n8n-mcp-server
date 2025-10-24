@@ -551,7 +551,14 @@ export class MCPServerImpl implements MCPServer {
       "create_workflow",
       {
         description: "Create a new workflow",
-        inputSchema: createWorkflowSchema.shape,
+        inputSchema: {
+          name: z.string(),
+          active: z.boolean().optional(),
+          nodes: z.array(nodeSchema),
+          connections: connectionsSchema,
+          settings: settingsSchema,
+          tags: z.array(z.string()).optional(),
+        },
       },
       async (args) => {
         const workflow = await this.n8nClient.createWorkflow(args as WorkflowDefinition);
@@ -570,8 +577,16 @@ export class MCPServerImpl implements MCPServer {
     this.server.registerTool(
       "update_workflow",
       {
-        description: "Update an existing workflow",
-        inputSchema: updateWorkflowSchema.shape,
+        description: "Update an existing workflow by ID",
+        inputSchema: {
+          id: z.string(),
+          name: z.string().optional(),
+          active: z.boolean().optional(),
+          nodes: z.array(nodeSchema).optional(),
+          connections: connectionsSchema.optional(),
+          settings: settingsSchema.optional(),
+          tags: z.array(z.string()).optional(),
+        },
       },
       async (args) => {
         const { id, ...workflowData } = args;

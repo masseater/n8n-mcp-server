@@ -345,8 +345,8 @@ export class N8nApiClientImpl implements N8nApiClient {
         throw new Error("Workflow ID is required");
       }
 
-      // Remove 'active' field as it's read-only for n8n API
-      const { active, ...workflowPayload } = workflow;
+      // Remove 'active' and 'id' fields as they're read-only for n8n API
+      const { active, id: workflowId, ...workflowPayload } = workflow as any;
 
       const response = await this.httpClient.put<any>(
         `/api/v1/workflows/${id}`,
@@ -413,7 +413,22 @@ export class N8nApiClientImpl implements N8nApiClient {
         throw new Error("Workflow ID is required");
       }
 
-      await this.httpClient.patch(`/api/v1/workflows/${id}`, { active });
+      // First, get the current workflow (raw data from API)
+      const response = await this.httpClient.get<any>(
+        `/api/v1/workflows/${id}`,
+      );
+      const workflow = response.data || response;
+
+      // Update the workflow with the new active status
+      // Only include allowed fields for PUT request
+      await this.httpClient.put(`/api/v1/workflows/${id}`, {
+        name: workflow.name,
+        nodes: workflow.nodes,
+        connections: workflow.connections,
+        settings: workflow.settings,
+        active,
+      });
+
       return true;
     } catch (error) {
       console.error(`Failed to set workflow ${id} active status:`, error);
