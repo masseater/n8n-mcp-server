@@ -6,7 +6,6 @@ import axios, {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
-  AxiosResponse,
 } from "axios";
 
 /**
@@ -15,14 +14,12 @@ import axios, {
 export class N8nHttpClient {
   private client: AxiosInstance;
   private retryAttempts: number;
-  private timeout: number;
 
   constructor(
     baseURL: string,
     timeout: number = 30000,
     retryAttempts: number = 3,
   ) {
-    this.timeout = timeout;
     this.retryAttempts = retryAttempts;
 
     this.client = axios.create({

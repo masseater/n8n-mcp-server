@@ -7,7 +7,6 @@ import type {
   AuthCredentials,
   ListOptions,
   WorkflowDefinition,
-  WorkflowDetail,
   WorkflowSummary,
 } from "../types/index.js";
 import type {
@@ -15,7 +14,6 @@ import type {
   IConnections,
   IWorkflowSettings,
   ITag,
-  IConnection,
 } from "../types/n8n-types.js";
 import { N8nHttpClient } from "./http-client.js";
 import { AuthManager as AuthManagerImpl } from "./auth-manager.js";
@@ -66,63 +64,6 @@ const GenericValueSchema: z.ZodType<
   z.array(z.lazy(() => GenericValueSchema)),
 ]);
 
-const INodeParametersSchema = z.record(z.string(), GenericValueSchema);
-
-const INodeCredentialsDetailsSchema = z.object({
-  id: z.string().nullable(),
-  name: z.string(),
-});
-
-const INodeSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  typeVersion: z.number(),
-  type: z.string(),
-  position: z.tuple([z.number(), z.number()]),
-  disabled: z.boolean().optional(),
-  notes: z.string().optional(),
-  notesInFlow: z.boolean().optional(),
-  retryOnFail: z.boolean().optional(),
-  maxTries: z.number().optional(),
-  waitBetweenTries: z.number().optional(),
-  alwaysOutputData: z.boolean().optional(),
-  executeOnce: z.boolean().optional(),
-  onError: z
-    .enum(["continueErrorOutput", "continueRegularOutput", "stopWorkflow"])
-    .optional(),
-  continueOnFail: z.boolean().optional(),
-  parameters: INodeParametersSchema,
-  credentials: z.record(z.string(), INodeCredentialsDetailsSchema).optional(),
-  webhookId: z.string().optional(),
-  extendsCredential: z.string().optional(),
-});
-
-const IConnectionSchema = z.object({
-  node: z.string(),
-  type: z.string(),
-  index: z.number(),
-});
-
-const IConnectionsSchema = z.record(
-  z.string(),
-  z.record(
-    z.string(),
-    z.array(z.union([z.array(IConnectionSchema), z.null()]))
-  )
-);
-
-const IWorkflowSettingsSchema = z.object({
-  timezone: z.string().optional(),
-  errorWorkflow: z.string().optional(),
-  callerIds: z.string().optional(),
-  callerPolicy: z.string().optional(),
-  saveDataErrorExecution: z.string().optional(),
-  saveDataSuccessExecution: z.string().optional(),
-  saveManualExecutions: z.boolean().optional(),
-  saveExecutionProgress: z.boolean().optional(),
-  executionOrder: z.string().optional(),
-});
-
 const WorkflowSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -133,17 +74,6 @@ const WorkflowSummarySchema = z.object({
   nodeCount: z.number(),
 });
 
-const WorkflowDetailSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  active: z.boolean(),
-  tags: z.array(z.string()).optional().default([]),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  nodes: z.array(INodeSchema),
-  connections: IConnectionsSchema,
-  settings: IWorkflowSettingsSchema.optional(),
-});
 
 const ListOptionsSchema = z.object({
   active: z.boolean().optional(),
@@ -158,14 +88,12 @@ const ListOptionsSchema = z.object({
 export class N8nApiClientImpl {
   private httpClient: N8nHttpClient;
   private authManager: AuthManagerImpl;
-  private baseUrl: string;
 
   constructor(
     baseUrl: string,
     timeout: number = 30000,
     retryAttempts: number = 3,
   ) {
-    this.baseUrl = baseUrl;
     this.httpClient = new N8nHttpClient(baseUrl, timeout, retryAttempts);
     this.authManager = new AuthManagerImpl();
   }

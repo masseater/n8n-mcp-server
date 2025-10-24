@@ -108,7 +108,7 @@ program
         console.log("HTTP MCP Server is running. Press Ctrl+C to stop.");
 
         // Keep the process alive for HTTP transport
-        return new Promise<void>((resolve) => {
+        return new Promise<void>(() => {
           // Don't resolve the promise to keep the process alive
           // The process will be kept alive by the HTTP server
         });

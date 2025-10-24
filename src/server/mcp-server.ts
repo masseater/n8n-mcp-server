@@ -4,15 +4,8 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 import express from "express";
-import { createLogger, format, transports } from "winston";
-import type { ServerConfig, TransportConfig, WorkflowDefinition } from "../types/index.js";
-import type {
-  INode,
-  IConnections,
-  IWorkflowSettings,
-} from "../types/n8n-types.js";
+import type { ServerConfig, TransportConfig } from "../types/index.js";
 import { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js";
 import {
@@ -109,7 +102,7 @@ export class MCPServerImpl {
       this.app.use(express.json());
 
       // Health check endpoint
-      this.app.get("/health", (req, res) => {
+      this.app.get("/health", (_req, res) => {
         console.log("📊 Health check requested");
         res.json({ status: "ok", timestamp: new Date().toISOString() });
       });
@@ -351,7 +344,7 @@ export class MCPServerImpl {
       });
 
       // Keep the process alive for HTTP transport
-      return new Promise<void>((resolve) => {
+      return new Promise<void>(() => {
         // Don't resolve the promise to keep the process alive
         // The process will be kept alive by the HTTP server
         // Set up a long-running interval to keep the process alive

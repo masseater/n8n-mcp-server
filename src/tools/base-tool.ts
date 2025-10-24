@@ -8,7 +8,7 @@ import type { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js"
 /**
  * MCP tool handler function type
  */
-export type ToolHandler<TArgs = Record<string, unknown>, TResult = unknown> = (
+export type ToolHandler<TArgs = Record<string, unknown>> = (
   args: TArgs
 ) => Promise<{
   content: Array<{
