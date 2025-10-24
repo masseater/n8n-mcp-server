@@ -404,41 +404,6 @@ export class N8nApiClientImpl implements N8nApiClient {
     }
   }
 
-  /**
-   * Set workflow active/inactive status
-   */
-  async setWorkflowActive(id: string, active: boolean): Promise<boolean> {
-    try {
-      if (!id) {
-        throw new Error("Workflow ID is required");
-      }
-
-      // First, get the current workflow (raw data from API)
-      const response = await this.httpClient.get<any>(
-        `/api/v1/workflows/${id}`,
-      );
-      const workflow = response.data || response;
-
-      // Update the workflow with the new active status
-      // Only include allowed fields for PUT request
-      await this.httpClient.put(`/api/v1/workflows/${id}`, {
-        name: workflow.name,
-        nodes: workflow.nodes,
-        connections: workflow.connections,
-        settings: workflow.settings,
-        active,
-      });
-
-      return true;
-    } catch (error) {
-      console.error(`Failed to set workflow ${id} active status:`, error);
-      throw new Error(
-        `Failed to set workflow active status: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      );
-    }
-  }
 
   /**
    * Test connection to n8n API

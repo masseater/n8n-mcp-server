@@ -48,11 +48,6 @@ export interface N8nApiClient {
   deleteWorkflow(id: string): Promise<boolean>;
 
   /**
-   * Set workflow active/inactive status
-   */
-  setWorkflowActive(id: string, active: boolean): Promise<boolean>;
-
-  /**
    * Test connection to n8n API
    */
   testConnection(): Promise<boolean>;

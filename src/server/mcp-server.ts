@@ -26,6 +26,7 @@ export class MCPServerImpl implements MCPServer {
   private optimizer: ResponseOptimizerImpl;
   private config: ServerConfig | null = null;
   private app: express.Application | null = null;
+  private registeredTools: string[] = [];
 
   constructor() {
     this.server = new McpServer({
@@ -268,20 +269,6 @@ export class MCPServerImpl implements MCPServer {
                     };
                     break;
 
-                  case "activate_workflow":
-                    result = await this.n8nClient.setWorkflowActive(
-                      args.id,
-                      true,
-                    );
-                    break;
-
-                  case "deactivate_workflow":
-                    result = await this.n8nClient.setWorkflowActive(
-                      args.id,
-                      false,
-                    );
-                    break;
-
                   default:
                     res.json({
                       jsonrpc: "2.0",
@@ -360,7 +347,7 @@ export class MCPServerImpl implements MCPServer {
           `  - POST /mcp - Main MCP HTTP endpoint for client connections`,
         );
         console.log(
-          `🔧 MCP Tools available: list_workflows, get_workflow, create_workflow, update_workflow, delete_workflow, activate_workflow, deactivate_workflow`,
+          `🔧 MCP Tools available: ${this.registeredTools.join(', ')}`,
         );
       });
 
@@ -517,6 +504,7 @@ export class MCPServerImpl implements MCPServer {
         };
       },
     );
+    this.registeredTools.push("list_workflows");
 
     // Register get_workflow tool
     this.server.registerTool(
@@ -545,6 +533,7 @@ export class MCPServerImpl implements MCPServer {
         };
       },
     );
+    this.registeredTools.push("get_workflow");
 
     // Register create_workflow tool
     this.server.registerTool(
@@ -572,6 +561,7 @@ export class MCPServerImpl implements MCPServer {
         };
       },
     );
+    this.registeredTools.push("create_workflow");
 
     // Register update_workflow tool
     this.server.registerTool(
@@ -604,6 +594,7 @@ export class MCPServerImpl implements MCPServer {
         };
       },
     );
+    this.registeredTools.push("update_workflow");
 
     // Register delete_workflow tool
     this.server.registerTool(
@@ -626,49 +617,7 @@ export class MCPServerImpl implements MCPServer {
         };
       },
     );
+    this.registeredTools.push("delete_workflow");
 
-    // Register activate_workflow tool
-    this.server.registerTool(
-      "activate_workflow",
-      {
-        description: "Activate a workflow",
-        inputSchema: {
-          id: z.string(),
-        },
-      },
-      async (args) => {
-        await this.n8nClient.setWorkflowActive(args.id, true);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Workflow ${args.id} activated successfully`,
-            },
-          ],
-        };
-      },
-    );
-
-    // Register deactivate_workflow tool
-    this.server.registerTool(
-      "deactivate_workflow",
-      {
-        description: "Deactivate a workflow",
-        inputSchema: {
-          id: z.string(),
-        },
-      },
-      async (args) => {
-        await this.n8nClient.setWorkflowActive(args.id, false);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Workflow ${args.id} deactivated successfully`,
-            },
-          ],
-        };
-      },
-    );
   }
 }
