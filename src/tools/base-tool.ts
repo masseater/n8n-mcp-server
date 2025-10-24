@@ -2,8 +2,8 @@
  * Base tool interface and utilities for MCP tools
  */
 
-import type { ResponseOptimizer } from "../interfaces/mcp-server.js";
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
+import type { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js";
 
 /**
  * MCP tool handler function type
@@ -32,7 +32,7 @@ export interface ToolDefinition<TArgs = Record<string, unknown>> {
  */
 export interface ToolContext {
   n8nClient: N8nApiClientImpl;
-  optimizer: ResponseOptimizer;
+  optimizer: ResponseOptimizerImpl;
 }
 
 /**

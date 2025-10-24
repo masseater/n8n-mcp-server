@@ -4,11 +4,6 @@
 
 import { z } from "zod";
 import type {
-  AuthManager,
-  HttpClient,
-  N8nApiClient,
-} from "../interfaces/n8n-client.js";
-import type {
   AuthCredentials,
   ListOptions,
   WorkflowDefinition,
@@ -140,9 +135,9 @@ const ListOptionsSchema = z.object({
 /**
  * n8n API client implementation
  */
-export class N8nApiClientImpl implements N8nApiClient {
-  private httpClient: HttpClient;
-  private authManager: AuthManager;
+export class N8nApiClientImpl {
+  private httpClient: N8nHttpClient;
+  private authManager: AuthManagerImpl;
   private baseUrl: string;
 
   constructor(
@@ -186,23 +181,8 @@ export class N8nApiClientImpl implements N8nApiClient {
    */
   async getWorkflows(options?: ListOptions): Promise<WorkflowSummary[]> {
     try {
-      // Validate options
-      const validatedOptions = ListOptionsSchema.parse(options || {});
-
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (validatedOptions.active !== undefined) {
-        params.append("active", validatedOptions.active.toString());
-      }
-      if (validatedOptions.tags && validatedOptions.tags.length > 0) {
-        params.append("tags", validatedOptions.tags.join(","));
-      }
-      if (validatedOptions.limit) {
-        params.append("limit", validatedOptions.limit.toString());
-      }
-      if (validatedOptions.offset) {
-        params.append("offset", validatedOptions.offset.toString());
-      }
+      const validatedOptions = ListOptionsSchema.parse(options || {}) as Partial<ListOptions>;
+      const params = this.buildQueryParams(validatedOptions);
 
       const url = `/api/v1/workflows${
         params.toString() ? `?${params.toString()}` : ""
@@ -210,34 +190,12 @@ export class N8nApiClientImpl implements N8nApiClient {
       const response = await this.httpClient.get<any>(url);
       const workflows = response.data || response;
 
-      // Transform and validate response
       return workflows.map((workflow: any) => {
-        // Handle tags - n8n API returns tag objects with id and name
-        const tags = Array.isArray(workflow.tags)
-          ? workflow.tags.map((tag: any) =>
-              typeof tag === "string" ? tag : tag.name || tag.id || ""
-            ).filter((tag: string) => tag !== "")
-          : [];
-
-        const transformed = {
-          id: workflow.id,
-          name: workflow.name,
-          active: workflow.active || false,
-          tags,
-          createdAt: workflow.createdAt,
-          updatedAt: workflow.updatedAt,
-          nodeCount: workflow.nodes?.length || 0,
-        };
-
+        const transformed = this.transformToWorkflowSummary(workflow);
         return WorkflowSummarySchema.parse(transformed);
       });
     } catch (error) {
-      console.error("Failed to get workflows:", error);
-      throw new Error(
-        `Failed to get workflows: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      );
+      this.handleApiError(error, "Failed to get workflows");
     }
   }
 
@@ -255,34 +213,9 @@ export class N8nApiClientImpl implements N8nApiClient {
       );
       const workflow = response.data || response;
 
-      // Handle tags - n8n API returns tag objects with id and name
-      const tags = Array.isArray(workflow.tags)
-        ? workflow.tags.map((tag: any) =>
-            typeof tag === "string" ? tag : tag.name || tag.id || ""
-          ).filter((tag: string) => tag !== "")
-        : [];
-
-      // Transform response
-      const transformed: WorkflowDetail = {
-        id: workflow.id,
-        name: workflow.name,
-        active: workflow.active || false,
-        tags,
-        createdAt: workflow.createdAt,
-        updatedAt: workflow.updatedAt,
-        nodes: workflow.nodes || [],
-        connections: workflow.connections || {},
-        settings: workflow.settings,
-      };
-
-      return transformed;
+      return this.transformToWorkflowDetail(workflow);
     } catch (error) {
-      console.error(`Failed to get workflow ${id}:`, error);
-      throw new Error(
-        `Failed to get workflow: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      );
+      this.handleApiError(error, `Failed to get workflow ${id}`);
     }
   }
 
@@ -304,32 +237,11 @@ export class N8nApiClientImpl implements N8nApiClient {
       );
       const workflowData = response.data || response;
 
-      // Handle tags - n8n API returns tag objects with id and name
-      const tags = Array.isArray(workflowData.tags)
-        ? workflowData.tags.map((tag: any) =>
-            typeof tag === "string" ? tag : tag.name || tag.id || ""
-          ).filter((tag: string) => tag !== "")
-        : [];
-
-      // Transform response
-      const transformed = {
-        id: workflowData.id,
-        name: workflowData.name,
-        active: workflowData.active || false,
-        tags,
-        createdAt: workflowData.createdAt,
-        updatedAt: workflowData.updatedAt,
-        nodeCount: workflowData.nodes?.length || 0,
-      };
+      const transformed = this.transformToWorkflowSummary(workflowData);
 
       return WorkflowSummarySchema.parse(transformed);
     } catch (error) {
-      console.error("Failed to create workflow:", error);
-      throw new Error(
-        `Failed to create workflow: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      );
+      this.handleApiError(error, "Failed to create workflow");
     }
   }
 
@@ -354,32 +266,11 @@ export class N8nApiClientImpl implements N8nApiClient {
       );
       const workflowData = response.data || response;
 
-      // Handle tags - n8n API returns tag objects with id and name
-      const tags = Array.isArray(workflowData.tags)
-        ? workflowData.tags.map((tag: any) =>
-            typeof tag === "string" ? tag : tag.name || tag.id || ""
-          ).filter((tag: string) => tag !== "")
-        : [];
-
-      // Transform response
-      const transformed = {
-        id: workflowData.id,
-        name: workflowData.name,
-        active: workflowData.active || false,
-        tags,
-        createdAt: workflowData.createdAt,
-        updatedAt: workflowData.updatedAt,
-        nodeCount: workflowData.nodes?.length || 0,
-      };
+      const transformed = this.transformToWorkflowSummary(workflowData);
 
       return WorkflowSummarySchema.parse(transformed);
     } catch (error) {
-      console.error(`Failed to update workflow ${id}:`, error);
-      throw new Error(
-        `Failed to update workflow: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      );
+      this.handleApiError(error, `Failed to update workflow ${id}`);
     }
   }
 
@@ -395,15 +286,83 @@ export class N8nApiClientImpl implements N8nApiClient {
       await this.httpClient.delete(`/api/v1/workflows/${id}`);
       return true;
     } catch (error) {
-      console.error(`Failed to delete workflow ${id}:`, error);
-      throw new Error(
-        `Failed to delete workflow: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      );
+      this.handleApiError(error, `Failed to delete workflow ${id}`);
     }
   }
 
+  /**
+   * Normalize tags from API response
+   */
+  private normalizeTagsFromResponse(tags: any): string[] {
+    if (!tags || !Array.isArray(tags)) {
+      return [];
+    }
+    return tags.map((tag) => (typeof tag === "string" ? tag : tag.name || ""));
+  }
+
+  /**
+   * Transform workflow data to WorkflowSummary
+   */
+  private transformToWorkflowSummary(workflow: any): WorkflowSummary {
+    const tags = this.normalizeTagsFromResponse(workflow.tags);
+    return {
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active,
+      tags,
+      createdAt: workflow.createdAt,
+      updatedAt: workflow.updatedAt,
+      nodeCount: workflow.nodes?.length || 0,
+    };
+  }
+
+  /**
+   * Transform workflow data to WorkflowDetail
+   */
+  private transformToWorkflowDetail(workflow: any): WorkflowDetail {
+    const tags = this.normalizeTagsFromResponse(workflow.tags);
+    return {
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active,
+      tags,
+      createdAt: workflow.createdAt,
+      updatedAt: workflow.updatedAt,
+      nodes: workflow.nodes || [],
+      connections: workflow.connections || {},
+      settings: workflow.settings || {},
+    };
+  }
+
+  /**
+   * Build query parameters for list operations
+   */
+  private buildQueryParams(options: Partial<ListOptions>): URLSearchParams {
+    const params = new URLSearchParams();
+    if (options.active !== undefined) {
+      params.append("active", options.active.toString());
+    }
+    if (options.tags && options.tags.length > 0) {
+      params.append("tags", options.tags.join(","));
+    }
+    if (options.limit) {
+      params.append("limit", options.limit.toString());
+    }
+    if (options.offset !== undefined) {
+      params.append("offset", options.offset.toString());
+    }
+    return params;
+  }
+
+  /**
+   * Handle API errors consistently
+   */
+  private handleApiError(error: unknown, context: string): never {
+    console.error(`${context}:`, error);
+    throw new Error(
+      `${context}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 
   /**
    * Test connection to n8n API

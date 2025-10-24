@@ -2,7 +2,6 @@
  * Response optimizer for context efficiency
  */
 
-import type { ResponseOptimizer } from "../interfaces/mcp-server.js";
 import type {
   WorkflowDetail,
   WorkflowSummary,
@@ -17,7 +16,7 @@ import type {
 /**
  * Response optimizer implementation
  */
-export class ResponseOptimizerImpl implements ResponseOptimizer {
+export class ResponseOptimizerImpl {
   private maxSize: number;
   private defaultPageSize: number;
 
@@ -434,8 +433,8 @@ if (import.meta.vitest) {
         const result = optimizer.optimizeWorkflows(workflows);
 
         expect(result).toHaveLength(2);
-        expect(result[0].nodeCount).toBe(1);
-        expect(result[1].nodeCount).toBe(2);
+        expect(result[0]?.nodeCount).toBe(1);
+        expect(result[1]?.nodeCount).toBe(2);
       });
     });
 

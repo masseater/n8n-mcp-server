@@ -8,12 +8,11 @@ import axios, {
   AxiosRequestConfig,
   AxiosResponse,
 } from "axios";
-import type { HttpClient } from "../interfaces/n8n-client.js";
 
 /**
  * HTTP client implementation with retry logic and error handling
  */
-export class N8nHttpClient implements HttpClient {
+export class N8nHttpClient {
   private client: AxiosInstance;
   private retryAttempts: number;
   private timeout: number;

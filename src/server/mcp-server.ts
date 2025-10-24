@@ -7,7 +7,6 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import express from "express";
 import { createLogger, format, transports } from "winston";
-import type { MCPServer } from "../interfaces/mcp-server.js";
 import type { ServerConfig, TransportConfig, WorkflowDefinition } from "../types/index.js";
 import type {
   INode,
@@ -27,7 +26,7 @@ import {
 /**
  * MCP server implementation
  */
-export class MCPServerImpl implements MCPServer {
+export class MCPServerImpl {
   private server: McpServer;
   private n8nClient: N8nApiClientImpl;
   private optimizer: ResponseOptimizerImpl;
