@@ -2,9 +2,72 @@
 
 Model Context Protocol (MCP) server for n8n workflow automation platform. This server provides AI models with comprehensive access to n8n workflows through a standardized MCP interface.
 
+## Quick Start
+
+### Prerequisites
+
+- n8n instance running (local or remote)
+- n8n API key ([how to get API key](https://docs.n8n.io/api/authentication/))
+- Node.js 18+ and pnpm installed
+
+### Setup and Run
+
+1. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+2. **Configure environment variables**
+   ```bash
+   export N8N_URL="http://localhost:5678"
+   export N8N_API_KEY="your-api-key"
+   ```
+
+3. **Build and start**
+   ```bash
+   # Build the project
+   pnpm run build
+
+   # Start the server (stdio transport - for MCP clients)
+   pnpm start
+
+   # Or start with HTTP transport (for development/testing)
+   pnpm start --transport http --port 3000
+   ```
+
+### Using with Claude Desktop
+
+Add this configuration to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "n8n": {
+      "command": "node",
+      "args": ["/absolute/path/to/n8n-mcp-server/dist/index.js"],
+      "env": {
+        "N8N_URL": "http://localhost:5678",
+        "N8N_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+After saving, restart Claude Desktop. You can now ask Claude to manage your n8n workflows!
+
+**Example prompts**:
+- "List all my n8n workflows"
+- "Create a new workflow called 'Email Automation'"
+- "Show me the details of workflow ID abc123"
+- "Update workflow xyz456 to add a new node"
+
 ## Features
 
-- **Complete Workflow Management**: Create, read, update, delete, and activate/deactivate workflows
+- **Complete Workflow Management**: Create, read, update, and delete n8n workflows
 - **Optimized Responses**: Context-efficient data structures for AI model consumption
 - **Flexible Authentication**: API key-based authentication
 - **Dual Transport Support**: stdio and HTTP transports
@@ -166,39 +229,6 @@ Delete a workflow.
 }
 ```
 
-### 6. `activate_workflow`
-
-Activate a workflow.
-
-**Parameters:**
-- `id` (string, required): Workflow ID
-
-**Example:**
-```json
-{
-  "name": "activate_workflow",
-  "arguments": {
-    "id": "workflow-123"
-  }
-}
-```
-
-### 7. `deactivate_workflow`
-
-Deactivate a workflow.
-
-**Parameters:**
-- `id` (string, required): Workflow ID
-
-**Example:**
-```json
-{
-  "name": "deactivate_workflow",
-  "arguments": {
-    "id": "workflow-123"
-  }
-}
-```
 
 ## Usage Examples
 
