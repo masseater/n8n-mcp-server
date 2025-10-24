@@ -16,7 +16,9 @@
     "start:stdio": "node dist/index.js --transport stdio",
     "start:http": "node dist/index.js --transport http --port 3000",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
   },
   "keywords": [
     "n8n",
@@ -38,10 +40,13 @@
   "devDependencies": {
     "@types/express": "5.0.3",
     "@types/node": "^24.9.1",
+    "@vitest/coverage-v8": "^4.0.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.2"
   },
   "volta": {
-    "node": "22.20.0"
+    "node": "22.20.0",
+    "pnpm": "10.19.0"
   }
 }

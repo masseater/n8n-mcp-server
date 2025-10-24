@@ -370,3 +370,127 @@ export class ResponseOptimizerImpl implements ResponseOptimizer {
     };
   }
 }
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+
+  describe("ResponseOptimizerImpl", () => {
+    const optimizer = new ResponseOptimizerImpl();
+
+    describe("optimizeWorkflowSummary", () => {
+      it("should extract essential workflow fields", () => {
+        const workflow = {
+          id: "workflow-1",
+          name: "Test Workflow",
+          active: true,
+          tags: ["test"],
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-02",
+          nodes: [{ id: "node1" }, { id: "node2" }],
+          connections: {},
+          settings: {},
+        };
+
+        const result = optimizer.optimizeWorkflowSummary(workflow);
+
+        expect(result).toEqual({
+          id: "workflow-1",
+          name: "Test Workflow",
+          active: true,
+          tags: ["test"],
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-02",
+          nodeCount: 2,
+        });
+      });
+
+      it("should handle missing optional fields", () => {
+        const workflow = {
+          id: "workflow-1",
+          name: "Test Workflow",
+        };
+
+        const result = optimizer.optimizeWorkflowSummary(workflow);
+
+        expect(result).toEqual({
+          id: "workflow-1",
+          name: "Test Workflow",
+          active: false,
+          tags: [],
+          createdAt: undefined,
+          updatedAt: undefined,
+          nodeCount: 0,
+        });
+      });
+    });
+
+    describe("optimizeWorkflows", () => {
+      it("should optimize multiple workflows", () => {
+        const workflows = [
+          { id: "1", name: "Workflow 1", nodes: [{}] },
+          { id: "2", name: "Workflow 2", nodes: [{}, {}] },
+        ];
+
+        const result = optimizer.optimizeWorkflows(workflows);
+
+        expect(result).toHaveLength(2);
+        expect(result[0].nodeCount).toBe(1);
+        expect(result[1].nodeCount).toBe(2);
+      });
+    });
+
+    describe("paginate", () => {
+      it("should paginate data correctly", () => {
+        const data = Array.from({ length: 100 }, (_, i) => i);
+
+        const result = optimizer.paginate(data, 10, 0);
+
+        expect(result.data).toHaveLength(10);
+        expect(result.data[0]).toBe(0);
+        expect(result.data[9]).toBe(9);
+        expect(result.pagination.total).toBe(100);
+        expect(result.pagination.hasMore).toBe(true);
+      });
+
+      it("should handle last page", () => {
+        const data = Array.from({ length: 25 }, (_, i) => i);
+
+        const result = optimizer.paginate(data, 10, 20);
+
+        expect(result.data).toHaveLength(5);
+        expect(result.pagination.hasMore).toBe(false);
+      });
+    });
+
+    describe("createListWorkflowsResponse", () => {
+      it("should create minimal response by default", () => {
+        const workflows = [
+          { id: "1", name: "Workflow 1", active: true, nodes: [] },
+        ];
+
+        const result = optimizer.createListWorkflowsResponse(workflows, false);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toHaveProperty("count");
+        expect(result.data).toHaveProperty("workflows");
+      });
+
+      it("should create full response with raw=true", () => {
+        const workflows = [
+          {
+            id: "1",
+            name: "Workflow 1",
+            active: true,
+            nodes: [],
+            tags: ["test"],
+          },
+        ];
+
+        const result = optimizer.createListWorkflowsResponse(workflows, true);
+
+        expect(result.success).toBe(true);
+        expect(Array.isArray(result.data)).toBe(true);
+      });
+    });
+  });
+}
