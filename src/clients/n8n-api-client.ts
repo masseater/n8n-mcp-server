@@ -33,6 +33,26 @@ interface N8nWorkflowResponse {
   settings?: IWorkflowSettings;
 }
 
+// Type for workflow updates (excludes read-only fields)
+type WorkflowUpdatePayload = Omit<Partial<WorkflowDefinition>, 'active' | 'id'>;
+
+/**
+ * Internal type for workflow details before optimization.
+ * This type is returned by the API client and contains full n8n workflow data.
+ * The optimizer layer converts this to the public WorkflowDetail type.
+ */
+interface WorkflowDetailInternal {
+  id: string;
+  name: string;
+  active: boolean;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  nodes: INode[];
+  connections: IConnections;
+  settings?: IWorkflowSettings;
+}
+
 // Validation schemas based on n8n types
 const GenericValueSchema: z.ZodType<
   string | object | number | boolean | undefined | null
@@ -180,50 +200,44 @@ export class N8nApiClientImpl {
    * Get list of workflows
    */
   async getWorkflows(options?: ListOptions): Promise<WorkflowSummary[]> {
-    try {
+    return this.withErrorHandling("Failed to get workflows", async () => {
       const validatedOptions = ListOptionsSchema.parse(options || {}) as Partial<ListOptions>;
       const params = this.buildQueryParams(validatedOptions);
 
       const url = `/api/v1/workflows${
         params.toString() ? `?${params.toString()}` : ""
       }`;
-      const response = await this.httpClient.get<any>(url);
-      const workflows = response.data || response;
+      const response = await this.httpClient.get<N8nWorkflowResponse[]>(url);
+      const workflows = this.normalizeResponse(response);
 
-      return workflows.map((workflow: any) => {
+      return workflows.map((workflow) => {
         const transformed = this.transformToWorkflowSummary(workflow);
         return WorkflowSummarySchema.parse(transformed);
       });
-    } catch (error) {
-      this.handleApiError(error, "Failed to get workflows");
-    }
+    });
   }
 
   /**
    * Get detailed workflow information
    */
-  async getWorkflow(id: string): Promise<WorkflowDetail> {
-    try {
-      if (!id) {
-        throw new Error("Workflow ID is required");
-      }
+  async getWorkflow(id: string): Promise<WorkflowDetailInternal> {
+    return this.withErrorHandling(`Failed to get workflow ${id}`, async () => {
+      this.validateId(id);
 
-      const response = await this.httpClient.get<any>(
+      const response = await this.httpClient.get<N8nWorkflowResponse>(
         `/api/v1/workflows/${id}`,
       );
-      const workflow = response.data || response;
+      const workflow = this.normalizeResponse(response);
 
       return this.transformToWorkflowDetail(workflow);
-    } catch (error) {
-      this.handleApiError(error, `Failed to get workflow ${id}`);
-    }
+    });
   }
 
   /**
    * Create a new workflow
    */
   async createWorkflow(workflow: WorkflowDefinition): Promise<WorkflowSummary> {
-    try {
+    return this.withErrorHandling("Failed to create workflow", async () => {
       if (!workflow.name) {
         throw new Error("Workflow name is required");
       }
@@ -231,18 +245,16 @@ export class N8nApiClientImpl {
       // Remove 'active' field as it's read-only for n8n API
       const { active, ...workflowPayload } = workflow;
 
-      const response = await this.httpClient.post<any>(
+      const response = await this.httpClient.post<N8nWorkflowResponse>(
         "/api/v1/workflows",
         workflowPayload,
       );
-      const workflowData = response.data || response;
+      const workflowData = this.normalizeResponse(response);
 
       const transformed = this.transformToWorkflowSummary(workflowData);
 
       return WorkflowSummarySchema.parse(transformed);
-    } catch (error) {
-      this.handleApiError(error, "Failed to create workflow");
-    }
+    });
   }
 
   /**
@@ -252,48 +264,84 @@ export class N8nApiClientImpl {
     id: string,
     workflow: WorkflowDefinition,
   ): Promise<WorkflowSummary> {
-    try {
-      if (!id) {
-        throw new Error("Workflow ID is required");
-      }
+    return this.withErrorHandling(`Failed to update workflow ${id}`, async () => {
+      this.validateId(id);
 
       // Remove 'active' and 'id' fields as they're read-only for n8n API
-      const { active, id: workflowId, ...workflowPayload } = workflow as any;
+      const workflowPayload = this.sanitizeWorkflowForUpdate(workflow);
 
-      const response = await this.httpClient.put<any>(
+      const response = await this.httpClient.put<N8nWorkflowResponse>(
         `/api/v1/workflows/${id}`,
         workflowPayload,
       );
-      const workflowData = response.data || response;
+      const workflowData = this.normalizeResponse(response);
 
       const transformed = this.transformToWorkflowSummary(workflowData);
 
       return WorkflowSummarySchema.parse(transformed);
-    } catch (error) {
-      this.handleApiError(error, `Failed to update workflow ${id}`);
-    }
+    });
   }
 
   /**
    * Delete a workflow
    */
   async deleteWorkflow(id: string): Promise<boolean> {
-    try {
-      if (!id) {
-        throw new Error("Workflow ID is required");
-      }
+    return this.withErrorHandling(`Failed to delete workflow ${id}`, async () => {
+      this.validateId(id);
 
       await this.httpClient.delete(`/api/v1/workflows/${id}`);
       return true;
+    });
+  }
+
+  /**
+   * Normalize API response to extract data
+   */
+  private normalizeResponse<T>(response: T | { data: T }): T {
+    if (response && typeof response === "object" && "data" in response) {
+      return response.data;
+    }
+    return response;
+  }
+
+  /**
+   * Validate workflow ID
+   */
+  private validateId(id: string): void {
+    if (!id) {
+      throw new Error("Workflow ID is required");
+    }
+  }
+
+  /**
+   * Sanitize workflow data for update by removing read-only fields
+   */
+  private sanitizeWorkflowForUpdate(workflow: WorkflowDefinition): WorkflowUpdatePayload {
+    const { active, ...rest } = workflow;
+    // Also remove 'id' if it exists (it shouldn't, but defensive programming)
+    const sanitized = rest as Record<string, unknown>;
+    delete sanitized.id;
+    return sanitized as WorkflowUpdatePayload;
+  }
+
+  /**
+   * Error handling wrapper for async operations
+   */
+  private async withErrorHandling<T>(
+    context: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await operation();
     } catch (error) {
-      this.handleApiError(error, `Failed to delete workflow ${id}`);
+      this.handleApiError(error, context);
     }
   }
 
   /**
    * Normalize tags from API response
    */
-  private normalizeTagsFromResponse(tags: any): string[] {
+  private normalizeTagsFromResponse(tags: unknown): string[] {
     if (!tags || !Array.isArray(tags)) {
       return [];
     }
@@ -303,7 +351,7 @@ export class N8nApiClientImpl {
   /**
    * Transform workflow data to WorkflowSummary
    */
-  private transformToWorkflowSummary(workflow: any): WorkflowSummary {
+  private transformToWorkflowSummary(workflow: N8nWorkflowResponse): WorkflowSummary {
     const tags = this.normalizeTagsFromResponse(workflow.tags);
     return {
       id: workflow.id,
@@ -317,11 +365,13 @@ export class N8nApiClientImpl {
   }
 
   /**
-   * Transform workflow data to WorkflowDetail
+   * Transform workflow data to WorkflowDetailInternal
+   * Note: Returns internal format with IConnections and INode[].
+   * The optimizer layer (response-optimizer.ts) converts it to the public WorkflowDetail type.
    */
-  private transformToWorkflowDetail(workflow: any): WorkflowDetail {
+  private transformToWorkflowDetail(workflow: N8nWorkflowResponse): WorkflowDetailInternal {
     const tags = this.normalizeTagsFromResponse(workflow.tags);
-    return {
+    const result: WorkflowDetailInternal = {
       id: workflow.id,
       name: workflow.name,
       active: workflow.active,
@@ -330,8 +380,13 @@ export class N8nApiClientImpl {
       updatedAt: workflow.updatedAt,
       nodes: workflow.nodes || [],
       connections: workflow.connections || {},
-      settings: workflow.settings || {},
     };
+
+    if (workflow.settings !== undefined) {
+      result.settings = workflow.settings;
+    }
+
+    return result;
   }
 
   /**
