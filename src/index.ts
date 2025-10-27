@@ -10,6 +10,8 @@
 import { Command } from "commander";
 import { createLogger, format, transports } from "winston";
 import type { TransportType } from "./types/index.js";
+import { loadConfig, validateConfig } from "./config/index.js";
+import { MCPServerImpl } from "./server/mcp-server.js";
 
 const program = new Command();
 
@@ -70,7 +72,6 @@ program
       });
 
       // Load configuration
-      const { loadConfig, validateConfig } = await import("./config/index.js");
       const config = loadConfig();
 
       // Override config with CLI options
@@ -89,7 +90,6 @@ program
       }
 
       // Initialize and start MCP server
-      const { MCPServerImpl } = await import("./server/mcp-server.js");
       const mcpServer = new MCPServerImpl();
 
       await mcpServer.initialize(config);
