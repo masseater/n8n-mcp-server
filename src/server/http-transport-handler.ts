@@ -3,7 +3,8 @@
  */
 import express from "express";
 import type { ServerConfig } from "../types/index.js";
-import type { ToolSchema, AnyToolDefinition } from "../tools/base-tool.js";
+import type { ToolSchema } from "../tools/base-tool.js";
+import type { Tool } from "./tool-registry.js";
 import { McpProtocolHandler } from "./mcp-protocol-handler.js";
 
 export class HttpTransportHandler {
@@ -14,7 +15,7 @@ export class HttpTransportHandler {
   constructor(
     config: ServerConfig,
     getToolSchemasCallback: () => ToolSchema[],
-    getToolByNameCallback: (name: string) => AnyToolDefinition | undefined,
+    getToolByNameCallback: (name: string) => Tool | undefined,
   ) {
     this.config = config;
     this.app = express();

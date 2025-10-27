@@ -4,23 +4,24 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
-import type { ToolContext, ToolSchema, AnyToolDefinition } from "../tools/base-tool.js";
+import type { ToolContext, ToolSchema } from "../tools/base-tool.js";
+import { convertToJsonSchema } from "../tools/base-tool.js";
 import { DeleteWorkflowTool } from "../tools/implementations/delete-workflow-tool.js";
 import { ListWorkflowsTool } from "../tools/implementations/list-workflows-tool.js";
 import { GetWorkflowTool } from "../tools/implementations/get-workflow-tool.js";
 import { CreateWorkflowTool } from "../tools/implementations/create-workflow-tool.js";
 import { UpdateWorkflowTool } from "../tools/implementations/update-workflow-tool.js";
 
+export type Tool =
+  | DeleteWorkflowTool
+  | ListWorkflowsTool
+  | GetWorkflowTool
+  | CreateWorkflowTool
+  | UpdateWorkflowTool;
+
 export class ToolRegistry {
   private registeredTools: string[] = [];
-  private toolDefinitions = new Map<string, AnyToolDefinition>();
-  private toolInstances: (
-    | DeleteWorkflowTool
-    | ListWorkflowsTool
-    | GetWorkflowTool
-    | CreateWorkflowTool
-    | UpdateWorkflowTool
-  )[] = [];
+  private toolInstances = new Map<string, Tool>();
   private schemasCache: ToolSchema[] | null = null;
 
   constructor(
@@ -39,7 +40,7 @@ export class ToolRegistry {
     };
 
     // Manual tool registration for safety and explicit review
-    this.toolInstances = [
+    const tools: Tool[] = [
       new DeleteWorkflowTool(context),
       new ListWorkflowsTool(context),
       new GetWorkflowTool(context),
@@ -47,16 +48,16 @@ export class ToolRegistry {
       new UpdateWorkflowTool(context),
     ];
 
-    console.log(`✅ ToolRegistry initialized with ${String(this.toolInstances.length)} tools`);
+    for (const tool of tools) {
+      this.toolInstances.set(tool.name, tool);
+    }
+
+    console.log(`✅ ToolRegistry initialized with ${String(this.toolInstances.size)} tools`);
   }
 
-  /**
-   * Get all tool schemas (without handlers)
-   */
   getToolSchemas(): ToolSchema[] {
     const startTime = performance.now();
 
-    // Return cached schemas if available
     if (this.schemasCache) {
       const endTime = performance.now();
       console.debug(`📊 Tool schemas served from cache in ${(endTime - startTime).toFixed(2)}ms`);
@@ -65,18 +66,14 @@ export class ToolRegistry {
 
     const schemas: ToolSchema[] = [];
 
-    // Convert tool instances to definitions and extract schemas
-    for (const toolInstance of this.toolInstances) {
-      const tool = toolInstance.toDefinition();
-      this.toolDefinitions.set(tool.name, tool);
+    for (const tool of this.toolInstances.values()) {
       schemas.push({
         name: tool.name,
         description: tool.description,
-        inputSchema: tool.inputSchema,
+        inputSchema: convertToJsonSchema(tool.getInputSchema()),
       });
     }
 
-    // Cache the schemas
     this.schemasCache = schemas;
 
     const endTime = performance.now();
@@ -85,50 +82,37 @@ export class ToolRegistry {
     return schemas;
   }
 
-  /**
-   * Get tool definition by name
-   */
-  getToolByName(name: string): AnyToolDefinition | undefined {
-    return this.toolDefinitions.get(name);
+  getToolByName(name: string): Tool | undefined {
+    return this.toolInstances.get(name);
   }
 
-  /**
-   * Setup tool handlers and register them with the MCP server
-   */
   setupToolHandlers(): void {
-    // Get all tool schemas (this also initializes toolDefinitions)
     const schemas = this.getToolSchemas();
 
-    // Register all tools with the MCP server
-    schemas.forEach((schema) => {
-      const tool = this.toolDefinitions.get(schema.name);
-      if (tool) {
+    for (const schema of schemas) {
+      const toolInstance = this.toolInstances.get(schema.name);
+      if (toolInstance) {
         this.server.registerTool(
-          tool.name,
+          schema.name,
           {
-            description: tool.description,
-            inputSchema: tool.inputSchema as Record<string, never>,
+            description: schema.description,
+            // Use cached schema to avoid redundant conversion; cast required by MCP SDK
+            inputSchema: schema.inputSchema as Record<string, never>,
           },
-          tool.handler as never,
+          // Union type requires cast; runtime validation by Zod
+          toolInstance.handler.bind(toolInstance) as never,
         );
-        this.registeredTools.push(tool.name);
+        this.registeredTools.push(schema.name);
       }
-    });
+    }
   }
 
-  /**
-   * Get list of registered tool names
-   */
   getRegisteredTools(): string[] {
     return this.registeredTools;
   }
 
-  /**
-   * Clear cached schemas and tool definitions
-   */
   clearCache(): void {
     this.schemasCache = null;
-    this.toolDefinitions.clear();
     console.debug("🧹 Tool cache cleared");
   }
 }
