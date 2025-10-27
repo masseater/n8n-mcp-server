@@ -6,7 +6,7 @@ import { z } from "zod";
 import { RawTool } from "../base/raw-tool.js";
 import type { WorkflowDetailInternal } from "../../clients/n8n-api-client.js";
 
-export type GetWorkflowArgs = {
+type GetWorkflowArgs = {
   id: string;
   raw?: boolean;
 };

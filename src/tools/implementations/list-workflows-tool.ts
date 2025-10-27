@@ -6,7 +6,7 @@ import { z } from "zod";
 import { RawTool } from "../base/raw-tool.js";
 import type { WorkflowSummary } from "../../types/index.js";
 
-export type ListWorkflowsArgs = {
+type ListWorkflowsArgs = {
   active?: boolean;
   tags?: string[];
   limit?: number;

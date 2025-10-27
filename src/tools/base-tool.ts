@@ -19,8 +19,6 @@ export type ToolDefinition<TArgs = Record<string, unknown>> = {
   handler: ToolHandler<TArgs>;
 }
 
-export type ToolSchema = Omit<ToolDefinition, "handler">;
-
 export type ToolContext = {
   n8nClient: N8nApiClientImpl;
   responseBuilder: ToolResponseBuilder;
@@ -45,12 +43,15 @@ export function createToolResponse(data: unknown): ToolResponse {
 }
 
 export function convertToJsonSchema(schema: ZodSchema): Record<string, unknown> {
+  // Use jsonSchema2019-09 target for better compatibility with JSON Schema Draft 2020-12
+  // Note: MCP SDK uses zod-to-json-schema internally, so we must match its approach
   const jsonSchema = zodToJsonSchema(schema, {
-    target: "openApi3",
+    target: "jsonSchema2019-09",
     $refStrategy: "none",
   });
 
   if (typeof jsonSchema === "object") {
+    // Remove $schema and definitions fields as MCP doesn't require them in tool definitions
     const { $schema: _$schema, definitions: _definitions, ...cleanSchema } = jsonSchema as Record<string, unknown>;
     return cleanSchema;
   }

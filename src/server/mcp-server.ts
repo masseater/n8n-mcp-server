@@ -4,10 +4,11 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import express from "express";
 import type { ServerConfig, TransportConfig } from "../types/index.js";
 import { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
-import { HttpTransportHandler } from "./http-transport-handler.js";
 import { ToolRegistry } from "./tool-registry.js";
 
 /**
@@ -18,7 +19,6 @@ export class MCPServerImpl {
   private n8nClient: N8nApiClientImpl;
   private responseBuilder: ToolResponseBuilder;
   private config: ServerConfig | null = null;
-  private httpHandler: HttpTransportHandler | null = null;
   private toolRegistry: ToolRegistry | null = null;
 
   constructor() {
@@ -86,22 +86,55 @@ export class MCPServerImpl {
       // Don't log to stdout for stdio transport as it interferes with MCP protocol
     } else {
       const port = transport.port ?? 3000;
+      const app = express();
+      app.use(express.json());
 
-      if (!this.toolRegistry) {
-        throw new Error("Tool registry not initialized");
-      }
-
-      const toolRegistry = this.toolRegistry;
-
-      // Create HTTP transport handler
-      this.httpHandler = new HttpTransportHandler(
-        this.config,
-        () => toolRegistry.getToolSchemas(),
-        (name) => toolRegistry.getToolByName(name),
+      console.log("🌐 Setting up HTTP transport...");
+      console.log(`📍 n8n URL: ${this.config.n8n.baseUrl}`);
+      console.log(
+        `🔑 API Key: ${
+          this.config.n8n.credentials.apiKey
+            ? "***" + this.config.n8n.credentials.apiKey.slice(-4)
+            : "NOT SET"
+        }`,
       );
 
-      // Start HTTP server
-      await this.httpHandler.start(port, toolRegistry.getRegisteredTools());
+      // Health check endpoint
+      app.get("/health", (_req, res) => {
+        console.log("📊 Health check requested");
+        res.json({ status: "ok", timestamp: new Date().toISOString() });
+      });
+
+      // MCP Streamable HTTP endpoint
+      app.post("/mcp", async (req, res) => {
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined,
+          enableJsonResponse: true,
+        });
+
+        res.on("close", () => {
+          void transport.close();
+        });
+
+        await this.server.connect(transport);
+        await transport.handleRequest(req, res, req.body);
+      });
+
+      app.listen(port, () => {
+        console.log("🚀 HTTP MCP Server started successfully!");
+        console.log(`🌐 Server listening on port ${String(port)}`);
+        console.log(`📋 Available endpoints:`);
+        console.log(`  - GET /health - Health check endpoint`);
+        console.log(`  - POST /mcp - MCP Streamable HTTP endpoint`);
+        if (this.toolRegistry) {
+          console.log(`🔧 MCP Tools available: ${this.toolRegistry.getRegisteredTools().join(", ")}`);
+        }
+      });
+
+      // Keep the process alive
+      await new Promise<void>(() => {
+        // Process will be kept alive by HTTP server
+      });
     }
   }
 

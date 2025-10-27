@@ -7,7 +7,7 @@ import { RawTool } from "../base/raw-tool.js";
 import { nodeSchema, connectionsSchema, settingsSchema } from "../schemas.js";
 import type { WorkflowDefinition, WorkflowSummary } from "../../types/index.js";
 
-export type CreateWorkflowArgs = WorkflowDefinition & {
+type CreateWorkflowArgs = WorkflowDefinition & {
   raw?: boolean;
 };
 
@@ -27,7 +27,7 @@ export class CreateWorkflowTool extends RawTool<CreateWorkflowArgs> {
       active: z.boolean().optional(),
       nodes: z.array(nodeSchema),
       connections: connectionsSchema,
-      settings: settingsSchema,
+      settings: settingsSchema.describe("Workflow settings (required field, use {} for empty settings)"),
       tags: z.array(z.string()).optional(),
       raw: z.boolean().optional(),
     });

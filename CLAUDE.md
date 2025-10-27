@@ -417,7 +417,55 @@ Get detailed information about a specific workflow.
 
 **Context reduction**: 85-90% with default response
 
-### 3. create_workflow
+### 3. get_workflow_connections
+
+Get workflow node connections in a graph structure. Shows which nodes connect to which nodes.
+
+**Parameters**:
+- `id` (string, required): Workflow ID
+- `raw` (boolean, optional): Include raw connection structure
+
+**Response**:
+- Default (`raw=false`): `{ success, message, data: { id, name, graph: [NodeConnection...] } }`
+  - Each `NodeConnection` contains: `{ node, id, type, inputs: [node names], outputs: [node names] }`
+- With `raw=true`: Same as default, but also includes `rawConnections` field with n8n's original connection structure
+
+**Example response**:
+```json
+{
+  "success": true,
+  "message": "ワークフロー接続情報を取得しました",
+  "data": {
+    "id": "workflow-123",
+    "name": "My Workflow",
+    "graph": [
+      {
+        "node": "Start",
+        "id": "node1",
+        "type": "n8n-nodes-base.start",
+        "inputs": [],
+        "outputs": ["HTTP Request"]
+      },
+      {
+        "node": "HTTP Request",
+        "id": "node2",
+        "type": "n8n-nodes-base.httpRequest",
+        "inputs": ["Start"],
+        "outputs": ["Set"]
+      }
+    ]
+  }
+}
+```
+
+**Context reduction**: 70-80% compared to full workflow data
+
+**Use cases**:
+- Understanding workflow structure without node details
+- Debugging connection issues
+- Visualizing data flow between nodes
+
+### 4. create_workflow
 
 Create a new workflow.
 
@@ -436,7 +484,7 @@ Create a new workflow.
 
 **Context reduction**: 90% with default response
 
-### 4. update_workflow
+### 5. update_workflow
 
 Update an existing workflow.
 
@@ -456,7 +504,7 @@ Update an existing workflow.
 
 **Context reduction**: 90% with default response
 
-### 5. delete_workflow
+### 6. delete_workflow
 
 Delete a workflow by ID.
 

@@ -60,6 +60,15 @@ type NodeSummary = {
   disabled?: boolean;
 }
 
+// Node connection graph types
+export type NodeConnection = {
+  node: string;
+  id: string;
+  type: string;
+  inputs: string[];
+  outputs: string[];
+}
+
 export type ConnectionSummary = Record<string, Record<string, {
       node: string;
       type: string;

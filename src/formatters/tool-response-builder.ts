@@ -168,6 +168,40 @@ export class ToolResponseBuilder {
       },
     };
   }
+
+  /**
+   * Create response for get_workflow_connections tool
+   */
+  createGetWorkflowConnectionsResponse(
+    workflow: unknown,
+    raw = false
+  ): MCPToolResponse {
+    const wf = workflow as Record<string, unknown>;
+    const graph = this.workflowFormatter.formatWorkflowConnections(workflow);
+
+    if (raw) {
+      return {
+        success: true,
+        message: "ワークフロー接続情報を取得しました",
+        data: {
+          id: wf.id as string,
+          name: wf.name as string,
+          graph,
+          rawConnections: wf.connections,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      message: "ワークフロー接続情報を取得しました",
+      data: {
+        id: wf.id as string,
+        name: wf.name as string,
+        graph,
+      },
+    };
+  }
 }
 
 if (import.meta.vitest) {
@@ -204,6 +238,51 @@ if (import.meta.vitest) {
 
         expect(result.success).toBe(true);
         expect(Array.isArray(result.data)).toBe(true);
+      });
+    });
+
+    describe("createGetWorkflowConnectionsResponse", () => {
+      it("should create minimal response by default", () => {
+        const workflow = {
+          id: "wf-1",
+          name: "Test Workflow",
+          nodes: [
+            { id: "node1", name: "Start", type: "n8n-nodes-base.start" },
+            { id: "node2", name: "HTTP", type: "n8n-nodes-base.httpRequest" },
+          ],
+          connections: {
+            Start: {
+              main: [[{ node: "HTTP", type: "main", index: 0 }]],
+            },
+          },
+        };
+
+        const result = builder.createGetWorkflowConnectionsResponse(workflow, false);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toHaveProperty("id");
+        expect(result.data).toHaveProperty("name");
+        expect(result.data).toHaveProperty("graph");
+        expect(Array.isArray((result.data as Record<string, unknown>).graph)).toBe(true);
+      });
+
+      it("should create full response with raw=true", () => {
+        const workflow = {
+          id: "wf-1",
+          name: "Test Workflow",
+          nodes: [
+            { id: "node1", name: "Start", type: "n8n-nodes-base.start" },
+          ],
+          connections: {},
+        };
+
+        const result = builder.createGetWorkflowConnectionsResponse(workflow, true);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toHaveProperty("id");
+        expect(result.data).toHaveProperty("name");
+        expect(result.data).toHaveProperty("graph");
+        expect(result.data).toHaveProperty("rawConnections");
       });
     });
   });

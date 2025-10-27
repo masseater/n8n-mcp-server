@@ -7,7 +7,7 @@ import { RawTool } from "../base/raw-tool.js";
 import { nodeSchema, connectionsSchema, settingsSchema } from "../schemas.js";
 import type { WorkflowDefinition, WorkflowSummary } from "../../types/index.js";
 
-export type UpdateWorkflowArgs = {
+type UpdateWorkflowArgs = {
   id: string;
   raw?: boolean;
 } & Partial<WorkflowDefinition>;
@@ -29,7 +29,7 @@ export class UpdateWorkflowTool extends RawTool<UpdateWorkflowArgs> {
       active: z.boolean().optional(),
       nodes: z.array(nodeSchema).optional(),
       connections: connectionsSchema.optional(),
-      settings: settingsSchema.optional(),
+      settings: settingsSchema.optional().describe("Workflow settings (required when updating nodes/connections, use {} for empty settings)"),
       tags: z.array(z.string()).optional(),
       raw: z.boolean().optional(),
     });

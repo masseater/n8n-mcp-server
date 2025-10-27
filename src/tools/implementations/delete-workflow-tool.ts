@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { BaseTool } from "../base/base-tool.js";
 
-export type DeleteWorkflowArgs = {
+type DeleteWorkflowArgs = {
   id: string;
 };
 
