@@ -4,7 +4,7 @@
 
 import { z } from "zod";
 import type { ToolDefinition, ToolContext } from "./base-tool.js";
-import { createToolResponse } from "./base-tool.js";
+import { createToolResponse, convertToJsonSchema } from "./base-tool.js";
 import { nodeSchema, connectionsSchema, settingsSchema } from "./schemas.js";
 import type { WorkflowDefinition } from "../types/index.js";
 
@@ -12,21 +12,23 @@ export type CreateWorkflowArgs = WorkflowDefinition & {
   raw?: boolean;
 };
 
+const createWorkflowSchema = z.object({
+  name: z.string(),
+  active: z.boolean().optional(),
+  nodes: z.array(nodeSchema),
+  connections: connectionsSchema,
+  settings: settingsSchema,
+  tags: z.array(z.string()).optional(),
+  raw: z.boolean().optional(),
+});
+
 export function createCreateWorkflowTool(
   context: ToolContext
 ): ToolDefinition<CreateWorkflowArgs> {
   return {
     name: "create_workflow",
     description: "Create a new workflow. Use raw=true to get full workflow details in response.",
-    inputSchema: {
-      name: z.string(),
-      active: z.boolean().optional(),
-      nodes: z.array(nodeSchema),
-      connections: connectionsSchema,
-      settings: settingsSchema,
-      tags: z.array(z.string()).optional(),
-      raw: z.boolean().optional(),
-    },
+    inputSchema: convertToJsonSchema(createWorkflowSchema),
     handler: async (args: CreateWorkflowArgs) => {
       const { raw, ...workflowData } = args;
       const workflow = await context.n8nClient.createWorkflow(workflowData);

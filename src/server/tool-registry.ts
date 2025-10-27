@@ -5,17 +5,13 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
 import type { ToolContext, ToolSchema, AnyToolDefinition } from "../tools/base-tool.js";
-import {
-  createListWorkflowsTool,
-  createGetWorkflowTool,
-  createCreateWorkflowTool,
-  createUpdateWorkflowTool,
-  createDeleteWorkflowTool,
-} from "../tools/index.js";
+import { loadTools, type ToolFactory } from "./tool-loader.js";
 
 export class ToolRegistry {
   private registeredTools: string[] = [];
   private toolDefinitions: Map<string, AnyToolDefinition> = new Map();
+  private toolFactories: Map<string, ToolFactory> = new Map();
+  private schemasCache: ToolSchema[] | null = null;
 
   constructor(
     private server: McpServer,
@@ -24,33 +20,51 @@ export class ToolRegistry {
   ) {}
 
   /**
+   * Initialize tool registry by loading tools
+   */
+  async initialize(): Promise<void> {
+    this.toolFactories = await loadTools();
+    console.log(`✅ ToolRegistry initialized with ${this.toolFactories.size} tools`);
+  }
+
+  /**
    * Get all tool schemas (without handlers)
    */
   getToolSchemas(): ToolSchema[] {
+    const startTime = performance.now();
+
+    // Return cached schemas if available
+    if (this.schemasCache) {
+      const endTime = performance.now();
+      console.debug(`📊 Tool schemas served from cache in ${(endTime - startTime).toFixed(2)}ms`);
+      return this.schemasCache;
+    }
+
     const context: ToolContext = {
       n8nClient: this.n8nClient,
       responseBuilder: this.responseBuilder,
     };
 
-    const tools = [
-      createListWorkflowsTool(context),
-      createGetWorkflowTool(context),
-      createCreateWorkflowTool(context),
-      createUpdateWorkflowTool(context),
-      createDeleteWorkflowTool(context),
-    ];
+    const schemas: ToolSchema[] = [];
 
-    // Store tool definitions for later use
-    tools.forEach((tool) => {
-      this.toolDefinitions.set(tool.name, tool);
-    });
+    // Create tools from factories and extract schemas
+    for (const [name, factory] of this.toolFactories) {
+      const tool = factory(context);
+      this.toolDefinitions.set(name, tool);
+      schemas.push({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+      });
+    }
 
-    // Return only schemas (without handlers)
-    return tools.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: tool.inputSchema,
-    }));
+    // Cache the schemas
+    this.schemasCache = schemas;
+
+    const endTime = performance.now();
+    console.debug(`📊 Tool schemas generated in ${(endTime - startTime).toFixed(2)}ms`);
+
+    return schemas;
   }
 
   /**
@@ -89,5 +103,14 @@ export class ToolRegistry {
    */
   getRegisteredTools(): string[] {
     return this.registeredTools;
+  }
+
+  /**
+   * Clear cached schemas and tool definitions
+   */
+  clearCache(): void {
+    this.schemasCache = null;
+    this.toolDefinitions.clear();
+    console.debug("🧹 Tool cache cleared");
   }
 }

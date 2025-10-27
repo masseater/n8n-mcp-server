@@ -9,6 +9,8 @@ import type { GetWorkflowArgs } from "./get-workflow.js";
 import type { CreateWorkflowArgs } from "./create-workflow.js";
 import type { UpdateWorkflowArgs } from "./update-workflow.js";
 import type { DeleteWorkflowArgs } from "./delete-workflow.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import type { ZodSchema } from "zod";
 
 /**
  * MCP tool handler function type
@@ -76,4 +78,22 @@ export function createToolResponse(data: unknown): {
       },
     ],
   };
+}
+
+/**
+ * Convert Zod schema to JSON Schema format
+ */
+export function convertToJsonSchema(schema: ZodSchema): Record<string, unknown> {
+  const jsonSchema = zodToJsonSchema(schema, {
+    target: "openApi3",
+    $refStrategy: "none",
+  });
+
+  // Remove $schema and other metadata fields
+  if (typeof jsonSchema === "object" && jsonSchema !== null) {
+    const { $schema, definitions, ...cleanSchema } = jsonSchema as Record<string, unknown>;
+    return cleanSchema;
+  }
+
+  return jsonSchema as Record<string, unknown>;
 }

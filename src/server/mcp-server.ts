@@ -65,6 +65,10 @@ export class MCPServerImpl {
       this.n8nClient,
       this.responseBuilder,
     );
+
+    // Initialize tool registry (loads tools automatically)
+    await this.toolRegistry.initialize();
+
     this.toolRegistry.setupToolHandlers();
   }
 
