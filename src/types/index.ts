@@ -52,7 +52,7 @@ export interface WorkflowDetail {
   settings?: WorkflowSettings | undefined;
 }
 
-export interface NodeSummary {
+interface NodeSummary {
   id: string;
   name: string;
   type: string;
@@ -66,7 +66,7 @@ export type ConnectionSummary = Record<string, Record<string, {
       index: number;
     }[]>>;
 
-export interface WorkflowSettings {
+interface WorkflowSettings {
   executionOrder?: string;
   saveManualExecutions?: boolean;
   saveExecutionProgress?: boolean;
@@ -91,15 +91,6 @@ export interface WorkflowDefinition {
   connections: IConnections;
   settings?: IWorkflowSettings;
   tags?: string[];
-}
-
-// Error handling types
-export interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-    details?: any;
-  };
 }
 
 // Transport types

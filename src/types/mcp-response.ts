@@ -39,23 +39,6 @@ export interface WorkflowDetailResponse {
 }
 
 /**
- * Response for create_workflow tool
- */
-export interface WorkflowCreateResponse {
-  id: string;
-  name: string;
-  active: boolean;
-}
-
-/**
- * Response for update_workflow tool
- */
-export interface WorkflowUpdateResponse {
-  id: string;
-  name: string;
-}
-
-/**
  * Response for delete_workflow tool
  */
 export interface WorkflowDeleteResponse {

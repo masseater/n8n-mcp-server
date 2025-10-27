@@ -5,9 +5,9 @@
 
 // Based on packages/workflow/src/interfaces.ts
 
-export type NodeConnectionType = string;
+type NodeConnectionType = string;
 
-export interface IConnection {
+interface IConnection {
   // The node the connection is to
   node: string;
   // The type of the input on destination node (for example "main")
@@ -19,13 +19,13 @@ export interface IConnection {
 // First array index: The output/input-index (if node has multiple inputs/outputs of the same type)
 // Second array index: The different connections (if one node is connected to multiple nodes)
 // Any index can be null, for example in a switch node with multiple indexes some of which are not connected
-export type NodeInputConnections = (IConnection[] | null)[];
+type NodeInputConnections = (IConnection[] | null)[];
 
-export type INodeConnections = Record<string, NodeInputConnections>;
+type INodeConnections = Record<string, NodeInputConnections>;
 
 export type IConnections = Record<string, INodeConnections>;
 
-export type GenericValue =
+type GenericValue =
   | string
   | object
   | number
@@ -33,20 +33,20 @@ export type GenericValue =
   | undefined
   | null;
 
-export interface IDataObject {
+interface IDataObject {
   [key: string]: GenericValue | IDataObject | GenericValue[] | IDataObject[];
 }
 
-export type INodeParameters = IDataObject;
+type INodeParameters = IDataObject;
 
-export interface INodeCredentialsDetails {
+interface INodeCredentialsDetails {
   id: string | null;
   name: string;
 }
 
-export type INodeCredentials = Record<string, INodeCredentialsDetails>;
+type INodeCredentials = Record<string, INodeCredentialsDetails>;
 
-export type OnError =
+type OnError =
   | "continueErrorOutput"
   | "continueRegularOutput"
   | "stopWorkflow";
@@ -89,17 +89,4 @@ export interface IWorkflowSettings {
 export interface ITag {
   id: string;
   name: string;
-}
-
-export interface IWorkflowBase {
-  id: string;
-  name: string;
-  active: boolean;
-  isArchived: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  nodes: INode[];
-  connections: IConnections;
-  settings?: IWorkflowSettings;
-  tags?: ITag[];
 }

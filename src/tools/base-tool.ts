@@ -15,7 +15,7 @@ import type { ZodSchema } from "zod";
 /**
  * MCP tool handler function type
  */
-export type ToolHandler<TArgs = Record<string, unknown>> = (
+type ToolHandler<TArgs = Record<string, unknown>> = (
   args: TArgs
 ) => Promise<{
   content: {
