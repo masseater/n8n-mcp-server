@@ -8,13 +8,7 @@ import type { ServerConfig, TransportConfig } from "../types/index.js";
 import { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
 import { HttpTransportHandler } from "./http-transport-handler.js";
-import {
-  createListWorkflowsTool,
-  createGetWorkflowTool,
-  createCreateWorkflowTool,
-  createUpdateWorkflowTool,
-  createDeleteWorkflowTool,
-} from "../tools/index.js";
+import { ToolRegistry } from "./tool-registry.js";
 
 /**
  * MCP server implementation
@@ -25,7 +19,7 @@ export class MCPServerImpl {
   private responseBuilder: ToolResponseBuilder;
   private config: ServerConfig | null = null;
   private httpHandler: HttpTransportHandler | null = null;
-  private registeredTools: string[] = [];
+  private toolRegistry: ToolRegistry | null = null;
 
   constructor() {
     this.server = new McpServer({
@@ -65,8 +59,13 @@ export class MCPServerImpl {
     // Response builder is already initialized in constructor
     // No need to reinitialize here
 
-    // Setup tool handlers
-    this.setupToolHandlers();
+    // Setup tool registry and handlers
+    this.toolRegistry = new ToolRegistry(
+      this.server,
+      this.n8nClient,
+      this.responseBuilder,
+    );
+    this.toolRegistry.setupToolHandlers();
   }
 
   /**
@@ -89,11 +88,11 @@ export class MCPServerImpl {
         this.config,
         this.n8nClient,
         this.responseBuilder,
-        (context) => this.getTools(context),
+        (context) => this.toolRegistry!.getTools(context),
       );
 
       // Start HTTP server
-      await this.httpHandler.start(port, this.registeredTools);
+      await this.httpHandler.start(port, this.toolRegistry!.getRegisteredTools());
     } else {
       throw new Error(`Unsupported transport type: ${transport.type}`);
     }
@@ -111,45 +110,5 @@ export class MCPServerImpl {
    */
   getServer(): any {
     return this.server;
-  }
-
-  /**
-   * Get all tool definitions
-   */
-  private getTools(context: any): any[] {
-    return [
-      createListWorkflowsTool(context),
-      createGetWorkflowTool(context),
-      createCreateWorkflowTool(context),
-      createUpdateWorkflowTool(context),
-      createDeleteWorkflowTool(context),
-    ];
-  }
-
-  /**
-   * Setup tool handlers
-   */
-  private setupToolHandlers(): void {
-    // Create tool context
-    const context = {
-      n8nClient: this.n8nClient,
-      responseBuilder: this.responseBuilder,
-    };
-
-    // Create all tools
-    const tools = this.getTools(context);
-
-    // Register all tools
-    tools.forEach((tool) => {
-      this.server.registerTool(
-        tool.name,
-        {
-          description: tool.description,
-          inputSchema: tool.inputSchema as Record<string, never>,
-        },
-        tool.handler as never
-      );
-      this.registeredTools.push(tool.name);
-    });
   }
 }
