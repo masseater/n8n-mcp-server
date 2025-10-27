@@ -16,11 +16,11 @@ export class WorkflowFormatter {
     return {
       id: wf.id as string,
       name: wf.name as string,
-      active: (wf.active as boolean) ?? false,
-      tags: (wf.tags as string[]) ?? [],
-      createdAt: (wf.createdAt as string) ?? "",
-      updatedAt: (wf.updatedAt as string) ?? "",
-      nodeCount: ((wf.nodes as unknown[])?.length) ?? 0,
+      active: (wf.active as boolean) || false,
+      tags: (wf.tags as string[]) || [],
+      createdAt: wf.createdAt as string,
+      updatedAt: wf.updatedAt as string,
+      nodeCount: ((wf.nodes as unknown[])?.length) || 0,
     };
   }
 
@@ -38,29 +38,29 @@ export class WorkflowFormatter {
     const wf = workflow as Record<string, unknown>;
 
     // Extract only essential node information
-    const formattedNodes = ((wf.nodes as unknown[]) ?? []).map((node: unknown) => {
+    const formattedNodes = ((wf.nodes as unknown[]) || []).map((node: unknown) => {
       const n = node as Record<string, unknown>;
       return {
         id: n.id as string,
         name: n.name as string,
         type: n.type as string,
         position: n.position as [number, number],
-        disabled: (n.disabled as boolean) ?? false,
+        disabled: (n.disabled as boolean) || false,
       };
     });
 
     // Simplify connections structure
     const formattedConnections = this.formatConnections(
-      (wf.connections as Record<string, unknown>) ?? {},
+      (wf.connections as Record<string, unknown>) || {},
     );
 
     return {
       id: wf.id as string,
       name: wf.name as string,
-      active: (wf.active as boolean) ?? false,
-      tags: (wf.tags as string[]) ?? [],
-      createdAt: (wf.createdAt as string) ?? "",
-      updatedAt: (wf.updatedAt as string) ?? "",
+      active: (wf.active as boolean) || false,
+      tags: (wf.tags as string[]) || [],
+      createdAt: wf.createdAt as string,
+      updatedAt: wf.updatedAt as string,
       nodes: formattedNodes,
       connections: formattedConnections as ConnectionSummary,
       settings: wf.settings

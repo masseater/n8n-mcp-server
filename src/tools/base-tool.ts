@@ -3,7 +3,7 @@
  */
 
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
-import type { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js";
+import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
 
 /**
  * MCP tool handler function type
@@ -32,7 +32,7 @@ export interface ToolDefinition<TArgs = Record<string, unknown>> {
  */
 export interface ToolContext {
   n8nClient: N8nApiClientImpl;
-  optimizer: ResponseOptimizerImpl;
+  responseBuilder: ToolResponseBuilder;
 }
 
 /**

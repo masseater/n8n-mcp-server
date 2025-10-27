@@ -50,7 +50,7 @@ export class ToolResponseBuilder {
       return {
         id: wf.id as string,
         name: wf.name as string,
-        active: (wf.active as boolean) ?? false,
+        active: (wf.active as boolean) || false,
       };
     });
 
@@ -90,9 +90,9 @@ export class ToolResponseBuilder {
       data: {
         id: wf.id as string,
         name: wf.name as string,
-        active: (wf.active as boolean) ?? false,
-        nodeCount: ((wf.nodes as unknown[])?.length) ?? 0,
-        tags: (wf.tags as string[]) ?? [],
+        active: (wf.active as boolean) || false,
+        nodeCount: ((wf.nodes as unknown[])?.length) || 0,
+        tags: (wf.tags as string[]) || [],
       },
     };
   }
@@ -121,7 +121,7 @@ export class ToolResponseBuilder {
       data: {
         id: wf.id as string,
         name: wf.name as string,
-        active: (wf.active as boolean) ?? false,
+        active: (wf.active as boolean) || false,
       },
     };
   }

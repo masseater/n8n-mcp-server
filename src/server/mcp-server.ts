@@ -7,7 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import express from "express";
 import type { ServerConfig, TransportConfig } from "../types/index.js";
 import { N8nApiClientImpl } from "../clients/n8n-api-client.js";
-import { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js";
+import { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
 import {
   createListWorkflowsTool,
   createGetWorkflowTool,
@@ -22,7 +22,7 @@ import {
 export class MCPServerImpl {
   private server: McpServer;
   private n8nClient: N8nApiClientImpl;
-  private optimizer: ResponseOptimizerImpl;
+  private responseBuilder: ToolResponseBuilder;
   private config: ServerConfig | null = null;
   private app: express.Application | null = null;
   private registeredTools: string[] = [];
@@ -34,7 +34,7 @@ export class MCPServerImpl {
     });
 
     this.n8nClient = new N8nApiClientImpl("", 30000, 3);
-    this.optimizer = new ResponseOptimizerImpl();
+    this.responseBuilder = new ToolResponseBuilder();
   }
 
   /**
