@@ -62,11 +62,8 @@ export class MCPServerImpl {
       throw new Error(`n8n API authentication failed: ${error}`);
     }
 
-    // Update optimizer settings
-    this.optimizer = new ResponseOptimizerImpl(
-      config.mcp.maxResponseSize,
-      config.mcp.defaultPageSize,
-    );
+    // Response builder is already initialized in constructor
+    // No need to reinitialize here
 
     // Setup tool handlers
     this.setupToolHandlers();
@@ -241,7 +238,7 @@ export class MCPServerImpl {
                 // Find the registered tool
                 const toolContext = {
                   n8nClient: this.n8nClient,
-                  optimizer: this.optimizer,
+                  responseBuilder: this.responseBuilder,
                 };
 
                 // Get the tool definition
@@ -396,7 +393,7 @@ export class MCPServerImpl {
     // Create tool context
     const context = {
       n8nClient: this.n8nClient,
-      optimizer: this.optimizer,
+      responseBuilder: this.responseBuilder,
     };
 
     // Create all tools

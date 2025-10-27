@@ -30,7 +30,7 @@ export function createUpdateWorkflowTool(
         id,
         workflowData as unknown as WorkflowDefinition
       );
-      const response = context.optimizer.createUpdateWorkflowResponse(
+      const response = context.responseBuilder.createUpdateWorkflowResponse(
         workflow,
         raw || false
       );

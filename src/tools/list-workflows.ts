@@ -36,7 +36,7 @@ export function createListWorkflowsTool(
       );
 
       const workflows = await context.n8nClient.getWorkflows(filteredArgs);
-      const response = context.optimizer.createListWorkflowsResponse(
+      const response = context.responseBuilder.createListWorkflowsResponse(
         workflows,
         raw || false
       );

@@ -23,7 +23,7 @@ export function createGetWorkflowTool(
     },
     handler: async (args) => {
       const workflow = await context.n8nClient.getWorkflow(args.id);
-      const response = context.optimizer.createGetWorkflowResponse(
+      const response = context.responseBuilder.createGetWorkflowResponse(
         workflow,
         args.raw || false
       );

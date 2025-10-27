@@ -28,7 +28,7 @@ export function createCreateWorkflowTool(
       const workflow = await context.n8nClient.createWorkflow(
         workflowData as unknown as WorkflowDefinition
       );
-      const response = context.optimizer.createCreateWorkflowResponse(
+      const response = context.responseBuilder.createCreateWorkflowResponse(
         workflow,
         raw || false
       );
