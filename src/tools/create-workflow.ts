@@ -8,9 +8,13 @@ import { createToolResponse } from "./base-tool.js";
 import { nodeSchema, connectionsSchema, settingsSchema } from "./schemas.js";
 import type { WorkflowDefinition } from "../types/index.js";
 
+export type CreateWorkflowArgs = WorkflowDefinition & {
+  raw?: boolean;
+};
+
 export function createCreateWorkflowTool(
   context: ToolContext
-): ToolDefinition {
+): ToolDefinition<CreateWorkflowArgs> {
   return {
     name: "create_workflow",
     description: "Create a new workflow. Use raw=true to get full workflow details in response.",
@@ -23,11 +27,9 @@ export function createCreateWorkflowTool(
       tags: z.array(z.string()).optional(),
       raw: z.boolean().optional(),
     },
-    handler: async (args) => {
-      const { raw, ...workflowData } = args as { raw?: boolean; [key: string]: unknown };
-      const workflow = await context.n8nClient.createWorkflow(
-        workflowData as unknown as WorkflowDefinition
-      );
+    handler: async (args: CreateWorkflowArgs) => {
+      const { raw, ...workflowData } = args;
+      const workflow = await context.n8nClient.createWorkflow(workflowData);
       const response = context.responseBuilder.createCreateWorkflowResponse(
         workflow,
         raw || false

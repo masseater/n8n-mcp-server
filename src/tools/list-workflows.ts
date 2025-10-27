@@ -6,13 +6,13 @@ import { z } from "zod";
 import type { ToolDefinition, ToolContext } from "./base-tool.js";
 import { createToolResponse } from "./base-tool.js";
 
-interface ListWorkflowsArgs {
+export type ListWorkflowsArgs = {
   active?: boolean;
   tags?: string[];
   limit?: number;
   offset?: number;
   raw?: boolean;
-}
+};
 
 export function createListWorkflowsTool(
   context: ToolContext
@@ -27,7 +27,7 @@ export function createListWorkflowsTool(
       offset: z.number().min(0).optional(),
       raw: z.boolean().optional(),
     },
-    handler: async (args) => {
+    handler: async (args: ListWorkflowsArgs) => {
       const { raw, ...apiArgs } = args;
 
       // Filter out undefined values for exactOptionalPropertyTypes compatibility

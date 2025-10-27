@@ -6,10 +6,10 @@ import { z } from "zod";
 import type { ToolDefinition, ToolContext } from "./base-tool.js";
 import { createToolResponse } from "./base-tool.js";
 
-interface GetWorkflowArgs {
+export type GetWorkflowArgs = {
   id: string;
   raw?: boolean;
-}
+};
 
 export function createGetWorkflowTool(
   context: ToolContext
@@ -21,7 +21,7 @@ export function createGetWorkflowTool(
       id: z.string(),
       raw: z.boolean().optional(),
     },
-    handler: async (args) => {
+    handler: async (args: GetWorkflowArgs) => {
       const workflow = await context.n8nClient.getWorkflow(args.id);
       const response = context.responseBuilder.createGetWorkflowResponse(
         workflow,

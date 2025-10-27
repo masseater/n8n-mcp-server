@@ -83,16 +83,21 @@ export class MCPServerImpl {
     } else if (transport.type === "http") {
       const port = transport.port || 3000;
 
+      if (!this.toolRegistry) {
+        throw new Error("Tool registry not initialized");
+      }
+
+      const toolRegistry = this.toolRegistry;
+
       // Create HTTP transport handler
       this.httpHandler = new HttpTransportHandler(
         this.config,
-        this.n8nClient,
-        this.responseBuilder,
-        (context) => this.toolRegistry!.getTools(context),
+        () => toolRegistry.getToolSchemas(),
+        (name) => toolRegistry.getToolByName(name),
       );
 
       // Start HTTP server
-      await this.httpHandler.start(port, this.toolRegistry!.getRegisteredTools());
+      await this.httpHandler.start(port, toolRegistry.getRegisteredTools());
     } else {
       throw new Error(`Unsupported transport type: ${transport.type}`);
     }
@@ -108,7 +113,7 @@ export class MCPServerImpl {
   /**
    * Get server instance
    */
-  getServer(): any {
+  getServer(): McpServer {
     return this.server;
   }
 }

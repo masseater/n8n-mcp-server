@@ -8,9 +8,14 @@ import { createToolResponse } from "./base-tool.js";
 import { nodeSchema, connectionsSchema, settingsSchema } from "./schemas.js";
 import type { WorkflowDefinition } from "../types/index.js";
 
+export type UpdateWorkflowArgs = {
+  id: string;
+  raw?: boolean;
+} & Partial<WorkflowDefinition>;
+
 export function createUpdateWorkflowTool(
   context: ToolContext
-): ToolDefinition {
+): ToolDefinition<UpdateWorkflowArgs> {
   return {
     name: "update_workflow",
     description: "Update an existing workflow by ID. Use raw=true to get full workflow details in response.",
@@ -24,12 +29,9 @@ export function createUpdateWorkflowTool(
       tags: z.array(z.string()).optional(),
       raw: z.boolean().optional(),
     },
-    handler: async (args) => {
-      const { id, raw, ...workflowData } = args as { id: string; raw?: boolean; [key: string]: unknown };
-      const workflow = await context.n8nClient.updateWorkflow(
-        id,
-        workflowData as unknown as WorkflowDefinition
-      );
+    handler: async (args: UpdateWorkflowArgs) => {
+      const { id, raw, ...workflowData } = args;
+      const workflow = await context.n8nClient.updateWorkflow(id, workflowData);
       const response = context.responseBuilder.createUpdateWorkflowResponse(
         workflow,
         raw || false

@@ -190,7 +190,7 @@ export class N8nApiClientImpl {
    */
   async updateWorkflow(
     id: string,
-    workflow: WorkflowDefinition,
+    workflow: Partial<WorkflowDefinition>,
   ): Promise<WorkflowSummary> {
     return this.withErrorHandling(`Failed to update workflow ${id}`, async () => {
       this.validateId(id);
@@ -244,7 +244,7 @@ export class N8nApiClientImpl {
   /**
    * Sanitize workflow data for update by removing read-only fields
    */
-  private sanitizeWorkflowForUpdate(workflow: WorkflowDefinition): WorkflowUpdatePayload {
+  private sanitizeWorkflowForUpdate(workflow: Partial<WorkflowDefinition>): WorkflowUpdatePayload {
     const { active, ...rest } = workflow;
     // Also remove 'id' if it exists (it shouldn't, but defensive programming)
     const sanitized = rest as Record<string, unknown>;

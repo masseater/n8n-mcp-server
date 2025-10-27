@@ -4,6 +4,11 @@
 
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
+import type { ListWorkflowsArgs } from "./list-workflows.js";
+import type { GetWorkflowArgs } from "./get-workflow.js";
+import type { CreateWorkflowArgs } from "./create-workflow.js";
+import type { UpdateWorkflowArgs } from "./update-workflow.js";
+import type { DeleteWorkflowArgs } from "./delete-workflow.js";
 
 /**
  * MCP tool handler function type
@@ -26,6 +31,25 @@ export interface ToolDefinition<TArgs = Record<string, unknown>> {
   inputSchema: Record<string, unknown>;
   handler: ToolHandler<TArgs>;
 }
+
+/**
+ * Tool schema without handler (for listing tools)
+ */
+export interface ToolSchema {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+/**
+ * Union type of all tool definitions
+ */
+export type AnyToolDefinition =
+  | ToolDefinition<ListWorkflowsArgs>
+  | ToolDefinition<GetWorkflowArgs>
+  | ToolDefinition<CreateWorkflowArgs>
+  | ToolDefinition<UpdateWorkflowArgs>
+  | ToolDefinition<DeleteWorkflowArgs>;
 
 /**
  * Base context for all tools

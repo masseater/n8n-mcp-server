@@ -6,9 +6,9 @@ import { z } from "zod";
 import type { ToolDefinition, ToolContext } from "./base-tool.js";
 import { createToolResponse } from "./base-tool.js";
 
-interface DeleteWorkflowArgs {
+export type DeleteWorkflowArgs = {
   id: string;
-}
+};
 
 export function createDeleteWorkflowTool(
   context: ToolContext
@@ -19,7 +19,7 @@ export function createDeleteWorkflowTool(
     inputSchema: {
       id: z.string(),
     },
-    handler: async (args) => {
+    handler: async (args: DeleteWorkflowArgs) => {
       await context.n8nClient.deleteWorkflow(args.id);
       const response = context.responseBuilder.createDeleteWorkflowResponse(args.id);
       return createToolResponse(response);

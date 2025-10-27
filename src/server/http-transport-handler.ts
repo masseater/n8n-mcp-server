@@ -3,8 +3,7 @@
  */
 import express from "express";
 import type { ServerConfig } from "../types/index.js";
-import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
-import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
+import type { ToolSchema, AnyToolDefinition } from "../tools/base-tool.js";
 import { McpProtocolHandler } from "./mcp-protocol-handler.js";
 
 export class HttpTransportHandler {
@@ -14,17 +13,15 @@ export class HttpTransportHandler {
 
   constructor(
     config: ServerConfig,
-    n8nClient: N8nApiClientImpl,
-    responseBuilder: ToolResponseBuilder,
-    getToolsCallback: (context: any) => any[],
+    getToolSchemasCallback: () => ToolSchema[],
+    getToolByNameCallback: (name: string) => AnyToolDefinition | undefined,
   ) {
     this.config = config;
     this.app = express();
     this.app.use(express.json());
     this.protocolHandler = new McpProtocolHandler(
-      n8nClient,
-      responseBuilder,
-      getToolsCallback,
+      getToolSchemasCallback,
+      getToolByNameCallback,
     );
     this.setupEndpoints();
   }

@@ -2,14 +2,12 @@
  * MCP Protocol message handler
  */
 import type { Request, Response } from "express";
-import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
-import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
+import type { ToolSchema, AnyToolDefinition } from "../tools/base-tool.js";
 
 export class McpProtocolHandler {
   constructor(
-    private n8nClient: N8nApiClientImpl,
-    private responseBuilder: ToolResponseBuilder,
-    private getToolsCallback: (context: any) => any[],
+    private getToolSchemasCallback: () => ToolSchema[],
+    private getToolByNameCallback: (name: string) => AnyToolDefinition | undefined,
   ) {}
 
   /**
@@ -88,100 +86,15 @@ export class McpProtocolHandler {
    */
   private handleToolsList(req: Request, res: Response): void {
     const request = req.body;
+
+    // Get tool schemas from ToolRegistry
+    const toolSchemas = this.getToolSchemasCallback();
+
     res.json({
       jsonrpc: "2.0",
       id: request.id,
       result: {
-        tools: [
-          {
-            name: "list_workflows",
-            description: "List all workflows in n8n",
-            inputSchema: {
-              type: "object",
-              properties: {
-                limit: { type: "number" },
-                active: { type: "boolean" },
-              },
-            },
-          },
-          {
-            name: "get_workflow",
-            description: "Get details of a specific workflow by ID",
-            inputSchema: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-              },
-              required: ["id"],
-            },
-          },
-          {
-            name: "create_workflow",
-            description: "Create a new workflow",
-            inputSchema: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                nodes: { type: "array" },
-                connections: { type: "object" },
-                active: { type: "boolean" },
-                settings: { type: "object" },
-                tags: { type: "array" },
-              },
-              required: ["name", "nodes"],
-            },
-          },
-          {
-            name: "update_workflow",
-            description: "Update an existing workflow by ID",
-            inputSchema: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-                name: { type: "string" },
-                nodes: { type: "array" },
-                connections: { type: "object" },
-                active: { type: "boolean" },
-                settings: { type: "object" },
-                tags: { type: "array" },
-              },
-              required: ["id"],
-            },
-          },
-          {
-            name: "delete_workflow",
-            description: "Delete a workflow by ID",
-            inputSchema: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-              },
-              required: ["id"],
-            },
-          },
-          {
-            name: "activate_workflow",
-            description: "Activate a workflow by ID",
-            inputSchema: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-              },
-              required: ["id"],
-            },
-          },
-          {
-            name: "deactivate_workflow",
-            description: "Deactivate a workflow by ID",
-            inputSchema: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-              },
-              required: ["id"],
-            },
-          },
-        ],
+        tools: toolSchemas,
       },
     });
   }
@@ -197,21 +110,8 @@ export class McpProtocolHandler {
     console.log(`🔧 Tool call: ${toolName}`, args);
 
     try {
-      // Find the registered tool
-      const toolContext = {
-        n8nClient: this.n8nClient,
-        responseBuilder: this.responseBuilder,
-      };
-
-      // Get the tool definition
-      let tool;
-      const tools = this.getToolsCallback(toolContext);
-      for (const t of tools) {
-        if (t.name === toolName) {
-          tool = t;
-          break;
-        }
-      }
+      // Get the tool definition by name
+      const tool = this.getToolByNameCallback(toolName);
 
       if (!tool) {
         res.json({
