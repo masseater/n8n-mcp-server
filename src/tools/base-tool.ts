@@ -4,11 +4,11 @@
 
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
-import type { ListWorkflowsArgs } from "./list-workflows.js";
-import type { GetWorkflowArgs } from "./get-workflow.js";
-import type { CreateWorkflowArgs } from "./create-workflow.js";
-import type { UpdateWorkflowArgs } from "./update-workflow.js";
-import type { DeleteWorkflowArgs } from "./delete-workflow.js";
+import type { ListWorkflowsArgs } from "./implementations/list-workflows-tool.js";
+import type { GetWorkflowArgs } from "./implementations/get-workflow-tool.js";
+import type { CreateWorkflowArgs } from "./implementations/create-workflow-tool.js";
+import type { UpdateWorkflowArgs } from "./implementations/update-workflow-tool.js";
+import type { DeleteWorkflowArgs } from "./implementations/delete-workflow-tool.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ZodSchema } from "zod";
 
@@ -62,14 +62,19 @@ export interface ToolContext {
 }
 
 /**
- * Create a standardized tool response
+ * Tool response type
  */
-export function createToolResponse(data: unknown): {
+export type ToolResponse = {
   content: {
     type: "text";
     text: string;
   }[];
-} {
+};
+
+/**
+ * Create a standardized tool response
+ */
+export function createToolResponse(data: unknown): ToolResponse {
   return {
     content: [
       {

@@ -4,8 +4,8 @@
 
 export * from "./base-tool.js";
 export * from "./schemas.js";
-export { createListWorkflowsTool } from "./list-workflows.js";
-export { createGetWorkflowTool } from "./get-workflow.js";
-export { createCreateWorkflowTool } from "./create-workflow.js";
-export { createUpdateWorkflowTool } from "./update-workflow.js";
-export { createDeleteWorkflowTool } from "./delete-workflow.js";
+export { ListWorkflowsTool } from "./implementations/list-workflows-tool.js";
+export { GetWorkflowTool } from "./implementations/get-workflow-tool.js";
+export { CreateWorkflowTool } from "./implementations/create-workflow-tool.js";
+export { UpdateWorkflowTool } from "./implementations/update-workflow-tool.js";
+export { DeleteWorkflowTool } from "./implementations/delete-workflow-tool.js";

@@ -39,7 +39,7 @@ type WorkflowUpdatePayload = Omit<Partial<WorkflowDefinition>, 'active' | 'id'>;
  * This type is returned by the API client and contains full n8n workflow data.
  * The optimizer layer converts this to the public WorkflowDetail type.
  */
-interface WorkflowDetailInternal {
+export interface WorkflowDetailInternal {
   id: string;
   name: string;
   active: boolean;

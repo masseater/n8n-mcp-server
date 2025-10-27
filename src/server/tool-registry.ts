@@ -5,12 +5,22 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
 import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
 import type { ToolContext, ToolSchema, AnyToolDefinition } from "../tools/base-tool.js";
-import { loadTools, type ToolFactory } from "./tool-loader.js";
+import { DeleteWorkflowTool } from "../tools/implementations/delete-workflow-tool.js";
+import { ListWorkflowsTool } from "../tools/implementations/list-workflows-tool.js";
+import { GetWorkflowTool } from "../tools/implementations/get-workflow-tool.js";
+import { CreateWorkflowTool } from "../tools/implementations/create-workflow-tool.js";
+import { UpdateWorkflowTool } from "../tools/implementations/update-workflow-tool.js";
 
 export class ToolRegistry {
   private registeredTools: string[] = [];
   private toolDefinitions: Map<string, AnyToolDefinition> = new Map();
-  private toolFactories: Map<string, ToolFactory> = new Map();
+  private toolInstances: Array<
+    | DeleteWorkflowTool
+    | ListWorkflowsTool
+    | GetWorkflowTool
+    | CreateWorkflowTool
+    | UpdateWorkflowTool
+  > = [];
   private schemasCache: ToolSchema[] | null = null;
 
   constructor(
@@ -20,11 +30,24 @@ export class ToolRegistry {
   ) {}
 
   /**
-   * Initialize tool registry by loading tools
+   * Initialize tool registry by creating tool instances
    */
   async initialize(): Promise<void> {
-    this.toolFactories = await loadTools();
-    console.log(`✅ ToolRegistry initialized with ${this.toolFactories.size} tools`);
+    const context: ToolContext = {
+      n8nClient: this.n8nClient,
+      responseBuilder: this.responseBuilder,
+    };
+
+    // Manual tool registration for safety and explicit review
+    this.toolInstances = [
+      new DeleteWorkflowTool(context),
+      new ListWorkflowsTool(context),
+      new GetWorkflowTool(context),
+      new CreateWorkflowTool(context),
+      new UpdateWorkflowTool(context),
+    ];
+
+    console.log(`✅ ToolRegistry initialized with ${this.toolInstances.length} tools`);
   }
 
   /**
@@ -40,17 +63,12 @@ export class ToolRegistry {
       return this.schemasCache;
     }
 
-    const context: ToolContext = {
-      n8nClient: this.n8nClient,
-      responseBuilder: this.responseBuilder,
-    };
-
     const schemas: ToolSchema[] = [];
 
-    // Create tools from factories and extract schemas
-    for (const [name, factory] of this.toolFactories) {
-      const tool = factory(context);
-      this.toolDefinitions.set(name, tool);
+    // Convert tool instances to definitions and extract schemas
+    for (const toolInstance of this.toolInstances) {
+      const tool = toolInstance.toDefinition();
+      this.toolDefinitions.set(tool.name, tool);
       schemas.push({
         name: tool.name,
         description: tool.description,
