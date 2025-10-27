@@ -63,7 +63,7 @@ export class N8nHttpClient {
       throw error;
     }
 
-    config._retryCount = config._retryCount || 0;
+    config._retryCount = config._retryCount ?? 0;
 
     // Check if we should retry
     if (config._retryCount < this.retryAttempts && this.shouldRetry(error)) {
@@ -107,7 +107,7 @@ export class N8nHttpClient {
       const data = error.response.data;
 
       return new Error(
-        `HTTP ${status}: ${(data as any)?.message || error.message}`,
+        `HTTP ${status}: ${(data as any)?.message ?? error.message}`,
       );
     } else if (error.request) {
       // Network error
@@ -209,7 +209,7 @@ if (import.meta.vitest) {
 
     beforeEach(() => {
       client = new N8nHttpClient(baseURL, 1000, 3);
-      // @ts-ignore - private member access for testing
+      // @ts-expect-error - private member access for testing
       mockAxios = new MockAdapter(client.client);
       vi.spyOn(console, "debug").mockImplementation(() => {});
       vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -224,20 +224,20 @@ if (import.meta.vitest) {
     describe("constructor", () => {
       it("should create client with default timeout", () => {
         const defaultClient = new N8nHttpClient(baseURL);
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         expect(defaultClient.client.defaults.timeout).toBe(30000);
       });
 
       it("should create client with custom timeout and retry attempts", () => {
         const customClient = new N8nHttpClient(baseURL, 5000, 5);
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         expect(customClient.client.defaults.timeout).toBe(5000);
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         expect(customClient.retryAttempts).toBe(5);
       });
 
       it("should set correct default headers", () => {
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         expect(client.client.defaults.headers["Content-Type"]).toBe("application/json");
       });
     });
@@ -329,7 +329,7 @@ if (import.meta.vitest) {
           return [200, { success: true }];
         });
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         vi.spyOn(client, "sleep").mockImplementation(() => Promise.resolve());
 
         const result = await client.get("/api/test");
@@ -349,7 +349,7 @@ if (import.meta.vitest) {
           return [200, { success: true }];
         });
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         vi.spyOn(client, "sleep").mockImplementation(() => Promise.resolve());
 
         const result = await client.get("/api/test");
@@ -366,7 +366,7 @@ if (import.meta.vitest) {
       it("should fail after max retry attempts", async () => {
         mockAxios.onGet("/api/test").reply(500, { message: "Server error" });
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         vi.spyOn(client, "sleep").mockImplementation(() => Promise.resolve());
 
         await expect(client.get("/api/test")).rejects.toThrow("HTTP 500");
@@ -374,7 +374,7 @@ if (import.meta.vitest) {
 
       it("should use exponential backoff for retries", async () => {
         const sleepSpy = vi.fn().mockResolvedValue(undefined);
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         client.sleep = sleepSpy;
 
         mockAxios.onGet("/api/test").reply(500);
@@ -409,7 +409,7 @@ if (import.meta.vitest) {
       it("should handle network errors", async () => {
         mockAxios.onGet("/api/test").networkError();
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         vi.spyOn(client, "sleep").mockImplementation(() => Promise.resolve());
 
         await expect(client.get("/api/test")).rejects.toThrow("Network error");
@@ -429,7 +429,7 @@ if (import.meta.vitest) {
         const newBaseURL = "http://localhost:8080";
         client.updateBaseURL(newBaseURL);
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         expect(client.client.defaults.baseURL).toBe(newBaseURL);
       });
     });
@@ -439,7 +439,7 @@ if (import.meta.vitest) {
         const newHeaders = { "X-Custom-Header": "value" };
         client.updateHeaders(newHeaders);
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         const headers = client.client.defaults.headers;
         expect(headers["Content-Type"]).toBe("application/json");
         expect(headers["X-Custom-Header"]).toBe("value");
@@ -452,7 +452,7 @@ if (import.meta.vitest) {
         client.updateHeaders(headers1);
         client.updateHeaders(headers2);
 
-        // @ts-ignore - private member access
+        // @ts-expect-error - private member access
         expect(client.client.defaults.headers["X-Header"]).toBe("value2");
       });
     });

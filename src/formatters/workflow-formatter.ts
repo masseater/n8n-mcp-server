@@ -45,20 +45,20 @@ export class WorkflowFormatter {
         name: n.name as string,
         type: n.type as string,
         position: n.position as [number, number],
-        disabled: (n.disabled as boolean) || false,
+        disabled: (n.disabled as boolean | undefined) ?? false,
       };
     });
 
     // Simplify connections structure
     const formattedConnections = this.formatConnections(
-      (wf.connections as Record<string, unknown>) || {},
+      (wf.connections as Record<string, unknown>) ?? {},
     );
 
     return {
       id: wf.id as string,
       name: wf.name as string,
-      active: (wf.active as boolean) || false,
-      tags: (wf.tags as string[]) || [],
+      active: (wf.active as boolean | undefined) ?? false,
+      tags: (wf.tags as string[] | undefined) ?? [],
       createdAt: wf.createdAt as string,
       updatedAt: wf.updatedAt as string,
       nodes: formattedNodes,
@@ -73,7 +73,7 @@ export class WorkflowFormatter {
    * Format connections structure
    */
   private formatConnections(connections: Record<string, unknown>): Record<string, unknown> {
-    if (!connections || typeof connections !== "object") {
+    if (typeof connections !== "object") {
       return {};
     }
 

@@ -200,9 +200,9 @@ if (import.meta.vitest) {
         const result = authManager.setCredentials(credentials);
 
         expect(result).toBe(true);
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.credentials).toEqual(credentials);
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.isAuthValid).toBe(true);
       });
 
@@ -215,9 +215,9 @@ if (import.meta.vitest) {
         const result = authManager.setCredentials(credentials);
 
         expect(result).toBe(false);
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.credentials).toBeNull();
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.isAuthValid).toBe(false);
       });
 
@@ -235,7 +235,7 @@ if (import.meta.vitest) {
         authManager.setCredentials(credentials1);
         authManager.setCredentials(credentials2);
 
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.credentials).toEqual(credentials2);
       });
     });
@@ -288,9 +288,9 @@ if (import.meta.vitest) {
         // Verify everything is cleared
         expect(authManager.isAuthenticated()).toBe(false);
         expect(authManager.getCredentials()).toBeNull();
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.credentials).toBeNull();
-        // @ts-ignore - private member access for testing
+        // @ts-expect-error - private member access for testing
         expect(authManager.isAuthValid).toBe(false);
       });
 

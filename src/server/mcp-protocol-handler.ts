@@ -105,7 +105,7 @@ export class McpProtocolHandler {
   private async handleToolsCall(req: Request, res: Response): Promise<void> {
     const request = req.body;
     const toolName = request.params?.name;
-    const args = request.params?.arguments || {};
+    const args = request.params?.arguments ?? {};
 
     console.log(`🔧 Tool call: ${toolName}`, args);
 

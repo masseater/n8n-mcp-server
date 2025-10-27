@@ -275,7 +275,7 @@ export class N8nApiClientImpl {
     if (!tags || !Array.isArray(tags)) {
       return [];
     }
-    return tags.map((tag) => (typeof tag === "string" ? tag : tag.name || ""));
+    return tags.map((tag) => (typeof tag === "string" ? tag : tag.name ?? ""));
   }
 
   /**
@@ -290,7 +290,7 @@ export class N8nApiClientImpl {
       tags,
       createdAt: workflow.createdAt,
       updatedAt: workflow.updatedAt,
-      nodeCount: workflow.nodes?.length || 0,
+      nodeCount: workflow.nodes?.length ?? 0,
     };
   }
 
@@ -308,8 +308,8 @@ export class N8nApiClientImpl {
       tags,
       createdAt: workflow.createdAt,
       updatedAt: workflow.updatedAt,
-      nodes: workflow.nodes || [],
-      connections: workflow.connections || {},
+      nodes: workflow.nodes ?? [],
+      connections: workflow.connections ?? {},
     };
 
     if (workflow.settings !== undefined) {
@@ -386,7 +386,7 @@ if (import.meta.vitest) {
         updateHeaders: vi.fn(),
         updateBaseURL: vi.fn(),
       };
-      // @ts-ignore - private member access
+      // @ts-expect-error - private member access
       client.httpClient = mockHttpClient;
 
       // Mock Auth manager
@@ -398,7 +398,7 @@ if (import.meta.vitest) {
         getCredentials: vi.fn(),
         clearAuth: vi.fn(),
       };
-      // @ts-ignore - private member access
+      // @ts-expect-error - private member access
       client.authManager = mockAuthManager;
 
       vi.spyOn(console, "error").mockImplementation(() => {});
@@ -744,7 +744,7 @@ if (import.meta.vitest) {
     describe("private methods", () => {
       describe("normalizeTagsFromResponse", () => {
         it("should normalize tag objects to strings", () => {
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           const result = client.normalizeTagsFromResponse([
             { name: "tag1" },
             { name: "tag2" },
@@ -753,20 +753,20 @@ if (import.meta.vitest) {
         });
 
         it("should keep string tags as is", () => {
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           const result = client.normalizeTagsFromResponse(["tag1", "tag2"]);
           expect(result).toEqual(["tag1", "tag2"]);
         });
 
         it("should handle null/undefined tags", () => {
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           expect(client.normalizeTagsFromResponse(null)).toEqual([]);
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           expect(client.normalizeTagsFromResponse(undefined)).toEqual([]);
         });
 
         it("should handle non-array tags", () => {
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           expect(client.normalizeTagsFromResponse("invalid")).toEqual([]);
         });
       });
@@ -780,7 +780,7 @@ if (import.meta.vitest) {
             offset: 5,
           };
 
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           const params = client.buildQueryParams(options);
 
           expect(params.toString()).toBe("active=true&tags=tag1%2Ctag2&limit=10&offset=5");
@@ -789,14 +789,14 @@ if (import.meta.vitest) {
         it("should handle active=false", () => {
           const options = { active: false };
 
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           const params = client.buildQueryParams(options);
 
           expect(params.toString()).toBe("active=false");
         });
 
         it("should handle empty options", () => {
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           const params = client.buildQueryParams({});
 
           expect(params.toString()).toBe("");
@@ -805,7 +805,7 @@ if (import.meta.vitest) {
         it("should handle offset=0", () => {
           const options = { offset: 0 };
 
-          // @ts-ignore - private member access
+          // @ts-expect-error - private member access
           const params = client.buildQueryParams(options);
 
           expect(params.toString()).toBe("offset=0");
