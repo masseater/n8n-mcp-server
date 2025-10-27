@@ -7,7 +7,7 @@ import type { AuthCredentials, ServerConfig } from "../types/index.js";
 /**
  * Default server configuration
  */
-export const DEFAULT_CONFIG: ServerConfig = {
+const DEFAULT_CONFIG: ServerConfig = {
   n8n: {
     baseUrl: process.env.N8N_URL || "http://localhost:5678",
     credentials: {
@@ -31,7 +31,7 @@ export const DEFAULT_CONFIG: ServerConfig = {
 /**
  * Validate authentication credentials
  */
-export function validateCredentials(credentials: AuthCredentials): boolean {
+function validateCredentials(credentials: AuthCredentials): boolean {
   if (!credentials.baseUrl) {
     return false;
   }

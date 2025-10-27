@@ -12,7 +12,7 @@ type NodeParameterValue =
   | NodeParameterValue[]
   | { [key: string]: NodeParameterValue };
 
-export const nodeParameterValueSchema: z.ZodType<NodeParameterValue> = z.lazy(
+const nodeParameterValueSchema: z.ZodType<NodeParameterValue> = z.lazy(
   () =>
     z.union([
       z.string(),
