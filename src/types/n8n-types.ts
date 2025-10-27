@@ -19,17 +19,11 @@ export interface IConnection {
 // First array index: The output/input-index (if node has multiple inputs/outputs of the same type)
 // Second array index: The different connections (if one node is connected to multiple nodes)
 // Any index can be null, for example in a switch node with multiple indexes some of which are not connected
-export type NodeInputConnections = Array<IConnection[] | null>;
+export type NodeInputConnections = (IConnection[] | null)[];
 
-export interface INodeConnections {
-  // Input name
-  [key: string]: NodeInputConnections;
-}
+export type INodeConnections = Record<string, NodeInputConnections>;
 
-export interface IConnections {
-  // Node name
-  [key: string]: INodeConnections;
-}
+export type IConnections = Record<string, INodeConnections>;
 
 export type GenericValue =
   | string
@@ -50,9 +44,7 @@ export interface INodeCredentialsDetails {
   name: string;
 }
 
-export interface INodeCredentials {
-  [key: string]: INodeCredentialsDetails;
-}
+export type INodeCredentials = Record<string, INodeCredentialsDetails>;
 
 export type OnError =
   | "continueErrorOutput"

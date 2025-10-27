@@ -9,7 +9,7 @@ import type { AuthCredentials } from "../types/index.js";
  */
 export class AuthManager {
   private credentials: AuthCredentials | null = null;
-  private isAuthValid: boolean = false;
+  private isAuthValid = false;
 
   /**
    * Validate authentication credentials

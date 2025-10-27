@@ -17,8 +17,8 @@ export class N8nHttpClient {
 
   constructor(
     baseURL: string,
-    timeout: number = 30000,
-    retryAttempts: number = 3,
+    timeout = 30000,
+    retryAttempts = 3,
   ) {
     this.retryAttempts = retryAttempts;
 

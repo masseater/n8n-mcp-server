@@ -60,15 +60,11 @@ export interface NodeSummary {
   disabled?: boolean;
 }
 
-export interface ConnectionSummary {
-  [key: string]: {
-    [key: string]: Array<{
+export type ConnectionSummary = Record<string, Record<string, {
       node: string;
       type: string;
       index: number;
-    }>;
-  };
-}
+    }[]>>;
 
 export interface WorkflowSettings {
   executionOrder?: string;

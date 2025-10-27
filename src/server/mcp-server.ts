@@ -116,7 +116,7 @@ export class MCPServerImpl {
           const request = req.body;
 
           // Handle MCP protocol messages
-          if (request && request.jsonrpc === "2.0") {
+          if (request?.jsonrpc === "2.0") {
             // Handle different MCP methods
             if (request.method === "initialize") {
               res.json({

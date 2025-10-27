@@ -20,11 +20,11 @@ export interface MCPToolResponse<T = unknown> {
  */
 export interface WorkflowListResponse {
   count: number;
-  workflows: Array<{
+  workflows: {
     id: string;
     name: string;
     active: boolean;
-  }>;
+  }[];
 }
 
 /**

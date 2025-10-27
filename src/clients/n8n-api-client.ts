@@ -23,7 +23,7 @@ interface N8nWorkflowResponse {
   id: string;
   name: string;
   active: boolean;
-  tags?: Array<ITag | string>;
+  tags?: (ITag | string)[];
   createdAt: string;
   updatedAt: string;
   nodes?: INode[];
@@ -91,8 +91,8 @@ export class N8nApiClientImpl {
 
   constructor(
     baseUrl: string,
-    timeout: number = 30000,
-    retryAttempts: number = 3,
+    timeout = 30000,
+    retryAttempts = 3,
   ) {
     this.httpClient = new N8nHttpClient(baseUrl, timeout, retryAttempts);
     this.authManager = new AuthManagerImpl();
@@ -114,7 +114,7 @@ export class N8nApiClientImpl {
 
       // Update HTTP client headers
       const headers = this.authManager.getAuthHeaders(credentials);
-      (this.httpClient as N8nHttpClient).updateHeaders(headers);
+      (this.httpClient).updateHeaders(headers);
 
       // Test connection
       return await this.testConnection();

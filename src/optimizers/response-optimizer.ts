@@ -20,7 +20,7 @@ export class ResponseOptimizerImpl {
   private maxSize: number;
   private defaultPageSize: number;
 
-  constructor(maxSize: number = 100000, defaultPageSize: number = 50) {
+  constructor(maxSize = 100000, defaultPageSize = 50) {
     this.maxSize = maxSize;
     this.defaultPageSize = defaultPageSize;
   }
@@ -107,7 +107,7 @@ export class ResponseOptimizerImpl {
   paginate<T>(
     data: T[],
     limit: number = this.defaultPageSize,
-    offset: number = 0,
+    offset = 0,
   ): {
     data: T[];
     pagination: {
@@ -233,7 +233,7 @@ export class ResponseOptimizerImpl {
    */
   createListWorkflowsResponse(
     workflows: unknown[],
-    raw: boolean = false
+    raw = false
   ): MCPToolResponse<WorkflowListResponse | WorkflowSummary[]> {
     if (raw) {
       // Return optimized workflow summaries (current behavior)
@@ -269,7 +269,7 @@ export class ResponseOptimizerImpl {
    */
   createGetWorkflowResponse(
     workflow: unknown,
-    raw: boolean = false
+    raw = false
   ): MCPToolResponse<WorkflowDetailResponse | WorkflowDetail> {
     if (raw) {
       // Return optimized workflow detail (current behavior)
@@ -302,8 +302,8 @@ export class ResponseOptimizerImpl {
    */
   createCreateWorkflowResponse(
     workflow: unknown,
-    raw: boolean = false
-  ): MCPToolResponse<WorkflowCreateResponse | unknown> {
+    raw = false
+  ): MCPToolResponse {
     if (raw) {
       // Return full workflow data
       return {
@@ -331,8 +331,8 @@ export class ResponseOptimizerImpl {
    */
   createUpdateWorkflowResponse(
     workflow: unknown,
-    raw: boolean = false
-  ): MCPToolResponse<WorkflowUpdateResponse | unknown> {
+    raw = false
+  ): MCPToolResponse {
     if (raw) {
       // Return full workflow data
       return {

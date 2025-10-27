@@ -11,10 +11,10 @@ import type { ResponseOptimizerImpl } from "../optimizers/response-optimizer.js"
 export type ToolHandler<TArgs = Record<string, unknown>> = (
   args: TArgs
 ) => Promise<{
-  content: Array<{
+  content: {
     type: string;
     text: string;
-  }>;
+  }[];
 }>;
 
 /**
@@ -39,10 +39,10 @@ export interface ToolContext {
  * Create a standardized tool response
  */
 export function createToolResponse(data: unknown): {
-  content: Array<{
+  content: {
     type: "text";
     text: string;
-  }>;
+  }[];
 } {
   return {
     content: [
