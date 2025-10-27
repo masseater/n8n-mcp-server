@@ -275,7 +275,16 @@ export class N8nApiClientImpl {
     if (!tags || !Array.isArray(tags)) {
       return [];
     }
-    return tags.map((tag) => (typeof tag === "string" ? tag : tag.name ?? ""));
+    return tags.map((tag: unknown) => {
+      if (typeof tag === "string") {
+        return tag;
+      }
+      if (typeof tag === "object" && tag !== null) {
+        const tagObj = tag as Record<string, unknown>;
+        return typeof tagObj.name === "string" ? tagObj.name : "";
+      }
+      return "";
+    });
   }
 
   /**
@@ -367,10 +376,29 @@ export class N8nApiClientImpl {
 if (import.meta.vitest) {
   const { describe, it, expect, beforeEach, vi, afterEach } = import.meta.vitest;
 
+  type MockFn = ReturnType<typeof vi.fn>;
+  type MockHttpClient = {
+    get: MockFn;
+    post: MockFn;
+    put: MockFn;
+    delete: MockFn;
+    patch: MockFn;
+    updateHeaders: MockFn;
+    updateBaseURL: MockFn;
+  };
+  type MockAuthManager = {
+    validateCredentials: MockFn;
+    setCredentials: MockFn;
+    getAuthHeaders: MockFn;
+    isAuthenticated: MockFn;
+    getCredentials: MockFn;
+    clearAuth: MockFn;
+  };
+
   describe("N8nApiClientImpl", () => {
     let client: N8nApiClientImpl;
-    let mockHttpClient: any;
-    let mockAuthManager: any;
+    let mockHttpClient: MockHttpClient;
+    let mockAuthManager: MockAuthManager;
     const baseUrl = "http://localhost:5678";
 
     beforeEach(() => {
@@ -401,7 +429,7 @@ if (import.meta.vitest) {
       // @ts-expect-error - private member access
       client.authManager = mockAuthManager;
 
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
     });
 
     afterEach(() => {
@@ -630,9 +658,11 @@ if (import.meta.vitest) {
 
         // Verify that active field is stripped from request
         const postCall = mockHttpClient.post.mock.calls[0];
-        expect(postCall[0]).toBe("/api/v1/workflows");
-        expect(postCall[1]).not.toHaveProperty("active");
-        expect(postCall[1]).toHaveProperty("name", "New Workflow");
+        if (postCall) {
+          expect(postCall[0]).toBe("/api/v1/workflows");
+          expect(postCall[1]).not.toHaveProperty("active");
+          expect(postCall[1]).toHaveProperty("name", "New Workflow");
+        }
       });
 
       it("should throw error if name is missing", async () => {
@@ -675,10 +705,12 @@ if (import.meta.vitest) {
 
         // Verify that active and id fields are stripped from request
         const putCall = mockHttpClient.put.mock.calls[0];
-        expect(putCall[0]).toBe("/api/v1/workflows/1");
-        expect(putCall[1]).not.toHaveProperty("active");
-        expect(putCall[1]).not.toHaveProperty("id");
-        expect(putCall[1]).toHaveProperty("name", "Updated Workflow");
+        if (putCall) {
+          expect(putCall[0]).toBe("/api/v1/workflows/1");
+          expect(putCall[1]).not.toHaveProperty("active");
+          expect(putCall[1]).not.toHaveProperty("id");
+          expect(putCall[1]).toHaveProperty("name", "Updated Workflow");
+        }
       });
 
       it("should throw error for empty id", async () => {

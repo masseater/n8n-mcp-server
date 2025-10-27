@@ -51,7 +51,8 @@ export type AnyToolDefinition =
   | ToolDefinition<GetWorkflowArgs>
   | ToolDefinition<CreateWorkflowArgs>
   | ToolDefinition<UpdateWorkflowArgs>
-  | ToolDefinition<DeleteWorkflowArgs>;
+  | ToolDefinition<DeleteWorkflowArgs>
+  | ToolDefinition;
 
 /**
  * Base context for all tools

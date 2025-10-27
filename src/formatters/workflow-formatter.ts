@@ -50,8 +50,9 @@ export class WorkflowFormatter {
     });
 
     // Simplify connections structure
+    const connections = wf.connections as Record<string, unknown> | undefined;
     const formattedConnections = this.formatConnections(
-      (wf.connections as Record<string, unknown>) ?? {},
+      connections ?? {},
     );
 
     return {

@@ -33,21 +33,21 @@ export class N8nHttpClient {
     // Add request interceptor for logging
     this.client.interceptors.request.use(
       (config) => {
-        console.debug(
-          `Making ${config.method?.toUpperCase()} request to ${config.url}`,
-        );
+        const method = config.method?.toUpperCase() ?? "UNKNOWN";
+        const url = config.url ?? "UNKNOWN";
+        console.debug(`Making ${method} request to ${url}`);
         return config;
       },
-      (error) => {
+      (error: unknown) => {
         console.error("Request interceptor error:", error);
-        return Promise.reject(error);
+        return Promise.reject(error instanceof Error ? error : new Error(String(error)));
       },
     );
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => this.handleResponseError(error),
+      (error: unknown) => this.handleResponseError(error as AxiosError),
     );
   }
 
@@ -55,12 +55,12 @@ export class N8nHttpClient {
    * Handle response errors with retry logic
    */
   private async handleResponseError(error: AxiosError): Promise<never> {
-    const config = error.config as AxiosRequestConfig & {
+    const config = error.config as (AxiosRequestConfig & {
       _retryCount?: number;
-    };
+    }) | undefined;
 
     if (!config) {
-      throw error;
+      throw this.transformError(error);
     }
 
     config._retryCount = config._retryCount ?? 0;
@@ -73,7 +73,7 @@ export class N8nHttpClient {
       const delay = Math.pow(2, config._retryCount) * 1000;
 
       console.warn(
-        `Request failed, retrying in ${delay}ms (attempt ${config._retryCount}/${this.retryAttempts})`,
+        `Request failed, retrying in ${String(delay)}ms (attempt ${String(config._retryCount)}/${String(this.retryAttempts)})`,
       );
 
       await this.sleep(delay);
@@ -104,10 +104,10 @@ export class N8nHttpClient {
     if (error.response) {
       // Server responded with error status
       const status = error.response.status;
-      const data = error.response.data;
+      const data = error.response.data as { message?: string } | undefined;
 
       return new Error(
-        `HTTP ${status}: ${(data as any)?.message ?? error.message}`,
+        `HTTP ${String(status)}: ${data?.message ?? error.message}`,
       );
     } else if (error.request) {
       // Network error
@@ -141,7 +141,7 @@ export class N8nHttpClient {
    */
   async post<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
@@ -153,7 +153,7 @@ export class N8nHttpClient {
    */
   async put<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await this.client.put<T>(url, data, config);
@@ -173,7 +173,7 @@ export class N8nHttpClient {
    */
   async patch<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await this.client.patch<T>(url, data, config);
@@ -201,19 +201,20 @@ export class N8nHttpClient {
 if (import.meta.vitest) {
   const { describe, it, expect, beforeEach, vi, afterEach } = import.meta.vitest;
   const MockAdapter = (await import("axios-mock-adapter")).default;
+  type MockAdapterInstance = InstanceType<typeof MockAdapter>;
 
   describe("N8nHttpClient", () => {
     let client: N8nHttpClient;
-    let mockAxios: any;
+    let mockAxios: MockAdapterInstance;
     const baseURL = "http://localhost:5678";
 
     beforeEach(() => {
       client = new N8nHttpClient(baseURL, 1000, 3);
       // @ts-expect-error - private member access for testing
       mockAxios = new MockAdapter(client.client);
-      vi.spyOn(console, "debug").mockImplementation(() => {});
-      vi.spyOn(console, "warn").mockImplementation(() => {});
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "debug").mockImplementation(() => undefined);
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
     });
 
     afterEach(() => {
@@ -410,7 +411,7 @@ if (import.meta.vitest) {
         mockAxios.onGet("/api/test").networkError();
 
         // @ts-expect-error - private member access
-        vi.spyOn(client, "sleep").mockImplementation(() => Promise.resolve());
+        vi.spyOn(client, "sleep").mockImplementation(() => Promise.resolve(undefined));
 
         await expect(client.get("/api/test")).rejects.toThrow("Network error");
       });
@@ -473,15 +474,16 @@ if (import.meta.vitest) {
         const errorSpy = vi.spyOn(console, "error");
 
         // Create a mock for axios.create to control the interceptor behavior
-        const originalCreate = axios.create;
+        const originalCreate = axios.create.bind(axios);
+        type ErrorHandler = ((error: unknown) => unknown) | null;
         const mockInterceptors = {
           request: {
             use: vi.fn((_fulfilled, rejected) => {
               // Store the rejection handler
-              mockInterceptors.request.errorHandler = rejected;
+              mockInterceptors.request.errorHandler = rejected as ErrorHandler;
               return 0;
             }),
-            errorHandler: null as any
+            errorHandler: null as ErrorHandler
           },
           response: {
             use: vi.fn()
@@ -489,7 +491,8 @@ if (import.meta.vitest) {
         };
 
         // Mock axios.create temporarily
-        (axios as any).create = vi.fn().mockReturnValue({
+        const axiosWithMock = axios as typeof axios & { create: ReturnType<typeof vi.fn> };
+        axiosWithMock.create = vi.fn().mockReturnValue({
           ...originalCreate({
             baseURL,
             timeout: 1000
@@ -516,7 +519,7 @@ if (import.meta.vitest) {
         );
 
         // Restore original axios.create
-        (axios as any).create = originalCreate;
+        Object.assign(axios, { create: originalCreate });
       });
     });
   });

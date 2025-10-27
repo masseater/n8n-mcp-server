@@ -113,11 +113,12 @@ if (import.meta.vitest) {
       });
 
       it("should reject credentials with undefined apiKey", () => {
-        const credentials: Partial<AuthCredentials> = {
+        const credentials: AuthCredentials = {
           baseUrl: "http://localhost:5678",
+          apiKey: "",
         };
 
-        expect(authManager.validateCredentials(credentials as AuthCredentials)).toBe(false);
+        expect(authManager.validateCredentials(credentials)).toBe(false);
       });
     });
 
@@ -137,9 +138,10 @@ if (import.meta.vitest) {
       });
 
       it("should return only Content-Type header when apiKey is missing", () => {
-        const credentials = {
+        const credentials: AuthCredentials = {
           baseUrl: "http://localhost:5678",
-        } as any;
+          apiKey: "",
+        };
 
         const headers = authManager.getAuthHeaders(credentials);
 
