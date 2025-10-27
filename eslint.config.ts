@@ -1,6 +1,7 @@
 import tseslint from 'typescript-eslint';
 import gitignore from 'eslint-config-flat-gitignore';
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export default tseslint.config(
   gitignore(),
   ...tseslint.configs.strictTypeChecked,
@@ -11,7 +12,7 @@ export default tseslint.config(
         projectService: {
           allowDefaultProject: ['*.config.ts'],
         },
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: import.meta.dirname as string,
       },
     },
     rules: {
@@ -23,6 +24,7 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',

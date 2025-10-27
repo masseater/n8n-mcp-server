@@ -61,7 +61,7 @@ export class HttpTransportHandler {
     // Start HTTP server
     this.app.listen(port, () => {
       console.log("🚀 HTTP MCP Server started successfully!");
-      console.log(`🌐 Server listening on port ${port}`);
+      console.log(`🌐 Server listening on port ${String(port)}`);
       console.log(`📋 Available endpoints:`);
       console.log(`  - GET /health - Health check endpoint`);
       console.log(

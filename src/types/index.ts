@@ -5,13 +5,13 @@
 import type { INode, IConnections, IWorkflowSettings } from './n8n-types.js';
 
 // Authentication types
-export interface AuthCredentials {
+export type AuthCredentials = {
   baseUrl: string;
   apiKey: string;
 }
 
 // Configuration types
-export interface ServerConfig {
+export type ServerConfig = {
   n8n: {
     baseUrl: string;
     credentials: AuthCredentials;
@@ -30,7 +30,7 @@ export interface ServerConfig {
 }
 
 // Workflow data models (optimized for context)
-export interface WorkflowSummary {
+export type WorkflowSummary = {
   id: string;
   name: string;
   active: boolean;
@@ -40,7 +40,7 @@ export interface WorkflowSummary {
   nodeCount: number;
 }
 
-export interface WorkflowDetail {
+export type WorkflowDetail = {
   id: string;
   name: string;
   active: boolean;
@@ -52,7 +52,7 @@ export interface WorkflowDetail {
   settings?: WorkflowSettings | undefined;
 }
 
-interface NodeSummary {
+type NodeSummary = {
   id: string;
   name: string;
   type: string;
@@ -66,7 +66,7 @@ export type ConnectionSummary = Record<string, Record<string, {
       index: number;
     }[]>>;
 
-interface WorkflowSettings {
+type WorkflowSettings = {
   executionOrder?: string;
   saveManualExecutions?: boolean;
   saveExecutionProgress?: boolean;
@@ -76,7 +76,7 @@ interface WorkflowSettings {
 }
 
 // API request/response types
-export interface ListOptions {
+export type ListOptions = {
   active?: boolean;
   tags?: string[];
   limit?: number;
@@ -84,7 +84,7 @@ export interface ListOptions {
 }
 
 // Workflow definition types for create/update operations
-export interface WorkflowDefinition {
+export type WorkflowDefinition = {
   name: string;
   active: boolean;
   nodes: INode[];
@@ -96,7 +96,7 @@ export interface WorkflowDefinition {
 // Transport types
 export type TransportType = "stdio" | "http";
 
-export interface TransportConfig {
+export type TransportConfig = {
   type: TransportType;
   port?: number | undefined;
 }

@@ -13,6 +13,14 @@ import type { TransportType } from "./types/index.js";
 import { loadConfig, validateConfig } from "./config/index.js";
 import { MCPServerImpl } from "./server/mcp-server.js";
 
+type CLIOptions = {
+  transport: string;
+  port: string;
+  n8nUrl?: string;
+  apiKey?: string;
+  logLevel: string;
+};
+
 const program = new Command();
 
 // Configure CLI
@@ -27,7 +35,7 @@ program
   .option("--n8n-url <url>", "n8n instance URL")
   .option("--api-key <key>", "n8n API key")
   .option("--log-level <level>", "Log level (error|warn|info|debug)", "info")
-  .action(async (options) => {
+  .action(async (options: CLIOptions) => {
     try {
       // Validate transport type
       const transport = options.transport as TransportType;
@@ -102,13 +110,13 @@ program
       if (transport === "stdio") {
         process.stdin.resume();
         // Don't log to stdout for stdio transport as it interferes with MCP protocol
-      } else if (transport === "http") {
+      } else {
         // HTTP transport keeps process alive automatically
         logger.info("n8n MCP Server started successfully");
         console.log("HTTP MCP Server is running. Press Ctrl+C to stop.");
 
         // Keep the process alive for HTTP transport
-        return new Promise<void>(() => {
+        await new Promise<void>(() => {
           // Don't resolve the promise to keep the process alive
           // The process will be kept alive by the HTTP server
         });

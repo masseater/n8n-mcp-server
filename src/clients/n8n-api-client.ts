@@ -19,7 +19,7 @@ import { N8nHttpClient } from "./http-client.js";
 import { AuthManager as AuthManagerImpl } from "./auth-manager.js";
 
 // n8n API response types
-interface N8nWorkflowResponse {
+type N8nWorkflowResponse = {
   id: string;
   name: string;
   active: boolean;
@@ -39,7 +39,7 @@ type WorkflowUpdatePayload = Omit<Partial<WorkflowDefinition>, 'active' | 'id'>;
  * This type is returned by the API client and contains full n8n workflow data.
  * The optimizer layer converts this to the public WorkflowDetail type.
  */
-export interface WorkflowDetailInternal {
+export type WorkflowDetailInternal = {
   id: string;
   name: string;
   active: boolean;
@@ -129,7 +129,7 @@ export class N8nApiClientImpl {
    */
   async getWorkflows(options?: ListOptions): Promise<WorkflowSummary[]> {
     return this.withErrorHandling("Failed to get workflows", async () => {
-      const validatedOptions = ListOptionsSchema.parse(options || {}) as Partial<ListOptions>;
+      const validatedOptions = ListOptionsSchema.parse(options ?? {}) as Partial<ListOptions>;
       const params = this.buildQueryParams(validatedOptions);
 
       const url = `/api/v1/workflows${
@@ -171,6 +171,7 @@ export class N8nApiClientImpl {
       }
 
       // Remove 'active' field as it's read-only for n8n API
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { active, ...workflowPayload } = workflow;
 
       const response = await this.httpClient.post<N8nWorkflowResponse>(
@@ -245,6 +246,7 @@ export class N8nApiClientImpl {
    * Sanitize workflow data for update by removing read-only fields
    */
   private sanitizeWorkflowForUpdate(workflow: Partial<WorkflowDefinition>): WorkflowUpdatePayload {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { active, ...rest } = workflow;
     // Also remove 'id' if it exists (it shouldn't, but defensive programming)
     const sanitized = rest as Record<string, unknown>;

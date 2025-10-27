@@ -13,14 +13,14 @@ import { UpdateWorkflowTool } from "../tools/implementations/update-workflow-too
 
 export class ToolRegistry {
   private registeredTools: string[] = [];
-  private toolDefinitions: Map<string, AnyToolDefinition> = new Map();
-  private toolInstances: Array<
+  private toolDefinitions = new Map<string, AnyToolDefinition>();
+  private toolInstances: (
     | DeleteWorkflowTool
     | ListWorkflowsTool
     | GetWorkflowTool
     | CreateWorkflowTool
     | UpdateWorkflowTool
-  > = [];
+  )[] = [];
   private schemasCache: ToolSchema[] | null = null;
 
   constructor(
@@ -32,7 +32,7 @@ export class ToolRegistry {
   /**
    * Initialize tool registry by creating tool instances
    */
-  async initialize(): Promise<void> {
+  initialize(): void {
     const context: ToolContext = {
       n8nClient: this.n8nClient,
       responseBuilder: this.responseBuilder,
@@ -47,7 +47,7 @@ export class ToolRegistry {
       new UpdateWorkflowTool(context),
     ];
 
-    console.log(`✅ ToolRegistry initialized with ${this.toolInstances.length} tools`);
+    console.log(`✅ ToolRegistry initialized with ${String(this.toolInstances.length)} tools`);
   }
 
   /**

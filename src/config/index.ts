@@ -9,10 +9,10 @@ import type { AuthCredentials, ServerConfig } from "../types/index.js";
  */
 const DEFAULT_CONFIG: ServerConfig = {
   n8n: {
-    baseUrl: process.env.N8N_URL || "http://localhost:5678",
+    baseUrl: process.env.N8N_URL ?? "http://localhost:5678",
     credentials: {
-      baseUrl: process.env.N8N_URL || "http://localhost:5678",
-      apiKey: process.env.N8N_API_KEY || "",
+      baseUrl: process.env.N8N_URL ?? "http://localhost:5678",
+      apiKey: process.env.N8N_API_KEY ?? "",
     },
     timeout: 30000,
     retryAttempts: 3,
@@ -23,7 +23,7 @@ const DEFAULT_CONFIG: ServerConfig = {
     verboseMode: false,
   },
   logging: {
-    level: process.env.LOG_LEVEL || "info",
+    level: process.env.LOG_LEVEL ?? "info",
     enableApiStats: false,
   },
 };

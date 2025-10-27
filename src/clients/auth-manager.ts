@@ -113,11 +113,11 @@ if (import.meta.vitest) {
       });
 
       it("should reject credentials with undefined apiKey", () => {
-        const credentials = {
+        const credentials: Partial<AuthCredentials> = {
           baseUrl: "http://localhost:5678",
-        } as any;
+        };
 
-        expect(authManager.validateCredentials(credentials)).toBe(false);
+        expect(authManager.validateCredentials(credentials as AuthCredentials)).toBe(false);
       });
     });
 

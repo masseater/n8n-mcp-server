@@ -36,11 +36,14 @@ export class ListWorkflowsTool extends RawTool<ListWorkflowsArgs> {
 
   async executeCore(args: ListWorkflowsCoreArgs): Promise<WorkflowSummary[]> {
     // Filter out undefined values for exactOptionalPropertyTypes compatibility
-    const filteredArgs = Object.fromEntries(
-      Object.entries(args).filter(([_, v]) => v !== undefined)
-    );
+    const filteredArgs: Record<string, string | number | boolean | string[]> = {};
 
-    return await this.context.n8nClient.getWorkflows(filteredArgs);
+    if (args.active !== undefined) filteredArgs.active = args.active;
+    if (args.tags !== undefined) filteredArgs.tags = args.tags;
+    if (args.limit !== undefined) filteredArgs.limit = args.limit;
+    if (args.offset !== undefined) filteredArgs.offset = args.offset;
+
+    return await this.context.n8nClient.getWorkflows(filteredArgs as ListWorkflowsCoreArgs);
   }
 
   formatResponse(data: unknown, raw: boolean): unknown {

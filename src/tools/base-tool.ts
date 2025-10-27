@@ -27,7 +27,7 @@ type ToolHandler<TArgs = Record<string, unknown>> = (
 /**
  * MCP tool definition
  */
-export interface ToolDefinition<TArgs = Record<string, unknown>> {
+export type ToolDefinition<TArgs = Record<string, unknown>> = {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
@@ -37,7 +37,7 @@ export interface ToolDefinition<TArgs = Record<string, unknown>> {
 /**
  * Tool schema without handler (for listing tools)
  */
-export interface ToolSchema {
+export type ToolSchema = {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
@@ -56,7 +56,7 @@ export type AnyToolDefinition =
 /**
  * Base context for all tools
  */
-export interface ToolContext {
+export type ToolContext = {
   n8nClient: N8nApiClientImpl;
   responseBuilder: ToolResponseBuilder;
 }
@@ -95,8 +95,8 @@ export function convertToJsonSchema(schema: ZodSchema): Record<string, unknown> 
   });
 
   // Remove $schema and other metadata fields
-  if (typeof jsonSchema === "object" && jsonSchema !== null) {
-    const { $schema, definitions, ...cleanSchema } = jsonSchema as Record<string, unknown>;
+  if (typeof jsonSchema === "object") {
+    const { $schema: _$schema, definitions: _definitions, ...cleanSchema } = jsonSchema as Record<string, unknown>;
     return cleanSchema;
   }
 

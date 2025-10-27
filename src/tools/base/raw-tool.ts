@@ -34,7 +34,7 @@ export abstract class RawTool<TArgs extends { raw?: boolean }> extends BaseTool<
    */
   async execute(args: TArgs): Promise<unknown> {
     const { raw, ...coreArgs } = args;
-    const result = await this.executeCore(coreArgs as Omit<TArgs, "raw">);
-    return this.formatResponse(result, raw || false);
+    const result = await this.executeCore(coreArgs);
+    return this.formatResponse(result, raw ?? false);
   }
 }

@@ -5,7 +5,7 @@
 /**
  * Common response structure for all MCP tools
  */
-export interface MCPToolResponse<T = unknown> {
+export type MCPToolResponse<T = unknown> = {
   success: boolean;
   message: string;
   data?: T;
@@ -18,7 +18,7 @@ export interface MCPToolResponse<T = unknown> {
 /**
  * Response for list_workflows tool
  */
-export interface WorkflowListResponse {
+export type WorkflowListResponse = {
   count: number;
   workflows: {
     id: string;
@@ -30,7 +30,7 @@ export interface WorkflowListResponse {
 /**
  * Response for get_workflow tool
  */
-export interface WorkflowDetailResponse {
+export type WorkflowDetailResponse = {
   id: string;
   name: string;
   active: boolean;
@@ -41,6 +41,6 @@ export interface WorkflowDetailResponse {
 /**
  * Response for delete_workflow tool
  */
-export interface WorkflowDeleteResponse {
+export type WorkflowDeleteResponse = {
   id: string;
 }

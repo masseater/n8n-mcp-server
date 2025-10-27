@@ -7,7 +7,7 @@
 
 type NodeConnectionType = string;
 
-interface IConnection {
+type IConnection = {
   // The node the connection is to
   node: string;
   // The type of the input on destination node (for example "main")
@@ -33,13 +33,13 @@ type GenericValue =
   | undefined
   | null;
 
-interface IDataObject {
+type IDataObject = {
   [key: string]: GenericValue | IDataObject | GenericValue[] | IDataObject[];
 }
 
 type INodeParameters = IDataObject;
 
-interface INodeCredentialsDetails {
+type INodeCredentialsDetails = {
   id: string | null;
   name: string;
 }
@@ -51,7 +51,7 @@ type OnError =
   | "continueRegularOutput"
   | "stopWorkflow";
 
-export interface INode {
+export type INode = {
   id: string;
   name: string;
   typeVersion: number;
@@ -73,7 +73,7 @@ export interface INode {
   extendsCredential?: string;
 }
 
-export interface IWorkflowSettings {
+export type IWorkflowSettings = {
   timezone?: string;
   errorWorkflow?: string;
   callerIds?: string;
@@ -86,7 +86,7 @@ export interface IWorkflowSettings {
 }
 
 // n8n API Tag type
-export interface ITag {
+export type ITag = {
   id: string;
   name: string;
 }

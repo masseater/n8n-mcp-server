@@ -53,7 +53,7 @@ export class MCPServerImpl {
         throw new Error("Failed to authenticate with n8n API");
       }
     } catch (error) {
-      throw new Error(`n8n API authentication failed: ${error}`);
+      throw new Error(`n8n API authentication failed: ${String(error)}`);
     }
 
     // Response builder is already initialized in constructor
@@ -67,7 +67,7 @@ export class MCPServerImpl {
     );
 
     // Initialize tool registry (loads tools automatically)
-    await this.toolRegistry.initialize();
+    this.toolRegistry.initialize();
 
     this.toolRegistry.setupToolHandlers();
   }
@@ -84,8 +84,8 @@ export class MCPServerImpl {
       const stdioTransport = new StdioServerTransport();
       await this.server.connect(stdioTransport);
       // Don't log to stdout for stdio transport as it interferes with MCP protocol
-    } else if (transport.type === "http") {
-      const port = transport.port || 3000;
+    } else {
+      const port = transport.port ?? 3000;
 
       if (!this.toolRegistry) {
         throw new Error("Tool registry not initialized");
@@ -102,8 +102,6 @@ export class MCPServerImpl {
 
       // Start HTTP server
       await this.httpHandler.start(port, toolRegistry.getRegisteredTools());
-    } else {
-      throw new Error(`Unsupported transport type: ${transport.type}`);
     }
   }
 

@@ -16,11 +16,11 @@ export class WorkflowFormatter {
     return {
       id: wf.id as string,
       name: wf.name as string,
-      active: (wf.active as boolean) || false,
-      tags: (wf.tags as string[]) || [],
+      active: (wf.active as boolean | undefined) ?? false,
+      tags: (wf.tags as string[] | undefined) ?? [],
       createdAt: wf.createdAt as string,
       updatedAt: wf.updatedAt as string,
-      nodeCount: ((wf.nodes as unknown[])?.length) || 0,
+      nodeCount: ((wf.nodes as unknown[] | undefined) ?? []).length,
     };
   }
 
@@ -38,7 +38,7 @@ export class WorkflowFormatter {
     const wf = workflow as Record<string, unknown>;
 
     // Extract only essential node information
-    const formattedNodes = ((wf.nodes as unknown[]) || []).map((node: unknown) => {
+    const formattedNodes = (wf.nodes as unknown[]).map((node: unknown) => {
       const n = node as Record<string, unknown>;
       return {
         id: n.id as string,

@@ -39,7 +39,7 @@ export class ToolResponseBuilder {
       );
       return {
         success: true,
-        message: `${workflows.length}件のワークフローを取得しました`,
+        message: `${String(workflows.length)}件のワークフローを取得しました`,
         data: formattedWorkflows,
       };
     }
@@ -50,13 +50,13 @@ export class ToolResponseBuilder {
       return {
         id: wf.id as string,
         name: wf.name as string,
-        active: (wf.active as boolean) || false,
+        active: wf.active as boolean,
       };
     });
 
     return {
       success: true,
-      message: `${workflows.length}件のワークフローを取得しました`,
+      message: `${String(workflows.length)}件のワークフローを取得しました`,
       data: {
         count: workflows.length,
         workflows: minimalWorkflows,
@@ -90,9 +90,9 @@ export class ToolResponseBuilder {
       data: {
         id: wf.id as string,
         name: wf.name as string,
-        active: (wf.active as boolean) || false,
-        nodeCount: ((wf.nodes as unknown[])?.length) || 0,
-        tags: (wf.tags as string[]) || [],
+        active: wf.active as boolean,
+        nodeCount: (wf.nodes as unknown[]).length,
+        tags: wf.tags as string[],
       },
     };
   }
@@ -121,7 +121,7 @@ export class ToolResponseBuilder {
       data: {
         id: wf.id as string,
         name: wf.name as string,
-        active: (wf.active as boolean) || false,
+        active: wf.active as boolean,
       },
     };
   }
