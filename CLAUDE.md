@@ -247,14 +247,15 @@ this.server.registerTool(
    - `name` is **required**
    - `nodes` and `connections` are **required** (can be empty arrays/objects)
    - `settings` is optional
-   - `active` field is **read-only** - must be excluded from request body
-   - Implementation: `const { active, ...workflowPayload } = workflow;`
+   - `active` and `tags` fields are **read-only** - must be excluded from request body
+   - Returns "read-only" error if included
+   - Implementation: `const { active, tags, ...workflowPayload } = workflow;`
 
 2. **Update Workflow** (PUT /api/v1/workflows/:id):
-   - `active` and `id` fields are **read-only** - must be excluded from request body
+   - `active`, `tags`, and `id` fields are **read-only** - must be excluded from request body
    - Returns "read-only" error if included
-   - Implementation: `sanitizeWorkflowForUpdate()` removes both fields
-   - Can update partial fields (name, nodes, connections, settings, tags)
+   - Implementation: `sanitizeWorkflowForUpdate()` removes all three fields
+   - Can update partial fields (name, nodes, connections, settings)
 
 3. **Workflow Activation**:
    - No dedicated activate/deactivate endpoint exists in n8n API
@@ -515,6 +516,86 @@ Delete a workflow by ID.
 - `{ success, message, data: { id } }`
 
 **Note**: activate_workflow and deactivate_workflow were removed due to n8n API limitations.
+
+### 7. create_workflow_from_file
+
+Create a new workflow from a local JSON file. This tool is useful for importing workflow definitions stored as JSON files.
+
+**Parameters**:
+- `filePath` (string, required): Path to workflow JSON file (absolute or relative to current working directory)
+- `raw` (boolean, optional): Return full created workflow data
+
+**JSON File Requirements**:
+The JSON file must contain a valid workflow definition with these required fields:
+- `name` (string): Workflow name
+- `nodes` (array): Array of node definitions
+- `connections` (object): Connection structure between nodes
+
+Optional fields:
+- `settings` (object): Workflow settings
+- `active` (boolean): Active status (will be excluded as it's read-only)
+- `tags` (array): Tags (will be excluded as it's read-only)
+
+**Response**:
+- Default (`raw=false`): `{ success, message, data: { id, name, active } }`
+- With `raw=true`: `{ success, message, data: <full workflow data> }`
+
+**Context reduction**: 90% with default response
+
+**Example**:
+```json
+{
+  "name": "My Workflow",
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {}
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
+```
+
+**Error Handling**:
+- File not found: Returns error if file doesn't exist
+- Invalid JSON: Returns error if file contains invalid JSON
+- Invalid workflow: Returns error if workflow structure is invalid
+
+### 8. replace_workflow_from_file
+
+Replace an existing workflow completely with data from a local JSON file. All workflow fields will be overwritten with the file contents.
+
+**Parameters**:
+- `id` (string, required): Workflow ID to replace
+- `filePath` (string, required): Path to workflow JSON file (absolute or relative to current working directory)
+- `raw` (boolean, optional): Return full updated workflow data
+
+**JSON File Requirements**:
+Same as `create_workflow_from_file`. The file should contain a complete workflow definition.
+
+**Response**:
+- Default (`raw=false`): `{ success, message, data: { id, name } }`
+- With `raw=true`: `{ success, message, data: <full workflow data> }`
+
+**Context reduction**: 90% with default response
+
+**Use Cases**:
+- Restoring workflow from backup
+- Applying workflow templates
+- Batch updating workflows with version control
+- Deploying workflows across environments
+
+**Important Notes**:
+- This completely replaces the workflow - all existing nodes and connections will be removed
+- The `active`, `tags`, and `id` fields in the JSON file are ignored (read-only in n8n API)
+- The workflow ID is taken from the `id` parameter, not from the JSON file
 
 ## Context Optimization Strategy
 

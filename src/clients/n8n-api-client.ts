@@ -170,9 +170,9 @@ export class N8nApiClientImpl {
         throw new Error("Workflow name is required");
       }
 
-      // Remove 'active' field as it's read-only for n8n API
+      // Remove 'active' and 'tags' fields as they're read-only for n8n API
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { active, ...workflowPayload } = workflow;
+      const { active, tags, ...workflowPayload } = workflow;
 
       const response = await this.httpClient.post<N8nWorkflowResponse>(
         "/api/v1/workflows",
@@ -196,7 +196,7 @@ export class N8nApiClientImpl {
     return this.withErrorHandling(`Failed to update workflow ${id}`, async () => {
       this.validateId(id);
 
-      // Remove 'active' and 'id' fields as they're read-only for n8n API
+      // Remove 'active', 'tags', and 'id' fields as they're read-only for n8n API
       const workflowPayload = this.sanitizeWorkflowForUpdate(workflow);
 
       const response = await this.httpClient.put<N8nWorkflowResponse>(
@@ -247,7 +247,7 @@ export class N8nApiClientImpl {
    */
   private sanitizeWorkflowForUpdate(workflow: Partial<WorkflowDefinition>): WorkflowUpdatePayload {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { active, ...rest } = workflow;
+    const { active, tags, ...rest } = workflow;
     // Also remove 'id' if it exists (it shouldn't, but defensive programming)
     const sanitized = rest as Record<string, unknown>;
     delete sanitized.id;

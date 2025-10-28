@@ -10,7 +10,9 @@ import { ListWorkflowsTool } from "../tools/implementations/list-workflows-tool.
 import { GetWorkflowTool } from "../tools/implementations/get-workflow-tool.js";
 import { GetWorkflowConnectionsTool } from "../tools/implementations/get-workflow-connections-tool.js";
 import { CreateWorkflowTool } from "../tools/implementations/create-workflow-tool.js";
+import { CreateWorkflowFromFileTool } from "../tools/implementations/create-workflow-from-file-tool.js";
 import { UpdateWorkflowTool } from "../tools/implementations/update-workflow-tool.js";
+import { ReplaceWorkflowFromFileTool } from "../tools/implementations/replace-workflow-from-file-tool.js";
 
 type Tool =
   | DeleteWorkflowTool
@@ -18,7 +20,9 @@ type Tool =
   | GetWorkflowTool
   | GetWorkflowConnectionsTool
   | CreateWorkflowTool
-  | UpdateWorkflowTool;
+  | CreateWorkflowFromFileTool
+  | UpdateWorkflowTool
+  | ReplaceWorkflowFromFileTool;
 
 export class ToolRegistry {
   private registeredTools: string[] = [];
@@ -46,7 +50,9 @@ export class ToolRegistry {
       new GetWorkflowTool(context),
       new GetWorkflowConnectionsTool(context),
       new CreateWorkflowTool(context),
+      new CreateWorkflowFromFileTool(context),
       new UpdateWorkflowTool(context),
+      new ReplaceWorkflowFromFileTool(context),
     ];
 
     for (const tool of tools) {
