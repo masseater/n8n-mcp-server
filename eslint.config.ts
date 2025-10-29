@@ -32,5 +32,8 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/no-unsafe-argument': 'error',
     },
+  },
+  {
+    ignores: ["**/*.generated.ts"],
   }
 );

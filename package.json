@@ -22,7 +22,8 @@
     "knip:fix": "knip --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "generate:types": "openapi-typescript https://docs.n8n.io/api/v1/openapi.yml -o src/types/n8n-api.generated.ts"
   },
   "keywords": [
     "n8n",
@@ -51,6 +52,7 @@
     "eslint": "9.38.0",
     "eslint-config-flat-gitignore": "2.1.0",
     "knip": "5.66.3",
+    "openapi-typescript": "7.10.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "8.46.2",
