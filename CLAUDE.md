@@ -112,23 +112,12 @@ This is a Model Context Protocol (MCP) server that bridges AI models with n8n wo
 **Layer 3: Client Layer (src/clients/)**
 
 1. **N8nApiClientImpl** (src/clients/n8n-api-client.ts)
-   - High-level n8n API wrapper
+   - Wrapper around @hey-api/openapi-ts generated SDK
    - Methods: `authenticate()`, `getWorkflows()`, `getWorkflow()`, `createWorkflow()`, `updateWorkflow()`, `deleteWorkflow()`
    - Returns `WorkflowSummary[]` for list operations
    - Returns `WorkflowDetailInternal` for detail operations (contains full INode[] and IConnections)
-   - Uses `N8nHttpClient` for all HTTP operations
-   - Uses `AuthManager` for authentication
-
-2. **N8nHttpClient** (src/clients/http-client.ts)
-   - Axios-based HTTP client with retry logic
-   - Exponential backoff: 2^n * 1000ms delays
-   - Retries on 5xx errors and network failures (not 4xx)
-   - Request/response interceptors for logging
-   - Methods: `get()`, `post()`, `put()`, `patch()`, `delete()`
-
-3. **AuthManager** (src/clients/auth-manager.ts)
-   - Manages API key authentication
-   - Updates HTTP client headers with `X-N8N-API-KEY`
+   - Uses generated SDK functions: `getWorkflows()`, `getWorkflowsById()`, `postWorkflows()`, `putWorkflowsById()`, `deleteWorkflowsById()`
+   - Configures generated client via `generatedClient.setConfig()`
 
 **Layer 4: Response Layer (src/formatters/)**
 

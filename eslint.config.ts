@@ -34,6 +34,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["**/*.generated.ts"],
+    ignores: ["**/*.generated.ts", "src/generated/**/*"],
   }
 );

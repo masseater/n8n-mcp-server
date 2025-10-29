@@ -5,6 +5,7 @@ const config: KnipConfig = {
   ignore: [
     'dist/**',
     'coverage/**',
+    'src/generated/**',
     '**/*.test.ts',
     '**/*.spec.ts',
   ],

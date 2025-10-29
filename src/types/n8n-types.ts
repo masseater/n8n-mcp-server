@@ -84,9 +84,3 @@ export type IWorkflowSettings = {
   saveExecutionProgress?: boolean;
   executionOrder?: string;
 }
-
-// n8n API Tag type
-export type ITag = {
-  id: string;
-  name: string;
-}
