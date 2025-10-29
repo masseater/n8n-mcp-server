@@ -110,5 +110,26 @@ export type TransportConfig = {
   port?: number | undefined;
 }
 
-// Re-export MCP response types
-export * from './mcp-response.js';
+// MCP response types
+export type {
+  MCPToolResponse,
+  WorkflowListResponse,
+  WorkflowDetailResponse,
+  WorkflowDeleteResponse,
+} from './mcp-response.js';
+
+// Execution types
+export type {
+  ExecutionStatus,
+  ExecutionMode,
+  NodeExecutionStatus,
+  ExecutionSummary,
+  ExecutionError,
+  NodeExecution,
+  ExecutionData,
+  ExecutionDetail,
+  N8nExecutionListResponse,
+  N8nExecutionDetailResponse,
+  ExecutionListResponse,
+  ExecutionDetailResponse,
+} from './execution-types.js';

@@ -9,6 +9,10 @@ import type {
   WorkflowDeleteResponse,
   WorkflowSummary,
   WorkflowDetail,
+  ExecutionSummary,
+  ExecutionListResponse,
+  ExecutionDetail,
+  ExecutionDetailResponse,
 } from "../types/index.js";
 import { WorkflowFormatter } from "./workflow-formatter.js";
 import { ContextMinimizer } from "./context-minimizer.js";
@@ -201,6 +205,28 @@ export class ToolResponseBuilder {
         graph,
       },
     };
+  }
+
+  /**
+   * Create response for list_executions tool
+   * Implementation will be added in Phase 2
+   */
+  createListExecutionsResponse(
+    _executions: ExecutionSummary[],
+    _raw = false
+  ): MCPToolResponse<ExecutionListResponse | ExecutionSummary[]> {
+    throw new Error('Not implemented yet - Phase 2');
+  }
+
+  /**
+   * Create response for get_execution tool
+   * Implementation will be added in Phase 2
+   */
+  createGetExecutionResponse(
+    _execution: ExecutionDetail,
+    _raw = false
+  ): MCPToolResponse<ExecutionDetailResponse | ExecutionDetail> {
+    throw new Error('Not implemented yet - Phase 2');
   }
 }
 

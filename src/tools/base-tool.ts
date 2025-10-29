@@ -1,4 +1,4 @@
-import type { N8nApiClientImpl } from "../clients/n8n-api-client.js";
+import type { N8nApiClient } from "../clients/types.js";
 import type { ToolResponseBuilder } from "../formatters/tool-response-builder.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ZodSchema } from "zod";
@@ -20,7 +20,7 @@ export type ToolDefinition<TArgs = Record<string, unknown>> = {
 }
 
 export type ToolContext = {
-  n8nClient: N8nApiClientImpl;
+  n8nClient: N8nApiClient;
   responseBuilder: ToolResponseBuilder;
 }
 
