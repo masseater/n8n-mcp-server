@@ -5,6 +5,7 @@
 import fs from "fs/promises";
 import path from "path";
 import type { WorkflowDefinition } from "../../types/index.js";
+import { ValidationError, FileError } from "../../errors/custom-errors.js";
 
 /**
  * Load workflow definition from a JSON file
@@ -12,7 +13,7 @@ import type { WorkflowDefinition } from "../../types/index.js";
 export async function loadWorkflowFromFile(filePath: string): Promise<WorkflowDefinition> {
   // 1. Validate file path
   if (!filePath) {
-    throw new Error("File path is required");
+    throw new ValidationError("File path is required");
   }
 
   // 2. Resolve to absolute path
@@ -21,40 +22,70 @@ export async function loadWorkflowFromFile(filePath: string): Promise<WorkflowDe
   // 3. Check file existence
   try {
     await fs.access(absolutePath);
-  } catch {
-    throw new Error(`File not found: ${absolutePath}`);
+  } catch (error) {
+    throw new FileError(
+      `File not found: ${absolutePath}`,
+      absolutePath,
+      undefined,
+      { cause: error }
+    );
   }
 
   // 4. Read file
-  const content = await fs.readFile(absolutePath, "utf-8");
+  let content: string;
+  try {
+    content = await fs.readFile(absolutePath, "utf-8");
+  } catch (error) {
+    throw new FileError(
+      `Failed to read file: ${absolutePath}`,
+      absolutePath,
+      undefined,
+      { cause: error }
+    );
+  }
 
   // 5. Parse JSON
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
   } catch (error) {
-    throw new Error(
-      `Invalid JSON: ${error instanceof Error ? error.message : "Unknown error"}`,
+    throw new FileError(
+      "Invalid JSON",
+      absolutePath,
+      undefined,
+      { cause: error }
     );
   }
 
   // 6. Validate workflow structure
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    throw new Error("Workflow must be an object");
+    throw new ValidationError(
+      "Workflow must be an object",
+      { filePath: absolutePath }
+    );
   }
 
   const workflow = parsed as Record<string, unknown>;
 
   if (typeof workflow.name !== "string") {
-    throw new Error("Workflow name is required and must be a string");
+    throw new ValidationError(
+      "Workflow name is required and must be a string",
+      { filePath: absolutePath }
+    );
   }
 
   if (!Array.isArray(workflow.nodes)) {
-    throw new Error("Workflow nodes must be an array");
+    throw new ValidationError(
+      "Workflow nodes must be an array",
+      { filePath: absolutePath }
+    );
   }
 
   if (typeof workflow.connections !== "object" || workflow.connections === null) {
-    throw new Error("Workflow connections must be an object");
+    throw new ValidationError(
+      "Workflow connections must be an object",
+      { filePath: absolutePath }
+    );
   }
 
   return workflow as WorkflowDefinition;

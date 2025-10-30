@@ -24,6 +24,15 @@ import type {
   WorkflowSummary,
 } from '../types/index.js';
 import type { INode, IConnections, IWorkflowSettings } from '../types/n8n-types.js';
+import {
+  ValidationError,
+  AuthenticationError,
+} from '../errors/custom-errors.js';
+import {
+  handleResponse,
+  validateRequired,
+  wrapAsync,
+} from '../errors/api-error-handler.js';
 
 /**
  * Internal type for workflow details before optimization.
@@ -104,28 +113,12 @@ export class N8nApiClientImpl {
   }
 
   /**
-   * Format error for display
-   */
-  private formatError(error: unknown): string {
-    if (typeof error === 'object' && error !== null) {
-      const err = error as { message?: string; code?: number; status?: number };
-      if (err.message) {
-        return err.message;
-      }
-      if (err.code !== undefined || err.status !== undefined) {
-        return `Error code: ${String(err.code ?? err.status ?? 'unknown')}`;
-      }
-    }
-    return String(error);
-  }
-
-  /**
    * Authenticate with n8n API
    */
   async authenticate(credentials: AuthCredentials): Promise<boolean> {
     try {
       if (!credentials.apiKey) {
-        return false;
+        throw new ValidationError('API key is required for authentication');
       }
 
       this.apiKey = credentials.apiKey;
@@ -141,8 +134,14 @@ export class N8nApiClientImpl {
       // Test connection
       return await this.testConnection();
     } catch (error) {
-      console.error('Authentication failed:', error);
-      return false;
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new AuthenticationError(
+        'Failed to authenticate with n8n API',
+        { baseUrl: this.baseUrl },
+        { cause: error }
+      );
     }
   }
 
@@ -150,7 +149,7 @@ export class N8nApiClientImpl {
    * Get list of workflows
    */
   async getWorkflows(options?: ListOptions): Promise<WorkflowSummary[]> {
-    try {
+    return wrapAsync(async () => {
       const query: Record<string, unknown> = {};
       if (options?.active !== undefined) {
         query.active = options.active;
@@ -169,73 +168,72 @@ export class N8nApiClientImpl {
         query: query as Record<string, string | number | boolean>,
       });
 
-      if (response.error) {
-        throw new Error(`Failed to get workflows: ${this.formatError(response.error)}`);
-      }
+      const data = handleResponse(response, {
+        operation: 'get workflows',
+        resourceType: 'workflows',
+        additionalInfo: { options },
+      });
 
-      const workflows = response.data?.data ?? [];
+      const workflows = data.data ?? [];
       return workflows.map((workflow) => this.transformToWorkflowSummary(workflow));
-    } catch (error) {
-      this.handleError('Failed to get workflows', error);
-    }
+    }, {
+      operation: 'get workflows',
+      resourceType: 'workflows',
+      additionalInfo: { options },
+    });
   }
 
   /**
    * Get detailed workflow information
    */
   async getWorkflow(id: string): Promise<WorkflowDetailInternal> {
-    try {
-      if (!id) {
-        throw new Error('Workflow ID is required');
-      }
+    validateRequired(id, 'Workflow ID');
 
+    return wrapAsync(async () => {
       const response = await getWorkflowsById({
         path: { id },
       });
 
-      if (response.error) {
-        throw new Error(`Failed to get workflow ${id}: ${this.formatError(response.error)}`);
-      }
+      const data = handleResponse(response, {
+        operation: 'get workflow',
+        resourceType: 'Workflow',
+        resourceId: id,
+      });
 
-      if (!response.data) {
-        throw new Error(`No workflow data returned for ${id}`);
-      }
-
-      return this.transformToWorkflowDetail(response.data);
-    } catch (error) {
-      this.handleError(`Failed to get workflow ${id}`, error);
-    }
+      return this.transformToWorkflowDetail(data);
+    }, {
+      operation: 'get workflow',
+      resourceType: 'Workflow',
+      resourceId: id,
+    });
   }
 
   /**
    * Create a new workflow
    */
   async createWorkflow(workflow: WorkflowDefinition): Promise<WorkflowDetailInternal> {
-    try {
-      if (!workflow.name) {
-        throw new Error('Workflow name is required');
-      }
+    validateRequired(workflow.name, 'Workflow name');
 
+    return wrapAsync(async () => {
       // Remove read-only fields
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { active, tags, ...workflowPayload } = workflow;
+      const { active: _active, tags: _tags, ...workflowPayload } = workflow;
 
       const response = await postWorkflows({
         body: workflowPayload as WorkflowWritable,
       });
 
-      if (response.error) {
-        throw new Error(`Failed to create workflow: ${this.formatError(response.error)}`);
-      }
+      const data = handleResponse(response, {
+        operation: 'create workflow',
+        resourceType: 'Workflow',
+        additionalInfo: { workflowName: workflow.name },
+      });
 
-      if (!response.data) {
-        throw new Error('No workflow data returned from create');
-      }
-
-      return this.transformToWorkflowDetail(response.data);
-    } catch (error) {
-      this.handleError('Failed to create workflow', error);
-    }
+      return this.transformToWorkflowDetail(data);
+    }, {
+      operation: 'create workflow',
+      resourceType: 'Workflow',
+      additionalInfo: { workflowName: workflow.name },
+    });
   }
 
   /**
@@ -245,55 +243,54 @@ export class N8nApiClientImpl {
     id: string,
     workflow: Partial<WorkflowDefinition>,
   ): Promise<WorkflowDetailInternal> {
-    try {
-      if (!id) {
-        throw new Error('Workflow ID is required');
-      }
+    validateRequired(id, 'Workflow ID');
 
+    return wrapAsync(async () => {
       // Remove read-only fields by destructuring
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { active, tags, ...workflowPayload } = workflow;
+      const { active: _active, tags: _tags, ...workflowPayload } = workflow;
 
       const response = await putWorkflowsById({
         path: { id },
         body: workflowPayload as unknown as WorkflowWritable,
       });
 
-      if (response.error) {
-        throw new Error(`Failed to update workflow ${id}: ${this.formatError(response.error)}`);
-      }
+      const data = handleResponse(response, {
+        operation: 'update workflow',
+        resourceType: 'Workflow',
+        resourceId: id,
+      });
 
-      if (!response.data) {
-        throw new Error(`No workflow data returned from update for ${id}`);
-      }
-
-      return this.transformToWorkflowDetail(response.data);
-    } catch (error) {
-      this.handleError(`Failed to update workflow ${id}`, error);
-    }
+      return this.transformToWorkflowDetail(data);
+    }, {
+      operation: 'update workflow',
+      resourceType: 'Workflow',
+      resourceId: id,
+    });
   }
 
   /**
    * Delete a workflow
    */
   async deleteWorkflow(id: string): Promise<{ id: string }> {
-    try {
-      if (!id) {
-        throw new Error('Workflow ID is required');
-      }
+    validateRequired(id, 'Workflow ID');
 
+    return wrapAsync(async () => {
       const response = await deleteWorkflowsById({
         path: { id },
       });
 
-      if (response.error) {
-        throw new Error(`Failed to delete workflow ${id}: ${this.formatError(response.error)}`);
-      }
+      handleResponse(response, {
+        operation: 'delete workflow',
+        resourceType: 'Workflow',
+        resourceId: id,
+      });
 
       return { id };
-    } catch (error) {
-      this.handleError(`Failed to delete workflow ${id}`, error);
-    }
+    }, {
+      operation: 'delete workflow',
+      resourceType: 'Workflow',
+      resourceId: id,
+    });
   }
 
   /**
@@ -374,7 +371,7 @@ export class N8nApiClientImpl {
     limit?: number;
     cursor?: string;
   }): Promise<Execution[]> {
-    try {
+    return wrapAsync(async () => {
       const query: Record<string, unknown> = {};
       if (options?.workflowId) {
         query.workflowId = options.workflowId;
@@ -393,14 +390,18 @@ export class N8nApiClientImpl {
         query: query as Record<string, string | number>,
       });
 
-      if (response.error) {
-        throw new Error(`Failed to get executions: ${this.formatError(response.error)}`);
-      }
+      const data = handleResponse(response, {
+        operation: 'get executions',
+        resourceType: 'executions',
+        additionalInfo: { options },
+      });
 
-      return response.data?.data ?? [];
-    } catch (error) {
-      this.handleError('Failed to get executions', error);
-    }
+      return data.data ?? [];
+    }, {
+      operation: 'get executions',
+      resourceType: 'executions',
+      additionalInfo: { options },
+    });
   }
 
   /**
@@ -410,11 +411,9 @@ export class N8nApiClientImpl {
     id: string,
     options?: { includeData?: boolean },
   ): Promise<Execution> {
-    try {
-      if (!id) {
-        throw new Error('Execution ID is required');
-      }
+    validateRequired(id, 'Execution ID');
 
+    return wrapAsync(async () => {
       const query: Record<string, unknown> = {};
       if (options?.includeData !== undefined) {
         query.includeData = options.includeData;
@@ -423,7 +422,10 @@ export class N8nApiClientImpl {
       // Convert string ID to number for API
       const numericId = Number(id);
       if (isNaN(numericId)) {
-        throw new Error(`Invalid execution ID: ${id}`);
+        throw new ValidationError(
+          `Invalid execution ID: ${id}`,
+          { executionId: id }
+        );
       }
 
       const response = await getExecutionsById({
@@ -431,27 +433,15 @@ export class N8nApiClientImpl {
         query: query as Record<string, boolean>,
       });
 
-      if (response.error) {
-        throw new Error(`Failed to get execution ${id}: ${this.formatError(response.error)}`);
-      }
-
-      if (!response.data) {
-        throw new Error(`No execution data returned for ${id}`);
-      }
-
-      return response.data;
-    } catch (error) {
-      this.handleError(`Failed to get execution ${id}`, error);
-    }
-  }
-
-  /**
-   * Handle API errors consistently
-   */
-  private handleError(context: string, error: unknown): never {
-    console.error(`${context}:`, error);
-    throw new Error(
-      `${context}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
+      return handleResponse(response, {
+        operation: 'get execution',
+        resourceType: 'Execution',
+        resourceId: id,
+      });
+    }, {
+      operation: 'get execution',
+      resourceType: 'Execution',
+      resourceId: id,
+    });
   }
 }

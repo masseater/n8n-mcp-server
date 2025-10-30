@@ -24,10 +24,11 @@ export class ContextMinimizer {
     }
 
     // If data is too large, try to reduce it
+    // Pass jsonString to avoid re-serialization
     if (Array.isArray(data)) {
-      return this.minimizeArray(data, sizeLimit) as T;
+      return this.minimizeArray(data, sizeLimit, jsonString) as T;
     } else if (typeof data === "object" && data !== null) {
-      return this.minimizeObject(data, sizeLimit) as T;
+      return this.minimizeObject(data, sizeLimit, jsonString) as T;
     }
 
     return data;
@@ -35,10 +36,10 @@ export class ContextMinimizer {
 
   /**
    * Minimize array data
+   * @param jsonString Pre-serialized JSON string to avoid re-serialization
    */
-  private minimizeArray<T>(data: T[], maxSize: number): T[] {
-    const jsonString = JSON.stringify(data);
-
+  private minimizeArray<T>(data: T[], maxSize: number, jsonString: string): T[] {
+    // Use pre-serialized string instead of re-serializing
     if (jsonString.length <= maxSize) {
       return data;
     }
@@ -53,10 +54,10 @@ export class ContextMinimizer {
 
   /**
    * Minimize object data
+   * @param jsonString Pre-serialized JSON string to avoid re-serialization
    */
-  private minimizeObject<T>(data: T, maxSize: number): T {
-    const jsonString = JSON.stringify(data);
-
+  private minimizeObject<T>(data: T, maxSize: number, jsonString: string): T {
+    // Use pre-serialized string instead of re-serializing
     if (jsonString.length <= maxSize) {
       return data;
     }
@@ -70,7 +71,7 @@ export class ContextMinimizer {
       delete minimized.executionData;
       delete minimized.verbose;
 
-      // Check if still too large
+      // Check if still too large (only one additional serialization needed)
       const newJsonString = JSON.stringify(minimized);
       if (newJsonString.length <= maxSize) {
         return minimized as T;

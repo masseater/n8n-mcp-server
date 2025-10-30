@@ -9,6 +9,7 @@ import {
   type GetExecutionArgs,
 } from '../../schemas/execution-schemas.js';
 import type { Execution } from '../../generated/types.gen.js';
+import { pickBy } from 'remeda';
 
 /**
  * GetExecutionTool
@@ -31,10 +32,12 @@ export class GetExecutionTool extends RawTool<GetExecutionArgs> {
   ): Promise<Execution> {
     // Call n8n API client to get execution detail
     // Build options object with only defined properties to satisfy exactOptionalPropertyTypes
-    const options: { includeData?: boolean } = {};
-    if (args.includeData !== undefined) {
-      options.includeData = args.includeData;
-    }
+    const options = pickBy(
+      {
+        includeData: args.includeData,
+      },
+      (value) => value !== undefined
+    );
 
     const execution = await this.context.n8nClient.getExecution(args.id, options);
 

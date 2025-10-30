@@ -9,6 +9,7 @@ import {
   type ListExecutionsArgs,
 } from '../../schemas/execution-schemas.js';
 import type { Execution } from '../../generated/types.gen.js';
+import { pickBy } from 'remeda';
 
 /**
  * ListExecutionsTool
@@ -31,25 +32,15 @@ export class ListExecutionsTool extends RawTool<ListExecutionsArgs> {
   ): Promise<Execution[]> {
     // Call n8n API client to get executions
     // Build options object with only defined properties to satisfy exactOptionalPropertyTypes
-    const options: {
-      workflowId?: string;
-      status?: string;
-      limit?: number;
-      cursor?: string;
-    } = {};
-
-    if (args.workflowId !== undefined) {
-      options.workflowId = args.workflowId;
-    }
-    if (args.status !== undefined) {
-      options.status = args.status;
-    }
-    if (args.limit !== undefined) {
-      options.limit = args.limit;
-    }
-    if (args.cursor !== undefined) {
-      options.cursor = args.cursor;
-    }
+    const options = pickBy(
+      {
+        workflowId: args.workflowId,
+        status: args.status,
+        limit: args.limit,
+        cursor: args.cursor,
+      },
+      (value) => value !== undefined
+    );
 
     const executions = await this.context.n8nClient.getExecutions(options);
 

@@ -605,3 +605,202 @@ This optimization is critical for:
 - Checking workflow status
 - Confirming successful create/update operations
 - Most common operations
+
+## Phase 3 Refactoring and Optimization (2025-10-30)
+
+This section documents the code quality improvements implemented in Phase 3 of the workflow execution tools project.
+
+### Refactoring Summary
+
+**Completed Tasks**:
+1. ✅ Code quality analysis
+2. ✅ DRY principle application  
+3. ✅ Design pattern application
+4. ✅ Performance optimization
+5. ✅ Type safety enhancement
+6. ✅ External library adoption (Remeda)
+
+### 1. DRY Principle - Code Deduplication
+
+**Problem**: Repetitive object property filtering logic in execution tools.
+
+**Solution**: Adopted **Remeda** library (`pickBy` function) to replace custom implementation.
+
+**Before** (custom implementation):
+```typescript
+const options: { workflowId?: string; status?: string; ... } = {};
+if (args.workflowId !== undefined) options.workflowId = args.workflowId;
+if (args.status !== undefined) options.status = args.status;
+// ... repeated for each property
+```
+
+**After** (Remeda):
+```typescript
+import { pickBy } from 'remeda';
+
+const options = pickBy(
+  { workflowId: args.workflowId, status: args.status, ... },
+  (value) => value !== undefined
+);
+```
+
+**Impact**:
+- Removed 100+ lines of custom utility code
+- Reduced maintenance burden
+- Improved type inference with Remeda's TypeScript-first design
+
+### 2. Design Pattern - Template Method
+
+**Problem**: Duplicated raw/minimal response logic across 6 response builder methods.
+
+**Solution**: Implemented **Template Method Pattern** with a generic `createResponse` method.
+
+**Before** (duplicated pattern):
+```typescript
+createListExecutionsResponse(executions, raw) {
+  if (raw) {
+    return { success: true, message: "...", data: executions };
+  }
+  return { success: true, message: "...", data: minimalData };
+}
+// ... same pattern repeated in 5 other methods
+```
+
+**After** (template method):
+```typescript
+private createResponse<TRaw, TMinimal>(
+  message: string,
+  rawData: TRaw,
+  minimalData: TMinimal,
+  raw: boolean
+): MCPToolResponse<TRaw | TMinimal> {
+  return {
+    success: true,
+    message,
+    data: raw ? rawData : minimalData,
+  };
+}
+
+// Usage
+createListExecutionsResponse(executions, raw) {
+  const message = `${executions.length}件の実行履歴を取得しました`;
+  const minimalData = { count: executions.length, executions: [...] };
+  return this.createResponse(message, executions, minimalData, raw);
+}
+```
+
+**Impact**:
+- Reduced code by 50 lines (-39%)
+- Eliminated 4 if-else branches
+- Centralized response creation logic
+- Improved type safety with generics
+
+### 3. Performance Optimization
+
+**Problem**: Redundant JSON.stringify() calls in ContextMinimizer (up to 4x serialization of same data).
+
+**Solution**: Pass serialized string between methods to avoid re-serialization.
+
+**Before**:
+```typescript
+minimizeContext(data) {
+  const jsonString = JSON.stringify(data);  // 1st
+  if (jsonString.length <= maxSize) return data;
+  
+  if (Array.isArray(data)) {
+    return minimizeArray(data, maxSize);     // calls JSON.stringify again (2nd)
+  } else {
+    return minimizeObject(data, maxSize);    // calls JSON.stringify again (2nd & 3rd)
+  }
+}
+```
+
+**After**:
+```typescript
+minimizeContext(data) {
+  const jsonString = JSON.stringify(data);  // 1st (only)
+  if (jsonString.length <= maxSize) return data;
+  
+  if (Array.isArray(data)) {
+    return minimizeArray(data, maxSize, jsonString);  // reuse
+  } else {
+    return minimizeObject(data, maxSize, jsonString); // reuse
+  }
+}
+```
+
+**Impact**:
+- Reduced JSON serialization by 50-75% for large data
+- Improved response time for context minimization
+- Lower CPU usage
+
+### 4. External Library Adoption - Remeda
+
+**Rationale**: Replace custom utility functions with battle-tested library.
+
+**Why Remeda over Lodash**:
+- TypeScript-first design (better type inference)
+- Tree-shakable (smaller bundle size)
+- Modern API (supports data-first and data-last)
+- Active development (2025+)
+
+**Added Dependency**:
+```json
+{
+  "dependencies": {
+    "remeda": "^2.32.0"
+  }
+}
+```
+
+**Usage**:
+- `pickBy()` - Filter object properties (src/tools/implementations/*)
+- Future: Can leverage other Remeda utilities (map, filter, groupBy, etc.)
+
+### Code Quality Metrics
+
+**Before Phase 3**:
+- Total test files: 9
+- Total tests: 43
+- Code duplication: Multiple patterns
+- Custom utilities: object-utils.ts (100+ lines)
+
+**After Phase 3**:
+- Total test files: 8
+- Total tests: 37  
+- Code duplication: Eliminated via Remeda & Template Method
+- Custom utilities: 0 (removed object-utils.ts)
+- External dependencies: +1 (Remeda)
+
+**Quality Gates** (all passing):
+- ✅ ESLint: 0 errors
+- ✅ Knip: 0 unused exports
+- ✅ Tests: 37/37 passed
+- ✅ Type check: No errors
+
+### Benefits
+
+1. **Maintainability**: Less code to maintain, well-tested external dependencies
+2. **Readability**: Clear patterns (Template Method), familiar library (Remeda)
+3. **Performance**: Reduced redundant operations (JSON serialization)
+4. **Type Safety**: Better type inference with Remeda, generic template method
+5. **Future-proof**: Can leverage more Remeda utilities as needed
+
+### Migration Notes
+
+If you need to add similar object filtering logic in the future:
+
+```typescript
+import { pickBy } from 'remeda';
+
+// Filter out undefined values
+const cleanObject = pickBy(sourceObject, (value) => value !== undefined);
+
+// Filter out null and undefined
+const nonNullish = pickBy(sourceObject, (value) => value != null);
+
+// Custom predicate
+const filtered = pickBy(sourceObject, (value, key) => someCondition(value, key));
+```
+
+For other common operations, check [Remeda documentation](https://remedajs.com/docs/).

@@ -11,6 +11,7 @@ import type {
   WorkflowDetail,
 } from "../types/index.js";
 import type { Execution } from "../generated/types.gen.js";
+import type { WorkflowDetailInternal } from "../clients/n8n-api-client.js";
 import { WorkflowFormatter } from "./workflow-formatter.js";
 import { ContextMinimizer } from "./context-minimizer.js";
 
@@ -27,33 +28,43 @@ export class ToolResponseBuilder {
   }
 
   /**
+   * Template method for creating MCP tool responses
+   * Handles the common pattern of raw vs minimal responses
+   */
+  private createResponse<TRaw, TMinimal = TRaw>(
+    message: string,
+    rawData: TRaw,
+    minimalData: TMinimal,
+    raw: boolean
+  ): MCPToolResponse<TRaw | TMinimal> {
+    return {
+      success: true,
+      message,
+      data: raw ? rawData : minimalData,
+    };
+  }
+
+  /**
    * Create response for list_workflows tool
    */
   createListWorkflowsResponse(
-    workflows: unknown[],
+    workflows: WorkflowSummary[],
     raw = false
   ): MCPToolResponse<WorkflowListResponse | WorkflowSummary[]> {
     if (raw) {
-      // Return formatted workflow summaries (current behavior)
-      const formattedWorkflows = workflows.map((workflow: unknown) =>
-        this.workflowFormatter.formatWorkflowSummary(workflow)
-      );
       return {
         success: true,
         message: `${String(workflows.length)}件のワークフローを取得しました`,
-        data: formattedWorkflows,
+        data: workflows,
       };
     }
 
     // Default: minimal response
-    const minimalWorkflows = workflows.map((workflow: unknown) => {
-      const wf = workflow as Record<string, unknown>;
-      return {
-        id: wf.id as string,
-        name: wf.name as string,
-        active: wf.active as boolean,
-      };
-    });
+    const minimalWorkflows = workflows.map((workflow) => ({
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active,
+    }));
 
     return {
       success: true,
@@ -69,7 +80,7 @@ export class ToolResponseBuilder {
    * Create response for get_workflow tool
    */
   createGetWorkflowResponse(
-    workflow: unknown,
+    workflow: WorkflowDetailInternal,
     raw = false
   ): MCPToolResponse<WorkflowDetailResponse | WorkflowDetail> {
     if (raw) {
@@ -84,16 +95,15 @@ export class ToolResponseBuilder {
     }
 
     // Default: minimal response
-    const wf = workflow as Record<string, unknown>;
     return {
       success: true,
       message: "ワークフローを取得しました",
       data: {
-        id: wf.id as string,
-        name: wf.name as string,
-        active: wf.active as boolean,
-        nodeCount: (wf.nodes as unknown[]).length,
-        tags: wf.tags as string[],
+        id: workflow.id,
+        name: workflow.name,
+        active: workflow.active,
+        nodeCount: workflow.nodes.length,
+        tags: workflow.tags,
       },
     };
   }
@@ -102,57 +112,35 @@ export class ToolResponseBuilder {
    * Create response for create_workflow tool
    */
   createCreateWorkflowResponse(
-    workflow: unknown,
+    workflow: WorkflowDetailInternal,
     raw = false
   ): MCPToolResponse {
-    if (raw) {
-      // Return full workflow data
-      return {
-        success: true,
-        message: "ワークフローを作成しました",
-        data: workflow,
-      };
-    }
+    const message = "ワークフローを作成しました";
 
-    // Default: minimal response
-    const wf = workflow as Record<string, unknown>;
-    return {
-      success: true,
-      message: "ワークフローを作成しました",
-      data: {
-        id: wf.id as string,
-        name: wf.name as string,
-        active: wf.active as boolean,
-      },
+    const minimalData = {
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active,
     };
+
+    return this.createResponse(message, workflow, minimalData, raw);
   }
 
   /**
    * Create response for update_workflow tool
    */
   createUpdateWorkflowResponse(
-    workflow: unknown,
+    workflow: WorkflowDetailInternal,
     raw = false
   ): MCPToolResponse {
-    if (raw) {
-      // Return full workflow data
-      return {
-        success: true,
-        message: "ワークフローを更新しました",
-        data: workflow,
-      };
-    }
+    const message = "ワークフローを更新しました";
 
-    // Default: minimal response
-    const wf = workflow as Record<string, unknown>;
-    return {
-      success: true,
-      message: "ワークフローを更新しました",
-      data: {
-        id: wf.id as string,
-        name: wf.name as string,
-      },
+    const minimalData = {
+      id: workflow.id,
+      name: workflow.name,
     };
+
+    return this.createResponse(message, workflow, minimalData, raw);
   }
 
   /**
@@ -174,10 +162,9 @@ export class ToolResponseBuilder {
    * Create response for get_workflow_connections tool
    */
   createGetWorkflowConnectionsResponse(
-    workflow: unknown,
+    workflow: WorkflowDetailInternal,
     raw = false
   ): MCPToolResponse {
-    const wf = workflow as Record<string, unknown>;
     const graph = this.workflowFormatter.formatWorkflowConnections(workflow);
 
     if (raw) {
@@ -185,10 +172,10 @@ export class ToolResponseBuilder {
         success: true,
         message: "ワークフロー接続情報を取得しました",
         data: {
-          id: wf.id as string,
-          name: wf.name as string,
+          id: workflow.id,
+          name: workflow.name,
           graph,
-          rawConnections: wf.connections,
+          rawConnections: workflow.connections,
         },
       };
     }
@@ -197,8 +184,8 @@ export class ToolResponseBuilder {
       success: true,
       message: "ワークフロー接続情報を取得しました",
       data: {
-        id: wf.id as string,
-        name: wf.name as string,
+        id: workflow.id,
+        name: workflow.name,
         graph,
       },
     };
@@ -211,16 +198,9 @@ export class ToolResponseBuilder {
     executions: Execution[],
     raw = false
   ): MCPToolResponse {
-    if (raw) {
-      // Return full execution data
-      return {
-        success: true,
-        message: `${String(executions.length)}件の実行履歴を取得しました`,
-        data: executions,
-      };
-    }
+    const message = `${String(executions.length)}件の実行履歴を取得しました`;
 
-    // Default: minimal response (id, workflowId, status, startedAt only)
+    // Minimal response: extract only essential fields
     const minimalExecutions = executions.map(e => ({
       id: e.id,
       workflowId: e.workflowId,
@@ -228,14 +208,12 @@ export class ToolResponseBuilder {
       startedAt: e.startedAt,
     }));
 
-    return {
-      success: true,
-      message: `${String(executions.length)}件の実行履歴を取得しました`,
-      data: {
-        count: executions.length,
-        executions: minimalExecutions,
-      },
+    const minimalData = {
+      count: executions.length,
+      executions: minimalExecutions,
     };
+
+    return this.createResponse(message, executions, minimalData, raw);
   }
 
   /**
@@ -245,27 +223,18 @@ export class ToolResponseBuilder {
     execution: Execution,
     raw = false
   ): MCPToolResponse {
-    if (raw) {
-      // Return full execution data
-      return {
-        success: true,
-        message: '実行詳細を取得しました',
-        data: execution,
-      };
-    }
+    const message = '実行詳細を取得しました';
 
-    // Default: minimal response (id, workflowId, status, startedAt, stoppedAt only)
-    return {
-      success: true,
-      message: '実行詳細を取得しました',
-      data: {
-        id: execution.id,
-        workflowId: execution.workflowId,
-        status: execution.status,
-        startedAt: execution.startedAt,
-        stoppedAt: execution.stoppedAt,
-      },
+    // Minimal response: extract only essential fields
+    const minimalData = {
+      id: execution.id,
+      workflowId: execution.workflowId,
+      status: execution.status,
+      startedAt: execution.startedAt,
+      stoppedAt: execution.stoppedAt,
     };
+
+    return this.createResponse(message, execution, minimalData, raw);
   }
 }
 
@@ -278,7 +247,7 @@ if (import.meta.vitest) {
     describe("createListWorkflowsResponse", () => {
       it("should create minimal response by default", () => {
         const workflows = [
-          { id: "1", name: "Workflow 1", active: true, nodes: [] },
+          { id: "1", name: "Workflow 1", active: true, tags: [], createdAt: "2024-01-01", updatedAt: "2024-01-01", nodeCount: 0 },
         ];
 
         const result = builder.createListWorkflowsResponse(workflows, false);
@@ -294,8 +263,10 @@ if (import.meta.vitest) {
             id: "1",
             name: "Workflow 1",
             active: true,
-            nodes: [],
             tags: ["test"],
+            createdAt: "2024-01-01",
+            updatedAt: "2024-01-01",
+            nodeCount: 0,
           },
         ];
 
@@ -311,9 +282,13 @@ if (import.meta.vitest) {
         const workflow = {
           id: "wf-1",
           name: "Test Workflow",
+          active: true,
+          tags: [],
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-01",
           nodes: [
-            { id: "node1", name: "Start", type: "n8n-nodes-base.start" },
-            { id: "node2", name: "HTTP", type: "n8n-nodes-base.httpRequest" },
+            { id: "node1", name: "Start", type: "n8n-nodes-base.start", typeVersion: 1, position: [250, 300] as [number, number], parameters: {} },
+            { id: "node2", name: "HTTP", type: "n8n-nodes-base.httpRequest", typeVersion: 1, position: [450, 300] as [number, number], parameters: {} },
           ],
           connections: {
             Start: {
@@ -335,8 +310,12 @@ if (import.meta.vitest) {
         const workflow = {
           id: "wf-1",
           name: "Test Workflow",
+          active: true,
+          tags: [],
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-01",
           nodes: [
-            { id: "node1", name: "Start", type: "n8n-nodes-base.start" },
+            { id: "node1", name: "Start", type: "n8n-nodes-base.start", typeVersion: 1, position: [250, 300] as [number, number], parameters: {} },
           ],
           connections: {},
         };
