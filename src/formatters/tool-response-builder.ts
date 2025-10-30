@@ -9,11 +9,8 @@ import type {
   WorkflowDeleteResponse,
   WorkflowSummary,
   WorkflowDetail,
-  ExecutionSummary,
-  ExecutionListResponse,
-  ExecutionDetail,
-  ExecutionDetailResponse,
 } from "../types/index.js";
+import type { Execution } from "../generated/types.gen.js";
 import { WorkflowFormatter } from "./workflow-formatter.js";
 import { ContextMinimizer } from "./context-minimizer.js";
 
@@ -209,24 +206,66 @@ export class ToolResponseBuilder {
 
   /**
    * Create response for list_executions tool
-   * Implementation will be added in Phase 2
    */
   createListExecutionsResponse(
-    _executions: ExecutionSummary[],
-    _raw = false
-  ): MCPToolResponse<ExecutionListResponse | ExecutionSummary[]> {
-    throw new Error('Not implemented yet - Phase 2');
+    executions: Execution[],
+    raw = false
+  ): MCPToolResponse {
+    if (raw) {
+      // Return full execution data
+      return {
+        success: true,
+        message: `${String(executions.length)}件の実行履歴を取得しました`,
+        data: executions,
+      };
+    }
+
+    // Default: minimal response (id, workflowId, status, startedAt only)
+    const minimalExecutions = executions.map(e => ({
+      id: e.id,
+      workflowId: e.workflowId,
+      status: e.status,
+      startedAt: e.startedAt,
+    }));
+
+    return {
+      success: true,
+      message: `${String(executions.length)}件の実行履歴を取得しました`,
+      data: {
+        count: executions.length,
+        executions: minimalExecutions,
+      },
+    };
   }
 
   /**
    * Create response for get_execution tool
-   * Implementation will be added in Phase 2
    */
   createGetExecutionResponse(
-    _execution: ExecutionDetail,
-    _raw = false
-  ): MCPToolResponse<ExecutionDetailResponse | ExecutionDetail> {
-    throw new Error('Not implemented yet - Phase 2');
+    execution: Execution,
+    raw = false
+  ): MCPToolResponse {
+    if (raw) {
+      // Return full execution data
+      return {
+        success: true,
+        message: '実行詳細を取得しました',
+        data: execution,
+      };
+    }
+
+    // Default: minimal response (id, workflowId, status, startedAt, stoppedAt only)
+    return {
+      success: true,
+      message: '実行詳細を取得しました',
+      data: {
+        id: execution.id,
+        workflowId: execution.workflowId,
+        status: execution.status,
+        startedAt: execution.startedAt,
+        stoppedAt: execution.stoppedAt,
+      },
+    };
   }
 }
 

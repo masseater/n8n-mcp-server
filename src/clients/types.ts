@@ -4,19 +4,16 @@
 
 import type { WorkflowDetailInternal } from './n8n-api-client.js';
 import type { WorkflowSummary, ListOptions } from '../types/index.js';
-import type {
-  ExecutionSummary,
-  ExecutionDetail,
-} from '../types/execution-types.js';
+import type { Execution } from '../generated/types.gen.js';
 
 /**
  * n8n API Client interface
  */
-export interface N8nApiClient {
+export type N8nApiClient = {
   /**
    * Authenticate with n8n API
    */
-  authenticate(credentials: { apiKey: string }): Promise<void>;
+  authenticate(credentials: { apiKey: string }): Promise<boolean>;
 
   /**
    * Get workflow list
@@ -54,7 +51,7 @@ export interface N8nApiClient {
     status?: string;
     limit?: number;
     cursor?: string;
-  }): Promise<ExecutionSummary[]>;
+  }): Promise<Execution[]>;
 
   /**
    * Get execution by ID
@@ -62,5 +59,5 @@ export interface N8nApiClient {
   getExecution(
     id: string,
     options?: { includeData?: boolean },
-  ): Promise<ExecutionDetail>;
+  ): Promise<Execution>;
 }

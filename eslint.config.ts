@@ -34,6 +34,13 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["**/*.generated.ts", "src/generated/**/*"],
+    files: ['**/*.test.ts'],
+    rules: {
+      // https://github.com/vitest-dev/eslint-plugin-vitest/issues/591
+      '@typescript-eslint/unbound-method': 'off',
+    }
+  },
+  {
+    ignores: ["**/*.generated.ts", "**/*.gen.ts", "src/generated/**/*"],
   }
 );

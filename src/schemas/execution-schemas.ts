@@ -5,28 +5,13 @@
 import { z } from 'zod';
 
 /**
- * Execution status schema
- */
-export const executionStatusSchema = z.enum([
-  'success',
-  'error',
-  'waiting',
-  'running',
-  'canceled',
-]);
-
-/**
  * list_executions tool input schema
  */
 export const listExecutionsArgsSchema = z.object({
   /** Filter by workflow ID */
   workflowId: z.string().optional(),
   /** Filter by execution status */
-  status: executionStatusSchema.optional(),
-  /** Filter by start date (ISO 8601) */
-  startDate: z.string().datetime().optional(),
-  /** Filter by end date (ISO 8601) */
-  endDate: z.string().datetime().optional(),
+  status: z.enum(['success', 'error', 'waiting', 'running', 'canceled']).optional(),
   /** Limit number of results (1-100) */
   limit: z.number().int().min(1).max(100).optional(),
   /** Pagination cursor from previous response */

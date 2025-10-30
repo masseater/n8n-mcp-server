@@ -70,15 +70,19 @@
   - ✅ 型定義ファイル（インターフェース）(src/types/execution-types.ts, src/schemas/execution-schemas.ts)
 
 ### Phase 2: Test-First Implementation
-- **開始日時**: （未着手）
-- **状態**: 未着手
+- **開始日時**: 2025-10-29
+- **完了日時**: 2025-10-29
+- **状態**: ✅ 完了
 - **目標**: TDDによる機能実装（Green Phase）
 - **依存関係**: Phase 1のテスト設計完了が必須
 - **成果物**:
-  - パスするテストコード
-  - 最小限の実装コード
-  - ListExecutionsTool実装
-  - GetExecutionTool実装
+  - ✅ パスするテストコード（64/64 tests passed）
+  - ✅ 最小限の実装コード
+  - ✅ ListExecutionsTool実装
+  - ✅ GetExecutionTool実装
+  - ✅ N8nApiClient拡張（getExecutions, getExecution）
+  - ✅ ToolResponseBuilder拡張（createListExecutionsResponse, createGetExecutionResponse）
+  - ✅ rawオプション実装（コンテキスト最適化）
 
 ### Phase 3: Refactoring and Optimization
 - **開始日時**: （未着手）

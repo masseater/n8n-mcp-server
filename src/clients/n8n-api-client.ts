@@ -9,10 +9,13 @@ import {
   postWorkflows,
   putWorkflowsById,
   deleteWorkflowsById,
+  getExecutions,
+  getExecutionsById,
 } from '../generated/sdk.gen.js';
 import type {
   Workflow,
   WorkflowWritable,
+  Execution,
 } from '../generated/types.gen.js';
 import type {
   AuthCredentials,
@@ -207,7 +210,7 @@ export class N8nApiClientImpl {
   /**
    * Create a new workflow
    */
-  async createWorkflow(workflow: WorkflowDefinition): Promise<WorkflowSummary> {
+  async createWorkflow(workflow: WorkflowDefinition): Promise<WorkflowDetailInternal> {
     try {
       if (!workflow.name) {
         throw new Error('Workflow name is required');
@@ -229,7 +232,7 @@ export class N8nApiClientImpl {
         throw new Error('No workflow data returned from create');
       }
 
-      return this.transformToWorkflowSummary(response.data);
+      return this.transformToWorkflowDetail(response.data);
     } catch (error) {
       this.handleError('Failed to create workflow', error);
     }
@@ -241,7 +244,7 @@ export class N8nApiClientImpl {
   async updateWorkflow(
     id: string,
     workflow: Partial<WorkflowDefinition>,
-  ): Promise<WorkflowSummary> {
+  ): Promise<WorkflowDetailInternal> {
     try {
       if (!id) {
         throw new Error('Workflow ID is required');
@@ -264,7 +267,7 @@ export class N8nApiClientImpl {
         throw new Error(`No workflow data returned from update for ${id}`);
       }
 
-      return this.transformToWorkflowSummary(response.data);
+      return this.transformToWorkflowDetail(response.data);
     } catch (error) {
       this.handleError(`Failed to update workflow ${id}`, error);
     }
@@ -273,7 +276,7 @@ export class N8nApiClientImpl {
   /**
    * Delete a workflow
    */
-  async deleteWorkflow(id: string): Promise<boolean> {
+  async deleteWorkflow(id: string): Promise<{ id: string }> {
     try {
       if (!id) {
         throw new Error('Workflow ID is required');
@@ -287,7 +290,7 @@ export class N8nApiClientImpl {
         throw new Error(`Failed to delete workflow ${id}: ${this.formatError(response.error)}`);
       }
 
-      return true;
+      return { id };
     } catch (error) {
       this.handleError(`Failed to delete workflow ${id}`, error);
     }
@@ -360,6 +363,86 @@ export class N8nApiClientImpl {
       connections: workflowData.connections ?? {},
       settings: workflow.settings as IWorkflowSettings,
     };
+  }
+
+  /**
+   * Get execution list
+   */
+  async getExecutions(options?: {
+    workflowId?: string;
+    status?: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Execution[]> {
+    try {
+      const query: Record<string, unknown> = {};
+      if (options?.workflowId) {
+        query.workflowId = options.workflowId;
+      }
+      if (options?.status) {
+        query.status = options.status;
+      }
+      if (options?.limit) {
+        query.limit = options.limit;
+      }
+      if (options?.cursor) {
+        query.cursor = options.cursor;
+      }
+
+      const response = await getExecutions({
+        query: query as Record<string, string | number>,
+      });
+
+      if (response.error) {
+        throw new Error(`Failed to get executions: ${this.formatError(response.error)}`);
+      }
+
+      return response.data?.data ?? [];
+    } catch (error) {
+      this.handleError('Failed to get executions', error);
+    }
+  }
+
+  /**
+   * Get execution by ID
+   */
+  async getExecution(
+    id: string,
+    options?: { includeData?: boolean },
+  ): Promise<Execution> {
+    try {
+      if (!id) {
+        throw new Error('Execution ID is required');
+      }
+
+      const query: Record<string, unknown> = {};
+      if (options?.includeData !== undefined) {
+        query.includeData = options.includeData;
+      }
+
+      // Convert string ID to number for API
+      const numericId = Number(id);
+      if (isNaN(numericId)) {
+        throw new Error(`Invalid execution ID: ${id}`);
+      }
+
+      const response = await getExecutionsById({
+        path: { id: numericId },
+        query: query as Record<string, boolean>,
+      });
+
+      if (response.error) {
+        throw new Error(`Failed to get execution ${id}: ${this.formatError(response.error)}`);
+      }
+
+      if (!response.data) {
+        throw new Error(`No execution data returned for ${id}`);
+      }
+
+      return response.data;
+    } catch (error) {
+      this.handleError(`Failed to get execution ${id}`, error);
+    }
   }
 
   /**

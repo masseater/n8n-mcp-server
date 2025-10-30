@@ -4,7 +4,7 @@
 
 import { z } from "zod";
 import { RawTool } from "../base/raw-tool.js";
-import type { WorkflowSummary } from "../../types/index.js";
+import type { WorkflowDetailInternal } from "../../clients/n8n-api-client.js";
 import { loadWorkflowFromFile } from "../utils/file-loader.js";
 
 type CreateWorkflowFromFileArgs = {
@@ -30,13 +30,13 @@ export class CreateWorkflowFromFileTool extends RawTool<CreateWorkflowFromFileAr
     });
   }
 
-  async executeCore(args: CreateWorkflowFromFileCoreArgs): Promise<WorkflowSummary> {
+  async executeCore(args: CreateWorkflowFromFileCoreArgs): Promise<WorkflowDetailInternal> {
     const workflow = await loadWorkflowFromFile(args.filePath);
     return await this.context.n8nClient.createWorkflow(workflow);
   }
 
   formatResponse(data: unknown, raw: boolean): unknown {
-    const workflow = data as WorkflowSummary;
+    const workflow = data as WorkflowDetailInternal;
     return this.context.responseBuilder.createCreateWorkflowResponse(workflow, raw);
   }
 }

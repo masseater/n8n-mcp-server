@@ -10,7 +10,7 @@ import { BaseTool } from "./base-tool.js";
  * - raw=false (default): Returns minimal, optimized response for context efficiency
  * - raw=true: Returns full, detailed response with all available data
  */
-export abstract class RawTool<TArgs extends { raw?: boolean }> extends BaseTool<TArgs> {
+export abstract class RawTool<TArgs extends { raw?: boolean | undefined }> extends BaseTool<TArgs> {
   /**
    * Execute core tool logic without raw option handling
    * Override this method to implement the main tool behavior

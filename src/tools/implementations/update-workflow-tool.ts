@@ -5,7 +5,8 @@
 import { z } from "zod";
 import { RawTool } from "../base/raw-tool.js";
 import { nodeSchema, connectionsSchema, settingsSchema } from "../schemas.js";
-import type { WorkflowDefinition, WorkflowSummary } from "../../types/index.js";
+import type { WorkflowDefinition } from "../../types/index.js";
+import type { WorkflowDetailInternal } from "../../clients/n8n-api-client.js";
 
 type UpdateWorkflowArgs = {
   id: string;
@@ -35,13 +36,13 @@ export class UpdateWorkflowTool extends RawTool<UpdateWorkflowArgs> {
     });
   }
 
-  async executeCore(args: UpdateWorkflowCoreArgs): Promise<WorkflowSummary> {
+  async executeCore(args: UpdateWorkflowCoreArgs): Promise<WorkflowDetailInternal> {
     const { id, ...workflowData } = args;
     return await this.context.n8nClient.updateWorkflow(id, workflowData);
   }
 
   formatResponse(data: unknown, raw: boolean): unknown {
-    const workflow = data as WorkflowSummary;
+    const workflow = data as WorkflowDetailInternal;
     return this.context.responseBuilder.createUpdateWorkflowResponse(
       workflow,
       raw
