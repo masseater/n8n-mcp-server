@@ -2,8 +2,9 @@
 
 ## Phase概要
 - **Phase名**: Test-First Implementation (Green Phase)
-- **開始日時**: （未着手）
-- **状態**: 未着手
+- **開始日時**: 2025-10-29
+- **完了日時**: 2025-10-29
+- **状態**: ✅ 完了
 - **目標**:
   - Phase 1で作成した失敗するテストをパスさせる
   - 最小限の実装でGreen Phaseを達成
@@ -54,7 +55,7 @@
   - すべてのテストが失敗することを確認
   - テスト実行環境の動作確認
   - 実装開始の準備完了
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ```bash
 # Red Phaseの確認
@@ -72,7 +73,7 @@ pnpm test:red
 - **完了条件**:
   - 関連するテストがパス
   - エラーケースも考慮
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ```typescript
 // Green Phase: 最小実装例
@@ -103,7 +104,7 @@ class N8nApiClientImpl {
 - **完了条件**:
   - 15個以上のテストケースがパス
   - raw オプションの動作
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ```typescript
 // Green Phase: 段階的な実装
@@ -156,7 +157,7 @@ export class ListExecutionsTool extends RawTool<ListExecutionsArgs> {
 - **完了条件**:
   - 10個以上のテストケースがパス
   - includeDataオプションの動作
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ### タスク5: ExecutionFormatter - 最小実装
 - **説明**: データ整形の最小実装
@@ -167,7 +168,7 @@ export class ListExecutionsTool extends RawTool<ListExecutionsArgs> {
   - `execution-formatter.test.ts`のテストケース
 - **完了条件**:
   - フォーマッターテストがパス
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ```typescript
 // Green Phase: 最小実装
@@ -192,7 +193,7 @@ export class ExecutionFormatter {
   - `tool-response-builder.test.ts`の実行関連テスト
 - **完了条件**:
   - レスポンスビルダーテストがパス
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ### タスク7: ToolRegistry更新
 - **説明**: 新しいツールをレジストリに登録
@@ -203,7 +204,7 @@ export class ExecutionFormatter {
   - 統合テストのツール登録テスト
 - **完了条件**:
   - ツール登録テストがパス
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ### タスク8: 統合テストをパスさせる
 - **説明**: E2Eシナリオのテストをパス
@@ -215,7 +216,7 @@ export class ExecutionFormatter {
 - **完了条件**:
   - MCPサーバー統合テストがパス
   - ツール呼び出しのE2Eテストがパス
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ### タスク9: 全テストのGreen確認
 - **説明**: すべてのテストがパスすることを確認
@@ -226,7 +227,7 @@ export class ExecutionFormatter {
   - `pnpm test`ですべてパス
   - カバレッジレポート生成
   - CIでのテスト成功
-- **状態**: 未着手
+- **状態**: ✅ 完了
 
 ```bash
 # Green Phase完了確認
@@ -307,11 +308,11 @@ class ListExecutionsTool {
   - （実装後に特定）
 
 ## チェックポイント
-- [ ] Red Phaseのテストがすべて存在することを確認
-- [ ] N8nApiClientのテストがパス
-- [ ] ListExecutionsToolのテストがパス（15ケース以上）
-- [ ] GetExecutionToolのテストがパス（10ケース以上）
-- [ ] 統合テストがパス
-- [ ] すべてのテストがパス（Green達成）
-- [ ] カバレッジ80%以上
-- [ ] 実環境での動作確認
+- [x] Red Phaseのテストがすべて存在することを確認
+- [x] N8nApiClientのテストがパス
+- [x] ListExecutionsToolのテストがパス（15ケース以上）
+- [x] GetExecutionToolのテストがパス（10ケース以上）
+- [x] 統合テストがパス
+- [x] すべてのテストがパス（Green達成）
+- [x] カバレッジ80%以上
+- [x] 実環境での動作確認
