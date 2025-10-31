@@ -31,7 +31,11 @@ program
 
 program
   .option("-t, --transport <type>", "Transport type (stdio|http)", "stdio")
-  .option("-p, --port <number>", "Port for HTTP transport", "3000")
+  .option(
+    "-p, --port <number>",
+    "Port for HTTP transport",
+    process.env.PORT ?? "3000",
+  )
   .option("--n8n-url <url>", "n8n instance URL")
   .option("--api-key <key>", "n8n API key")
   .option("--log-level <level>", "Log level (error|warn|info|debug)", "info")
