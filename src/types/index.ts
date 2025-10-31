@@ -117,4 +117,5 @@ export type {
   WorkflowListResponse,
   WorkflowDetailResponse,
   WorkflowDeleteResponse,
+  ExecutionSummary,
 } from './mcp-response.js';

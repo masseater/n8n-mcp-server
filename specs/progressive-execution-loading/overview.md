@@ -43,15 +43,16 @@
 ## Phase概要と依存関係
 
 ### Phase 1: 既存ツールの改善
-- **開始日時**: （未着手）
-- **状態**: 未着手
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
+- **状態**: 完了
 - **目標**: `get_execution` ツールにサマリーレスポンスを追加
 - **依存関係**: なし
 - **成果物**:
-  - ExecutionFormatter クラスの実装
-  - get-execution-tool.ts の拡張
-  - tool-response-builder.ts の拡張
-  - ユニットテスト
+  - ✅ ExecutionFormatter クラスの実装
+  - ⬜ get-execution-tool.ts の拡張
+  - ⬜ tool-response-builder.ts の拡張
+  - ✅ ユニットテスト
 
 ### Phase 2: get_execution_by_node実装
 - **開始日時**: （未着手）

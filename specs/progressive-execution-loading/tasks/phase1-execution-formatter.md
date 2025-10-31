@@ -2,13 +2,13 @@
 
 ## タスク目次
 
-- 1. [ExecutionSummaryレスポンス構造の設計] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. [統計情報計算ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. [availableNodes抽出ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. [期間計算ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. [ガイダンス生成ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 6. [formatSummary()メソッドの統合] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 7. [ExecutionFormatterユニットテストの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. [ExecutionSummaryレスポンス構造の設計] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. [統計情報計算ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. [availableNodes抽出ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. [期間計算ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 5. [ガイダンス生成ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 6. [formatSummary()メソッドの統合] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 7. [ExecutionFormatterユニットテストの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て直列実行（タスク間に依存関係あり）
@@ -18,7 +18,8 @@
 
 ## Phase概要
 - **Phase名**: ExecutionFormatter実装
-- **状態**: 未着手
+- **状態**: 完了
+- **完了日時**: 2025-10-31
 - **目標**: 実行データのサマリー形式への変換機能を実装し、MCPレスポンス制限（25,000 tokens）内に収めるExecutionSummaryを生成する
 
 ## TDD & 設計原則の適用

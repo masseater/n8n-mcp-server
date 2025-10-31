@@ -44,3 +44,33 @@ export type WorkflowDetailResponse = {
 export type WorkflowDeleteResponse = {
   id: string;
 }
+
+/**
+ * Execution summary response (for Progressive Execution Loading)
+ * Provides overview of execution with statistics and available nodes
+ */
+export type ExecutionSummary = {
+  id: string;
+  workflowId: string;
+  workflowName: string;
+  status: "success" | "error" | "waiting" | "running" | "canceled";
+  startedAt: string;
+  stoppedAt: string | undefined;
+  duration: number | undefined; // milliseconds
+  statistics: {
+    totalNodes: number;
+    executedNodes: number;
+    successfulNodes: number;
+    failedNodes: number;
+    totalItemsProcessed: number;
+  };
+  availableNodes: {
+    nodeName: string; // Node name from runData keys (user-defined name)
+    nodeType: string; // Node type (e.g., "n8n-nodes-base.httpRequest")
+    status: "success" | "error"; // Node execution status
+  }[];
+  _guidance: {
+    message: string;
+    example: string; // Next tool call example with nodeName
+  };
+}
