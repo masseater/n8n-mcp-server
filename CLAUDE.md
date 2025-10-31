@@ -107,16 +107,20 @@ This is a Model Context Protocol (MCP) server that bridges AI models with n8n wo
    - Each tool extends `RawTool<TArgs>` (not BaseTool directly)
    - Uses Zod for input validation with `raw?: boolean` field
    - Receives `ToolContext` with `n8nClient` and `responseBuilder`
-   - Available tools: ListWorkflowsTool, GetWorkflowTool, CreateWorkflowTool, UpdateWorkflowTool, DeleteWorkflowTool
+   - Available workflow tools: ListWorkflowsTool, GetWorkflowTool, GetWorkflowConnectionsTool, CreateWorkflowTool, CreateWorkflowFromFileTool, UpdateWorkflowTool, ReplaceWorkflowFromFileTool, DeleteWorkflowTool
+   - Available execution tools: ListExecutionsTool, GetExecutionTool
 
 **Layer 3: Client Layer (src/clients/)**
 
 1. **N8nApiClientImpl** (src/clients/n8n-api-client.ts)
    - Wrapper around @hey-api/openapi-ts generated SDK
-   - Methods: `authenticate()`, `getWorkflows()`, `getWorkflow()`, `createWorkflow()`, `updateWorkflow()`, `deleteWorkflow()`
-   - Returns `WorkflowSummary[]` for list operations
-   - Returns `WorkflowDetailInternal` for detail operations (contains full INode[] and IConnections)
-   - Uses generated SDK functions: `getWorkflows()`, `getWorkflowsById()`, `postWorkflows()`, `putWorkflowsById()`, `deleteWorkflowsById()`
+   - Workflow methods: `authenticate()`, `getWorkflows()`, `getWorkflow()`, `createWorkflow()`, `updateWorkflow()`, `deleteWorkflow()`
+   - Execution methods: `getExecutions()`, `getExecution()`
+   - Returns `WorkflowSummary[]` for workflow list operations
+   - Returns `WorkflowDetailInternal` for workflow detail operations (contains full INode[] and IConnections)
+   - Returns `Execution[]` for execution list operations
+   - Returns `Execution` for execution detail operations
+   - Uses generated SDK functions: `getWorkflows()`, `getWorkflowsById()`, `postWorkflows()`, `putWorkflowsById()`, `deleteWorkflowsById()`, `getExecutions()`, `getExecutionsById()`
    - Configures generated client via `generatedClient.setConfig()`
 
 **Layer 4: Response Layer (src/formatters/)**
@@ -124,7 +128,9 @@ This is a Model Context Protocol (MCP) server that bridges AI models with n8n wo
 1. **ToolResponseBuilder** (src/formatters/tool-response-builder.ts)
    - Creates optimized MCP tool responses
    - Two response modes: minimal (default) and raw
-   - Methods: `createListWorkflowsResponse()`, `createGetWorkflowResponse()`, etc.
+   - Workflow methods: `createListWorkflowsResponse()`, `createGetWorkflowResponse()`, `createGetWorkflowConnectionsResponse()`, `createCreateWorkflowResponse()`, `createUpdateWorkflowResponse()`, `createDeleteWorkflowResponse()`
+   - Execution methods: `createListExecutionsResponse()`, `createGetExecutionResponse()`
+   - Uses Template Method pattern with generic `createResponse<TRaw, TMinimal>()` for DRY code
    - Delegates to WorkflowFormatter and ContextMinimizer
 
 2. **WorkflowFormatter** (src/formatters/workflow-formatter.ts)
@@ -179,9 +185,18 @@ const context: ToolContext = {
 
 // 2. Manually instantiate tools
 const tools: Tool[] = [
+  // Workflow tools
   new DeleteWorkflowTool(context),
   new ListWorkflowsTool(context),
-  // ...
+  new GetWorkflowTool(context),
+  new GetWorkflowConnectionsTool(context),
+  new CreateWorkflowTool(context),
+  new CreateWorkflowFromFileTool(context),
+  new UpdateWorkflowTool(context),
+  new ReplaceWorkflowFromFileTool(context),
+  // Execution tools
+  new ListExecutionsTool(context),
+  new GetExecutionTool(context),
 ];
 
 // 3. Store in Map
@@ -374,7 +389,11 @@ n8n API: N8nWorkflowResponse[]
 
 ## Available MCP Tools
 
-All tools support a `raw` option to control response verbosity. By default, tools return minimal information to reduce context usage. Set `raw=true` to get complete workflow data.
+This server provides **10 MCP tools** for comprehensive n8n workflow and execution management:
+- **8 workflow management tools**: CRUD operations and connection visualization
+- **2 execution monitoring tools**: Execution history and detailed debugging
+
+All tools support a `raw` option to control response verbosity. By default, tools return minimal information to reduce context usage. Set `raw=true` to get complete data.
 
 ### 1. list_workflows
 
@@ -585,6 +604,117 @@ Same as `create_workflow_from_file`. The file should contain a complete workflow
 - This completely replaces the workflow - all existing nodes and connections will be removed
 - The `active`, `tags`, and `id` fields in the JSON file are ignored (read-only in n8n API)
 - The workflow ID is taken from the `id` parameter, not from the JSON file
+
+### 9. list_executions
+
+Get workflow execution history with optional filtering.
+
+**Parameters**:
+- `workflowId` (string, optional): Filter by specific workflow ID
+- `status` (enum, optional): Filter by execution status - "success" | "error" | "waiting" | "running" | "canceled"
+- `limit` (number, optional): Limit number of results (1-100, default: 20)
+- `cursor` (string, optional): Cursor for pagination (from previous response)
+- `raw` (boolean, optional): Return full execution data
+
+**Response**:
+- Default (`raw=false`):
+  ```json
+  {
+    "success": true,
+    "message": "実行履歴を取得しました",
+    "data": {
+      "count": 42,
+      "executions": [
+        {
+          "id": "12345",
+          "workflowId": "workflow-123",
+          "workflowName": "My Workflow",
+          "status": "success",
+          "startedAt": "2024-10-29T10:00:00Z",
+          "stoppedAt": "2024-10-29T10:00:05Z",
+          "executionTime": 5000
+        }
+      ]
+    }
+  }
+  ```
+- With `raw=true`: Full execution data including all metadata
+
+**Context reduction**: 60-70% with default response
+
+**Use cases**:
+- Monitoring workflow execution status
+- Debugging failed executions
+- Analyzing execution patterns and performance
+- Finding specific execution instances
+
+**Business rules**:
+- Executions are sorted in descending order (newest first)
+- Deleted workflows show as "Deleted Workflow"
+- Status filtering supports multiple execution states
+
+### 10. get_execution
+
+Get detailed information about a specific execution, including node-level execution results and error information.
+
+**Parameters**:
+- `id` (string, required): Execution ID (matches regex `^\d+$`)
+- `includeData` (boolean, optional): Include node input/output data (default: false)
+- `raw` (boolean, optional): Return full execution data
+
+**Response**:
+- Default (`raw=false`):
+  ```json
+  {
+    "success": true,
+    "message": "実行詳細を取得しました",
+    "data": {
+      "id": "12345",
+      "workflowId": "workflow-123",
+      "workflowName": "My Workflow",
+      "status": "error",
+      "startedAt": "2024-10-29T10:00:00Z",
+      "stoppedAt": "2024-10-29T10:00:05Z",
+      "executionTime": 5000,
+      "error": {
+        "node": "HTTP Request",
+        "message": "Connection timeout",
+        "timestamp": "2024-10-29T10:00:05Z"
+      },
+      "nodeExecutions": [
+        {
+          "nodeName": "Start",
+          "status": "success",
+          "executionTime": 10
+        },
+        {
+          "nodeName": "HTTP Request",
+          "status": "error",
+          "executionTime": 4990,
+          "error": "Connection timeout"
+        }
+      ]
+    }
+  }
+  ```
+- With `raw=true`: Complete execution data including all node I/O when `includeData=true`
+
+**Context reduction**: 75-85% with default response
+
+**Use cases**:
+- Debugging workflow failures
+- Analyzing node-level performance
+- Understanding execution flow
+- Identifying error sources
+
+**Business rules**:
+- Error information prioritized in response
+- Execution time in milliseconds
+- Node execution order preserved
+
+**Performance notes**:
+- Without `includeData`: < 1 second response time
+- With `includeData`: < 5 seconds response time (larger data payload)
 
 ## Context Optimization Strategy
 
