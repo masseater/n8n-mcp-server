@@ -39,6 +39,20 @@ export function handleResponse<T>(
     );
   }
 
+  // Check if response is HTML (indicates wrong endpoint or error page)
+  if (typeof response.data === 'string' && response.data.trim().startsWith('<!DOCTYPE')) {
+    throw new ApiError(
+      `Received HTML response instead of JSON for ${context.operation}. Check API endpoint URL.`,
+      undefined,
+      {
+        operation: context.operation,
+        resourceType: context.resourceType,
+        resourceId: context.resourceId,
+        ...context.additionalInfo,
+      }
+    );
+  }
+
   return response.data;
 }
 

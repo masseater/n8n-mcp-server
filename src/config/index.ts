@@ -25,6 +25,7 @@ const DEFAULT_CONFIG: ServerConfig = {
   logging: {
     level: process.env.LOG_LEVEL ?? "info",
     enableApiStats: false,
+    enableDebugConsole: process.env.DEBUG === "true",
   },
 };
 
@@ -85,8 +86,29 @@ export function validateConfig(config: ServerConfig): boolean {
 }
 
 /**
+ * Normalize base URL by adding /api/v1 if not present
+ */
+function normalizeBaseUrl(baseUrl: string): string {
+  const cleanUrl = baseUrl.replace(/\/$/, '');
+  return cleanUrl.endsWith('/api/v1') ? cleanUrl : `${cleanUrl}/api/v1`;
+}
+
+/**
  * Load configuration from environment variables and defaults
  */
 export function loadConfig(): ServerConfig {
-  return DEFAULT_CONFIG;
+  const rawBaseUrl = process.env.N8N_URL ?? "http://localhost:5678";
+  const normalizedBaseUrl = normalizeBaseUrl(rawBaseUrl);
+
+  return {
+    ...DEFAULT_CONFIG,
+    n8n: {
+      ...DEFAULT_CONFIG.n8n,
+      baseUrl: normalizedBaseUrl,
+      credentials: {
+        ...DEFAULT_CONFIG.n8n.credentials,
+        baseUrl: normalizedBaseUrl,
+      },
+    },
+  };
 }

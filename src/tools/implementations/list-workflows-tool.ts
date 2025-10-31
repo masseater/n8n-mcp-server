@@ -4,7 +4,8 @@
 
 import { z } from "zod";
 import { RawTool } from "../base/raw-tool.js";
-import type { WorkflowSummary } from "../../types/index.js";
+import type { WorkflowSummary, ListOptions } from "../../types/index.js";
+import { pickBy } from "remeda";
 
 type ListWorkflowsArgs = {
   active?: boolean;
@@ -35,15 +36,18 @@ export class ListWorkflowsTool extends RawTool<ListWorkflowsArgs> {
   }
 
   async executeCore(args: ListWorkflowsCoreArgs): Promise<WorkflowSummary[]> {
-    // Filter out undefined values for exactOptionalPropertyTypes compatibility
-    const filteredArgs: Record<string, string | number | boolean | string[]> = {};
+    // Build options object with only defined properties to satisfy exactOptionalPropertyTypes
+    const options = pickBy(
+      {
+        active: args.active,
+        tags: args.tags,
+        limit: args.limit,
+        offset: args.offset,
+      },
+      (value) => value !== undefined
+    ) as ListOptions;
 
-    if (args.active !== undefined) filteredArgs.active = args.active;
-    if (args.tags !== undefined) filteredArgs.tags = args.tags;
-    if (args.limit !== undefined) filteredArgs.limit = args.limit;
-    if (args.offset !== undefined) filteredArgs.offset = args.offset;
-
-    return await this.context.n8nClient.getWorkflows(filteredArgs as ListWorkflowsCoreArgs);
+    return await this.context.n8nClient.getWorkflows(options);
   }
 
   formatResponse(data: unknown, raw: boolean): unknown {

@@ -2,6 +2,7 @@
  * n8n API client implementation using @hey-api/openapi-ts generated SDK
  */
 
+import { logger } from '../utils/logger.js';
 import { client as generatedClient } from '../generated/client.gen.js';
 import {
   getWorkflows,
@@ -67,9 +68,9 @@ export class N8nApiClientImpl {
     this.baseUrl = baseUrl;
     this.retryAttempts = retryAttempts;
 
-    // Configure the generated client
+    // Configure the generated client (baseUrl already includes /api/v1 from config)
     generatedClient.setConfig({
-      baseUrl: baseUrl.replace(/\/$/, ''), // Remove trailing slash
+      baseUrl: baseUrl.replace(/\/$/, ''),
     });
 
     // Setup retry logic via interceptor
@@ -123,7 +124,7 @@ export class N8nApiClientImpl {
 
       this.apiKey = credentials.apiKey;
 
-      // Configure the generated client with auth
+      // Configure the generated client with auth (baseUrl already includes /api/v1 from config)
       generatedClient.setConfig({
         baseUrl: this.baseUrl.replace(/\/$/, ''),
         headers: {
@@ -164,9 +165,13 @@ export class N8nApiClientImpl {
         query.offset = options.offset;
       }
 
+      logger.debug('[N8nApiClient.getWorkflows] Query', { query });
+
       const response = await getWorkflows({
         query: query as Record<string, string | number | boolean>,
       });
+
+      logger.debug('[N8nApiClient.getWorkflows] Response', { response });
 
       const data = handleResponse(response, {
         operation: 'get workflows',
@@ -174,7 +179,11 @@ export class N8nApiClientImpl {
         additionalInfo: { options },
       });
 
+      logger.debug('[N8nApiClient.getWorkflows] Data after handleResponse', { data });
+
       const workflows = data.data ?? [];
+      logger.debug('[N8nApiClient.getWorkflows] Workflows count', { count: workflows.length });
+
       return workflows.map((workflow) => this.transformToWorkflowSummary(workflow));
     }, {
       operation: 'get workflows',

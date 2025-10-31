@@ -8,10 +8,10 @@
  */
 
 import { Command } from "commander";
-import { createLogger, format, transports } from "winston";
 import type { TransportType } from "./types/index.js";
 import { loadConfig, validateConfig } from "./config/index.js";
 import { MCPServerImpl } from "./server/mcp-server.js";
+import { logger } from "./utils/logger.js";
 
 type CLIOptions = {
   transport: string;
@@ -44,33 +44,19 @@ program
         process.exit(1);
       }
 
-      // Create logger with file output
+      // Load configuration
+      const config = loadConfig();
+
+      // Initialize logger with file output
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const logDir = "logs";
       const logFileName = `${logDir}/n8n-mcp-server-${timestamp}.log`;
 
-      // Ensure log directory exists
-      const fs = await import("fs");
-      if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
-      }
-
-      const logger = createLogger({
+      logger.initialize({
         level: options.logLevel,
-        format: format.combine(
-          format.timestamp(),
-          format.json(),
-        ),
-        transports: [
-          new transports.File({
-            filename: logFileName,
-            level: options.logLevel,
-            maxsize: 10 * 1024 * 1024, // 10MB
-            maxFiles: 5,
-            tailable: true,
-          }),
-          ...(transport === "http" ? [new transports.Console()] : []),
-        ],
+        logFileName,
+        enableConsole: transport === "http",
+        enableDebugConsole: config.logging.enableDebugConsole,
       });
 
       logger.info("Starting n8n MCP Server", {
@@ -78,9 +64,6 @@ program
         port: transport === "http" ? parseInt(options.port) : undefined,
         n8nUrl: options.n8nUrl,
       });
-
-      // Load configuration
-      const config = loadConfig();
 
       // Override config with CLI options
       if (options.n8nUrl) {

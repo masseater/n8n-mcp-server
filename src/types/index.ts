@@ -26,6 +26,7 @@ export type ServerConfig = {
   logging: {
     level: string;
     enableApiStats: boolean;
+    enableDebugConsole: boolean;
   };
 }
 
