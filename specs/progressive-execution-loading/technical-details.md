@@ -196,7 +196,7 @@ User → Tool.handler()
             ← ExecutionDetailInternal (full data)
         ← ExecutionDetailInternal
     → Tool.formatResponse(data, raw=false)
-        → ExecutionFormatter.formatSummary(data)
+        → ExecutionFormatter.formatSummary(execution)
             → calculateStatistics()
             → calculateDuration()
             → extractAvailableNodes()
@@ -206,6 +206,10 @@ User → Tool.handler()
     ← MCPToolResponse
 ← ToolResponse (MCP Protocol)
 ```
+
+**注意**:
+- workflowNameは現状"Unknown Workflow"を返す
+- 将来的にworkflow APIから取得することを検討（技術的負債）
 
 #### get_execution_by_node (Phase 2)
 ```
@@ -377,7 +381,7 @@ export class ExecutionFormatter {
     return {
       id: execution.id,
       workflowId: execution.workflowId,
-      workflowName: execution.workflowName ?? "Unknown",
+      workflowName: "Unknown Workflow",  // 将来的にworkflow APIから取得
       status: execution.status,
       startedAt: execution.startedAt,
       stoppedAt: execution.stoppedAt,

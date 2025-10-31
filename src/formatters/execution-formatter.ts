@@ -53,14 +53,14 @@ export class ExecutionFormatter {
       execution.stoppedAt ?? undefined
     );
     const guidance = this.generateGuidance(
-      String(execution.id ?? 'unknown'),
+      execution.id ? String(execution.id) : 'unknown',
       availableNodes
     );
 
     return {
-      id: String(execution.id ?? 'unknown'),
-      workflowId: String(execution.workflowId ?? 'unknown'),
-      workflowName: 'Unknown Workflow', // Will be populated from workflow API if needed
+      id: execution.id ? String(execution.id) : 'unknown',
+      workflowId: execution.workflowId ? String(execution.workflowId) : 'unknown',
+      workflowName: 'Unknown Workflow', // TODO: Fetch from workflow API if needed
       status: this.normalizeStatus(execution.status),
       startedAt: execution.startedAt ?? '',
       stoppedAt: execution.stoppedAt ?? undefined,

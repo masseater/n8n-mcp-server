@@ -71,6 +71,7 @@
 - **ビジネスルール**:
   - サマリー形式を返す
   - レスポンスサイズは1,000 tokens以内に抑える
+  - workflowNameは現状"Unknown Workflow"を返す（将来的にworkflow APIから取得することを検討）
 
 - **バリデーション**:
   - `id` は必須

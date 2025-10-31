@@ -42,7 +42,7 @@
 
 ## Phase概要と依存関係
 
-### Phase 1: 既存ツールの改善
+### Phase 1: ExecutionFormatter実装
 - **開始日時**: 2025-10-31
 - **完了日時**: 2025-10-31
 - **状態**: 完了
@@ -65,30 +65,55 @@
   - ✅ ユニットテスト（2テストケース追加）
   - ✅ 全品質チェック通過
 
-### Phase 3-8: （未実装）
-- **状態**: 未着手
-- 詳細は各Phaseの計画書を参照
-
 ### Phase 3: ツール登録と統合テスト
-- **開始日時**: （未着手）
-- **状態**: 未着手
-- **目標**: 2つのツールをToolRegistryに登録し、統合テストを実施
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
+- **状態**: 完了
+- **目標**: GetExecutionToolをToolRegistryに登録し、統合テストを実施
 - **依存関係**: Phase 1, 2の全完了が必須
 - **成果物**:
-  - tool-registry.ts の更新
-  - 統合テストの実装
-  - E2Eテスト
-  - ドキュメントの更新
+  - ✅ ToolRegistryユニットテスト（4テストケース）
+  - ✅ GetExecutionTool統合テスト（3テストケース）
+  - ✅ MCPサーバー起動確認（HTTPモード）
+  - ✅ 全品質チェック通過（type-check, lint, test）
 
-※各Phaseの詳細計画書は `/sdd:break-down-phase` コマンドで生成してください
+### Phase 4: NodeExecutionFormatter実装
+- **状態**: 未着手
+- 詳細は `specs/progressive-execution-loading/tasks/phase4-node-execution-formatter.md` を参照
+
+### Phase 5: get_execution_by_nodeツール実装
+- **状態**: 未着手
+- 詳細は `specs/progressive-execution-loading/tasks/phase5-get-execution-by-node-tool.md` を参照
+
+### Phase 6: get_execution_by_node統合
+- **状態**: 未着手
+- 詳細は `specs/progressive-execution-loading/tasks/phase6-get-execution-by-node-integration.md` を参照
+
+### Phase 7: 2ツール連携統合テスト
+- **状態**: 未着手
+- 詳細は `specs/progressive-execution-loading/tasks/phase7-two-tool-integration-test.md` を参照
+
+### Phase 8: ドキュメント更新とE2Eテスト
+- **状態**: 未着手
+- 詳細は `specs/progressive-execution-loading/tasks/phase8-documentation-and-e2e.md` を参照
 
 ## Phase依存関係図
 ```
-Phase 1 (既存ツールの改善)
+Phase 1 (ExecutionFormatter実装)
     ↓
-Phase 2 (get_execution_by_node実装)
+Phase 2 (get_execution拡張)
     ↓
 Phase 3 (ツール登録と統合テスト)
+
+Phase 4 (NodeExecutionFormatter実装) ← Phase 1-3と並行実行可能
+    ↓
+Phase 5 (get_execution_by_nodeツール実装)
+    ↓
+Phase 6 (get_execution_by_node統合)
+    ↓
+Phase 7 (2ツール連携統合テスト)
+    ↓
+Phase 8 (ドキュメント更新とE2Eテスト)
 ```
 
 ## シーケンス図
