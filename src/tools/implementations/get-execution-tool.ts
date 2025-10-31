@@ -1,56 +1,44 @@
 /**
- * GetExecutionTool - Get detailed execution information
- * Implements RawTool pattern for context optimization
+ * GetExecutionTool - Get execution summary (Progressive Execution Loading)
+ * Phase 2: Extended to return ExecutionSummary instead of full Execution
  */
 
-import { RawTool } from '../base/raw-tool.js';
+import { BaseTool } from '../base/base-tool.js';
 import {
   getExecutionArgsSchema,
   type GetExecutionArgs,
 } from '../../schemas/execution-schemas.js';
-import type { Execution } from '../../generated/types.gen.js';
-import { pickBy } from 'remeda';
+import type { ExecutionSummary } from '../../types/index.js';
+import { ExecutionFormatter } from '../../formatters/execution-formatter.js';
 
 /**
  * GetExecutionTool
- * Get detailed information about a specific execution
+ * Get execution summary (500-1,000 tokens) instead of full execution data
+ * Supports Progressive Execution Loading pattern
  */
-export class GetExecutionTool extends RawTool<GetExecutionArgs> {
+export class GetExecutionTool extends BaseTool<GetExecutionArgs> {
   readonly name = 'get_execution';
   readonly description =
-    '特定の実行の詳細情報を取得します。ノードごとの実行結果、エラー情報を含みます。';
+    '実行のサマリー情報を取得します。統計情報とavailableNodesリストを含みます。詳細なノードデータは get_execution_by_node を使用してください。';
 
   getInputSchema() {
     return getExecutionArgsSchema;
   }
 
   /**
-   * Execute core logic to fetch execution detail
+   * Execute: Fetch execution and format as summary
    */
-  async executeCore(
-    args: Omit<GetExecutionArgs, 'raw'>
-  ): Promise<Execution> {
-    // Call n8n API client to get execution detail
-    // Build options object with only defined properties to satisfy exactOptionalPropertyTypes
-    const options = pickBy(
-      {
-        includeData: args.includeData,
-      },
-      (value) => value !== undefined
-    );
+  async execute(args: GetExecutionArgs): Promise<unknown> {
+    // Always fetch with includeData=true to get runData
+    const execution = await this.context.n8nClient.getExecution(args.id, {
+      includeData: true,
+    });
 
-    const execution = await this.context.n8nClient.getExecution(args.id, options);
+    // Format execution to summary using ExecutionFormatter
+    const formatter = new ExecutionFormatter();
+    const summary: ExecutionSummary = formatter.formatSummary(execution);
 
-    return execution;
-  }
-
-  /**
-   * Format response based on raw option
-   */
-  formatResponse(data: unknown, raw: boolean): unknown {
-    return this.context.responseBuilder.createGetExecutionResponse(
-      data as Execution,
-      raw
-    );
+    // Return response using ToolResponseBuilder
+    return this.context.responseBuilder.createExecutionSummaryResponse(summary);
   }
 }

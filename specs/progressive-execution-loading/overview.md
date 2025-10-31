@@ -50,20 +50,24 @@
 - **依存関係**: なし
 - **成果物**:
   - ✅ ExecutionFormatter クラスの実装
-  - ⬜ get-execution-tool.ts の拡張
-  - ⬜ tool-response-builder.ts の拡張
+  - ✅ ExecutionSummary型の実装
   - ✅ ユニットテスト
 
-### Phase 2: get_execution_by_node実装
-- **開始日時**: （未着手）
-- **状態**: 未着手
-- **目標**: 単一ノードの詳細データ取得機能の実装
+### Phase 2: get_execution拡張とResponseBuilder
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
+- **状態**: 完了
+- **目標**: get_executionツールにExecutionFormatterを統合しExecutionSummaryを返す
 - **依存関係**: Phase 1の完了が必須
 - **成果物**:
-  - GetExecutionByNodeTool クラスの実装
-  - NodeExecutionFormatter クラスの実装
-  - tool-response-builder.ts の拡張
-  - ユニットテスト
+  - ✅ get-execution-tool.ts の拡張（ExecutionFormatterの統合）
+  - ✅ tool-response-builder.ts の拡張（createExecutionSummaryResponse追加）
+  - ✅ ユニットテスト（2テストケース追加）
+  - ✅ 全品質チェック通過
+
+### Phase 3-8: （未実装）
+- **状態**: 未着手
+- 詳細は各Phaseの計画書を参照
 
 ### Phase 3: ツール登録と統合テスト
 - **開始日時**: （未着手）

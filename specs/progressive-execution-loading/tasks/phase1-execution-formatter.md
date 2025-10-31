@@ -60,13 +60,14 @@
   - ExecutionSummaryの構造を設計し、TypeScript型として実装
   - フィールド: id, workflowId, workflowName, status, startedAt, stoppedAt, duration, statistics, availableNodes, _guidance
   - specification.mdとtechnical-details.mdの仕様に準拠
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: ExecutionSummaryの構造を検証するテストケース作成
-  - [ ] Green: ExecutionSummaryの型実装
-  - [ ] Refactor: 必要に応じて型を整理
+  - [x] Red: ExecutionSummaryの構造を検証するテストケース作成
+  - [x] Green: ExecutionSummaryの型実装
+  - [x] Refactor: 必要に応じて型を整理
 - **依存関係**: なし
-- **状態**: 未着手
+- **状態**: 完了
 
 ### タスク2: 統計情報計算ロジックの実装
 - **説明**:
@@ -77,13 +78,14 @@
     - successfulNodes: errorプロパティがないノードの数
     - failedNodes: errorプロパティがあるノードの数
     - totalItemsProcessed: 全ノードの出力アイテム数の合計
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: calculateStatistics()のテストケース作成（正常ケース、エラーケース、0件ケース）
-  - [ ] Green: 最小実装（forループまたはRemedaのsumBy等を使用）
-  - [ ] Refactor: Remedaを活用した関数型スタイルへのリファクタリング
+  - [x] Red: calculateStatistics()のテストケース作成（正常ケース、エラーケース、0件ケース）
+  - [x] Green: 最小実装（forループを使用）
+  - [x] Refactor: 関数型スタイルへのリファクタリング
 - **依存関係**: タスク1完了後
-- **状態**: 未着手
+- **状態**: 完了
 
 ### タスク3: availableNodes抽出ロジックの実装
 - **説明**:
@@ -93,26 +95,28 @@
     - nodeType: node.type（例: "n8n-nodes-base.httpRequest"）
     - status: errorがあれば"error"、なければ"success"
   - 返り値: Array<{ nodeName: string, nodeType: string, status: "success" | "error" }>
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: extractAvailableNodes()のテストケース作成（正常ノード、エラーノード、混在ケース）
-  - [ ] Green: Object.keys()とmapを使用した実装
-  - [ ] Refactor: Remedaのmapやfilterを活用した最適化
+  - [x] Red: extractAvailableNodes()のテストケース作成（正常ノード、エラーノード、混在ケース）
+  - [x] Green: Object.keys()とmapを使用した実装
+  - [x] Refactor: 関数型スタイルへの最適化
 - **依存関係**: タスク1完了後
-- **状態**: 未着手
+- **状態**: 完了
 
 ### タスク4: 期間計算ロジックの実装
 - **説明**:
   - calculateDuration() privateメソッドの実装
   - startedAtとstoppedAtから期間（ミリ秒）を計算
   - どちらかが存在しない場合はundefinedを返す
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: calculateDuration()のテストケース作成（正常ケース、stoppedAtなし、startedAtなし）
-  - [ ] Green: Date.getTime()を使用した実装
-  - [ ] Refactor: エッジケースの処理を明確化
+  - [x] Red: calculateDuration()のテストケース作成（正常ケース、stoppedAtなし、startedAtなし）
+  - [x] Green: Date.getTime()を使用した実装
+  - [x] Refactor: エッジケースの処理を明確化
 - **依存関係**: タスク1完了後
-- **状態**: 未着手
+- **状態**: 完了
 
 ### タスク5: ガイダンス生成ロジックの実装
 - **説明**:
@@ -121,26 +125,28 @@
   - メッセージ: "Use get_execution_by_node tool to fetch detailed data for a specific node"
   - 例: `get_execution_by_node(id: '${execution.id}', nodeName: 'HTTP Request')`
   - availableNodesの最初のnodeNameを使用
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: generateGuidance()のテストケース作成（availableNodesあり、なし）
-  - [ ] Green: テンプレート文字列を使用した実装
-  - [ ] Refactor: メッセージの明確化
+  - [x] Red: generateGuidance()のテストケース作成（availableNodesあり、なし）
+  - [x] Green: テンプレート文字列を使用した実装
+  - [x] Refactor: メッセージの明確化
 - **依存関係**: タスク3完了後（availableNodesを使用）
-- **状態**: 未着手
+- **状態**: 完了
 
 ### タスク6: formatSummary()メソッドの統合
 - **説明**:
   - formatSummary(execution: ExecutionDetailInternal): ExecutionSummaryの実装
   - タスク2-5で実装した各privateメソッドを呼び出し
   - ExecutionSummaryオブジェクトを組み立てて返す
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: formatSummary()の統合テストケース作成（全フィールドの検証）
-  - [ ] Green: 各privateメソッドを呼び出してExecutionSummaryを組み立て
-  - [ ] Refactor: オブジェクト生成ロジックの最適化
+  - [x] Red: formatSummary()の統合テストケース作成（全フィールドの検証）
+  - [x] Green: 各privateメソッドを呼び出してExecutionSummaryを組み立て
+  - [x] Refactor: オブジェクト生成ロジックの最適化
 - **依存関係**: タスク2, 3, 4, 5完了後
-- **状態**: 未着手
+- **状態**: 完了
 
 ### タスク7: ExecutionFormatterユニットテストの実装
 - **説明**:
@@ -148,13 +154,14 @@
   - 各privateメソッドのテスト（タスク2-5で作成済みのものを整理）
   - formatSummary()の統合テスト（複数シナリオ: 正常実行、エラー含む実行、空データ）
   - レスポンスサイズ検証（目標: 500-1,000 tokens）
-- **開始日時**: （未着手の場合は空欄）
+- **開始日時**: 2025-10-31
+- **完了日時**: 2025-10-31
 - **TDDステップ**:
-  - [ ] Red: 統合テストケースの追加（エッジケース、レスポンスサイズ検証）
-  - [ ] Green: 既存テストの整理と追加実装
-  - [ ] Refactor: テストコードの重複削減、テストユーティリティ関数の作成
+  - [x] Red: 統合テストケースの追加（エッジケース、レスポンスサイズ検証）
+  - [x] Green: 既存テストの整理と追加実装（7テストケース実装）
+  - [x] Refactor: テストコードの重複削減、テストユーティリティ関数の作成
 - **依存関係**: タスク6完了後
-- **状態**: 未着手
+- **状態**: 完了
 
 ## テスト戦略
 
@@ -166,10 +173,10 @@
   - 大規模実行データ（12ノード、100アイテム）でのテスト
 
 ## Phase完了条件
-- [ ] 全タスク完了
-- [ ] 全テスト通過
-- [ ] 品質チェックコマンドが成功（`pnpm run type-check`, `pnpm run lint`, `pnpm run test`）
-- [ ] ExecutionSummaryのレスポンスサイズが1,000 tokens以内
+- [x] 全タスク完了
+- [x] 全テスト通過
+- [x] 品質チェックコマンドが成功（`pnpm run type-check`, `pnpm run lint`, `pnpm run test`）
+- [x] ExecutionSummaryのレスポンスサイズが1,000 tokens以内
 
 ## 技術的課題と解決方針
 
