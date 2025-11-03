@@ -22,22 +22,22 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22.10.0'
           registry-url: 'https://registry.npmjs.org'
-      
+
       - uses: pnpm/action-setup@v4
         with:
           version: '10.19.0'
-      
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Build
         run: pnpm run build
-      
+
       - name: Update version
         run: |
           if [ "${{ inputs.version_type }}" = "alpha" ]; then
@@ -48,6 +48,6 @@ jobs:
           else
             npm version ${{ inputs.version_type }} --no-git-tag-version
           fi
-      
+
       - name: Publish to npm with provenance
         run: npm publish --provenance --access public --tag ${{ inputs.version_type == 'alpha' && 'alpha' || 'latest' }}
