@@ -389,11 +389,28 @@ n8n API: N8nWorkflowResponse[]
 
 ## Available MCP Tools
 
-This server provides **10 MCP tools** for comprehensive n8n workflow and execution management:
+This server provides **11 MCP tools** for comprehensive n8n workflow and execution management:
 - **8 workflow management tools**: CRUD operations and connection visualization
-- **2 execution monitoring tools**: Execution history and detailed debugging
+- **3 execution monitoring tools**: Execution history, summary, and node-level detailed debugging (Progressive Execution Loading)
 
 All tools support a `raw` option to control response verbosity. By default, tools return minimal information to reduce context usage. Set `raw=true` to get complete data.
+
+### Progressive Execution Loading
+
+**What is Progressive Execution Loading?**
+
+Progressive Execution Loading is an AI agent-optimized pattern that allows step-by-step data retrieval for large execution results. Instead of receiving all execution data at once (which can exceed MCP response limits), AI agents can:
+
+1. **First**, call `get_execution` to get a summary (500-1,000 tokens)
+2. **Then**, call `get_execution_by_node` for specific nodes that need investigation (limited to 50 items per node)
+
+This pattern prevents MCP response size from exceeding the 25,000 token limit while maintaining full access to execution details.
+
+**When to use Progressive Execution Loading:**
+- ✅ Debugging execution errors (get summary → identify error node → get node details)
+- ✅ Investigating specific node behavior (get summary → get node details)
+- ✅ Analyzing large executions with many nodes (>10 nodes)
+- ❌ Simple status checks (use `list_executions` instead)
 
 ### 1. list_workflows
 
@@ -655,75 +672,154 @@ Get workflow execution history with optional filtering.
 
 ### 10. get_execution
 
-Get detailed information about a specific execution, including node-level execution results and error information.
+**[Progressive Execution Loading - Step 1]**
+
+Get execution summary with statistics and available nodes list. This is the first step in Progressive Execution Loading pattern.
 
 **Parameters**:
 - `id` (string, required): Execution ID (matches regex `^\d+$`)
-- `includeData` (boolean, optional): Include node input/output data (default: false)
-- `raw` (boolean, optional): Return full execution data
 
-**Response**:
-- Default (`raw=false`):
-  ```json
-  {
-    "success": true,
-    "message": "実行詳細を取得しました",
-    "data": {
-      "id": "12345",
-      "workflowId": "workflow-123",
-      "workflowName": "My Workflow",
-      "status": "error",
-      "startedAt": "2024-10-29T10:00:00Z",
-      "stoppedAt": "2024-10-29T10:00:05Z",
-      "executionTime": 5000,
-      "error": {
-        "node": "HTTP Request",
-        "message": "Connection timeout",
-        "timestamp": "2024-10-29T10:00:05Z"
+**Response** (ExecutionSummary - 500-1,000 tokens):
+```json
+{
+  "success": true,
+  "message": "実行サマリーを取得しました",
+  "data": {
+    "id": "12345",
+    "workflowId": "1",
+    "workflowName": "Unknown Workflow",
+    "status": "error",
+    "startedAt": "2025-10-29T10:00:00Z",
+    "stoppedAt": "2025-10-29T10:00:05Z",
+    "duration": 5000,
+    "statistics": {
+      "totalNodes": 12,
+      "executedNodes": 12,
+      "successfulNodes": 11,
+      "failedNodes": 1,
+      "totalItemsProcessed": 110
+    },
+    "availableNodes": [
+      {
+        "nodeName": "Start",
+        "nodeType": "n8n-nodes-base.start",
+        "status": "success"
       },
-      "nodeExecutions": [
-        {
-          "nodeName": "Start",
-          "status": "success",
-          "executionTime": 10
-        },
-        {
-          "nodeName": "HTTP Request",
-          "status": "error",
-          "executionTime": 4990,
-          "error": "Connection timeout"
-        }
-      ]
+      {
+        "nodeName": "HTTP Request",
+        "nodeType": "n8n-nodes-base.httpRequest",
+        "status": "error"
+      }
+    ],
+    "_guidance": {
+      "message": "Use get_execution_by_node tool to fetch detailed data for a specific node",
+      "example": "get_execution_by_node(id: '12345', nodeName: 'HTTP Request')"
     }
   }
-  ```
-- With `raw=true`: Complete execution data including all node I/O when `includeData=true`
+}
+```
 
-**Context reduction**: 75-85% with default response
+**Context reduction**: 98% compared to full execution data (52,000 tokens → 800 tokens)
 
 **Use cases**:
-- Debugging workflow failures
-- Analyzing node-level performance
-- Understanding execution flow
-- Identifying error sources
+- Quick execution status check
+- Identifying error nodes before deep diving
+- Understanding overall execution flow
+- First step in Progressive Execution Loading
 
-**Business rules**:
-- Error information prioritized in response
-- Execution time in milliseconds
-- Node execution order preserved
+**AI Agent workflow**:
+1. Call `get_execution` to get summary
+2. Check `statistics.failedNodes` to identify if there are errors
+3. If errors exist, find error nodes in `availableNodes` (status="error")
+4. Use `nodeName` from `availableNodes` to call `get_execution_by_node` for details
 
-**Performance notes**:
-- Without `includeData`: < 1 second response time
-- With `includeData`: < 5 seconds response time (larger data payload)
+### 11. get_execution_by_node
+
+**[Progressive Execution Loading - Step 2]**
+
+Get detailed execution data for a single node. This is the second step in Progressive Execution Loading pattern, used after identifying nodes of interest from `get_execution`.
+
+**Parameters**:
+- `id` (string, required): Execution ID (matches regex `^\d+$`)
+- `nodeName` (string, required): Node name from runData keys (user-defined name, obtained from `get_execution` response's `availableNodes[].nodeName`)
+
+**Response** (NodeExecutionData - limited to 50 items, ~5,000 tokens):
+```json
+{
+  "success": true,
+  "message": "ノード 'HTTP Request' の実行詳細を取得しました",
+  "data": {
+    "executionId": "12345",
+    "nodeName": "HTTP Request",
+    "nodeType": "n8n-nodes-base.httpRequest",
+    "status": "error",
+    "executionTime": 30000,
+    "startTime": "2025-10-29T10:00:00Z",
+    "endTime": "2025-10-29T10:00:30Z",
+    "input": {
+      "items": []
+    },
+    "output": {
+      "items": []
+    },
+    "parameters": {
+      "method": "POST",
+      "url": "https://api.example.com/submit",
+      "timeout": 30000
+    },
+    "error": {
+      "message": "ETIMEDOUT: Connection timeout after 30000ms",
+      "description": "The server did not respond within the specified timeout period"
+    }
+  }
+}
+```
+
+**Context reduction**: 90% compared to full execution data (limited to 50 items per node)
+
+**Use cases**:
+- Investigating specific node errors (error details, parameters)
+- Analyzing node input/output data (limited to 50 items)
+- Understanding node execution behavior
+- Second step in Progressive Execution Loading
+
+**AI Agent workflow**:
+1. Get `nodeName` from `get_execution` response's `availableNodes`
+2. Call `get_execution_by_node` with the execution ID and node name
+3. Analyze `error`, `parameters`, `input`, `output` fields
+4. Report findings to human user
+
+**Important notes**:
+- Input/output items are limited to **50 items maximum** to prevent MCP response size from exceeding 25,000 token limit
+- If node has more than 50 items, only the first 50 are returned
+- Node name must match exactly (case-sensitive) with names from `availableNodes`
+- Returns error if node name doesn't exist in the execution
 
 ## Context Optimization Strategy
 
 **Overall context reduction**: Average 75-85% across all tools when using default (non-raw) responses.
 
+### Progressive Execution Loading Optimization
+
+**Dramatic context reduction for execution data**:
+- **Traditional approach** (`includeData=true`): 52,000+ tokens (exceeds MCP limit)
+- **Progressive Execution Loading**:
+  - Step 1 (`get_execution`): ~800 tokens (98% reduction)
+  - Step 2 (`get_execution_by_node`): ~5,000 tokens per node (90% reduction, limited to 50 items)
+
+**Total savings**: From 52,000 tokens → 800-6,000 tokens depending on investigation depth
+
 This optimization is critical for:
 - Reducing token usage in AI conversations
 - Enabling more workflow operations within context limits
 - Faster response processing
+- Preventing MCP response size from exceeding 25,000 token limit
+
+**When to use Progressive Execution Loading**:
+- ✅ Debugging execution errors (get summary → identify error node → get node details)
+- ✅ Investigating specific node behavior
+- ✅ Analyzing large executions with many nodes (>10 nodes)
+- ❌ Simple status checks (use `list_executions` instead)
 
 **When to use `raw=true`**:
 - When you need complete workflow structure for modifications

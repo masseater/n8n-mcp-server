@@ -9,6 +9,8 @@ import type {
   WorkflowDeleteResponse,
   WorkflowSummary,
   WorkflowDetail,
+  ExecutionSummary,
+  NodeExecutionData,
 } from "../types/index.js";
 import type { Execution } from "../generated/types.gen.js";
 import type { WorkflowDetailInternal } from "../clients/n8n-api-client.js";
@@ -217,7 +219,36 @@ export class ToolResponseBuilder {
   }
 
   /**
-   * Create response for get_execution tool
+   * Create response for get_execution tool (Phase 2: Progressive Execution Loading)
+   * Returns ExecutionSummary (500-1,000 tokens)
+   */
+  createExecutionSummaryResponse(
+    summary: ExecutionSummary
+  ): MCPToolResponse<ExecutionSummary> {
+    return {
+      success: true,
+      message: '実行サマリーを取得しました',
+      data: summary,
+    };
+  }
+
+  /**
+   * Create response for get_execution_by_node tool (Phase 5: Progressive Execution Loading)
+   * Returns NodeExecutionData (complete node execution data)
+   */
+  createExecutionByNodeResponse(
+    nodeData: NodeExecutionData
+  ): MCPToolResponse<NodeExecutionData> {
+    return {
+      success: true,
+      message: `ノード '${nodeData.nodeName}' の実行詳細を取得しました`,
+      data: nodeData,
+    };
+  }
+
+  /**
+   * Create response for get_execution tool (legacy, kept for compatibility)
+   * @deprecated Use createExecutionSummaryResponse instead
    */
   createGetExecutionResponse(
     execution: Execution,

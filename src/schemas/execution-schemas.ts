@@ -35,3 +35,15 @@ export const getExecutionArgsSchema = z.object({
 });
 
 export type GetExecutionArgs = z.infer<typeof getExecutionArgsSchema>;
+
+/**
+ * get_execution_by_node tool input schema
+ */
+export const getExecutionByNodeArgsSchema = z.object({
+  /** Execution ID (must be numeric string for n8n API compatibility) */
+  id: z.string().min(1).regex(/^\d+$/, 'Execution ID must be numeric').describe('実行ID'),
+  /** Node name from runData keys (user-defined name) */
+  nodeName: z.string().min(1).describe('ノード名（runDataのキー、ユーザー定義名）'),
+});
+
+export type GetExecutionByNodeArgs = z.infer<typeof getExecutionByNodeArgsSchema>;

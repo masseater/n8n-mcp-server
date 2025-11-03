@@ -2,11 +2,11 @@
 
 ## タスク目次
 
-- 1. [GetExecutionByNodeToolの骨組み作成] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. [execute()メソッドの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. [エラーハンドリングの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. [ToolResponseBuilderへのcreateExecutionByNodeResponse追加] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. [GetExecutionByNodeToolユニットテストの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. [GetExecutionByNodeToolの骨組み作成] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. [execute()メソッドの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. [エラーハンドリングの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. [ToolResponseBuilderへのcreateExecutionByNodeResponse追加] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 5. [GetExecutionByNodeToolユニットテストの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て直列実行（タスク間に依存関係あり）
@@ -16,7 +16,9 @@
 
 ## Phase概要
 - **Phase名**: GetExecutionByNodeTool実装
-- **状態**: 未着手
+- **状態**: 完了
+- **開始日時**: 2025-11-03
+- **完了日時**: 2025-11-03
 - **目標**: 単一ノードの詳細データを取得するMCPツールを実装
 
 ## TDD & 設計原則の適用
@@ -134,10 +136,10 @@
   - NodeExecutionFormatterは実際のインスタンスを使用
 
 ## Phase完了条件
-- [ ] 全タスク完了
-- [ ] 全テスト通過
-- [ ] 品質チェックコマンドが成功（`pnpm run type-check`, `pnpm run lint`, `pnpm run test`）
-- [ ] GetExecutionByNodeToolがNodeExecutionDataを返すことを確認
+- [x] 全タスク完了
+- [x] 全テスト通過
+- [x] 品質チェックコマンドが成功（`pnpm run type-check`, `pnpm run lint`, `pnpm run test`）
+- [x] GetExecutionByNodeToolがNodeExecutionDataを返すことを確認
 
 ## 技術的課題と解決方針
 

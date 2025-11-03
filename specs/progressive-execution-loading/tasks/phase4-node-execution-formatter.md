@@ -2,12 +2,12 @@
 
 ## タスク目次
 
-- 1. [NodeExecutionDataレスポンス構造の設計] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. [ノードデータ抽出ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. [入出力アイテム抽出ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. [エラー情報抽出ロジックの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. [formatNodeExecution()メソッドの統合] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 6. [NodeExecutionFormatterユニットテストの実装] - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. [NodeExecutionDataレスポンス構造の設計] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. [ノードデータ抽出ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. [入出力アイテム抽出ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. [エラー情報抽出ロジックの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 5. [formatNodeExecution()メソッドの統合] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 6. [NodeExecutionFormatterユニットテストの実装] - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て直列実行（タスク間に依存関係あり）
@@ -17,7 +17,9 @@
 
 ## Phase概要
 - **Phase名**: NodeExecutionFormatter実装
-- **状態**: 未着手
+- **状態**: 完了
+- **開始日時**: 2025-11-03
+- **完了日時**: 2025-11-03
 - **目標**: 単一ノードの実行データを抽出・整形する機能を実装し、NodeExecutionDataを生成する
 
 ## TDD & 設計原則の適用
@@ -149,10 +151,10 @@
   - 入出力アイテムが大量の場合（レスポンスサイズの懸念）
 
 ## Phase完了条件
-- [ ] 全タスク完了
-- [ ] 全テスト通過
-- [ ] 品質チェックコマンドが成功（`pnpm run type-check`, `pnpm run lint`, `pnpm run test`）
-- [ ] NodeExecutionFormatterが正常にNodeExecutionDataを返す
+- [x] 全タスク完了
+- [x] 全テスト通過
+- [x] 品質チェックコマンドが成功（`pnpm run type-check`, `pnpm run lint`, `pnpm run test`）
+- [x] NodeExecutionFormatterが正常にNodeExecutionDataを返す
 
 ## 技術的課題と解決方針
 
