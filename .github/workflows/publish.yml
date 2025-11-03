@@ -3,10 +3,16 @@ name: Publish to npm
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to publish (e.g., 1.0.0)'
-        required: true
-        type: string
+      version_type:
+        description: 'Version type to publish'
+        required: false
+        type: choice
+        options:
+          - alpha
+          - patch
+          - minor
+          - major
+        default: alpha
 
 jobs:
   publish:
@@ -33,7 +39,15 @@ jobs:
         run: pnpm run build
       
       - name: Update version
-        run: npm version ${{ inputs.version }} --no-git-tag-version
+        run: |
+          if [ "${{ inputs.version_type }}" = "alpha" ]; then
+            # Get current version and append -alpha with timestamp
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            TIMESTAMP=$(date +%Y%m%d%H%M%S)
+            npm version ${CURRENT_VERSION}-alpha.${TIMESTAMP} --no-git-tag-version
+          else
+            npm version ${{ inputs.version_type }} --no-git-tag-version
+          fi
       
       - name: Publish to npm with provenance
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --tag ${{ inputs.version_type == 'alpha' && 'alpha' || 'latest' }}
