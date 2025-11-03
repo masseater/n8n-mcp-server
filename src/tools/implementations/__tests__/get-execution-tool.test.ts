@@ -3,12 +3,14 @@
  * These tests are written BEFORE implementation to define the expected behavior
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { ToolContext } from '../../base-tool.js';
 import type { N8nApiClient } from '../../../clients/types.js';
 import type { ToolResponseBuilder } from '../../../formatters/tool-response-builder.js';
 import type { Execution } from '../../../generated/types.gen.js';
+import { NotFoundError, ApiError } from '../../../errors/custom-errors.js';
 import { GetExecutionTool } from '../get-execution-tool.js';
+import { logger } from '../../../utils/logger.js';
 
 describe('GetExecutionTool', () => {
   let mockN8nClient: N8nApiClient;
@@ -33,7 +35,16 @@ describe('GetExecutionTool', () => {
       responseBuilder: mockResponseBuilder,
     };
 
+    // Mock logger.error
+    vi.spyOn(logger, 'error').mockImplementation(() => {
+      // Mock implementation (do nothing)
+    });
+
     new GetExecutionTool(context);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('基本機能テスト', () => {
@@ -70,6 +81,48 @@ describe('GetExecutionTool', () => {
 
   });
 
+  describe('エラーハンドリングテスト', () => {
+    it('TC-ERROR-001: NotFoundError発生時にerror.messageを返す', async () => {
+      // Arrange
+      const errorMessage = "Execution '99999' not found";
+      const tool = new GetExecutionTool(context);
+      (mockN8nClient.getExecution as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new NotFoundError(errorMessage, {
+          operation: 'get execution',
+          resourceType: 'Execution',
+          resourceId: '99999',
+        })
+      );
 
+      // Act
+      const response = await tool.handler({ id: '99999' });
 
+      // Assert
+      expect(response.isError).toBe(true);
+      expect(response.content).toHaveLength(1);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
+    });
+
+    it('TC-ERROR-002: ApiError発生時にerror.messageを返す', async () => {
+      // Arrange
+      const errorMessage = 'Failed to get execution';
+      const tool = new GetExecutionTool(context);
+      (mockN8nClient.getExecution as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(errorMessage, 500, {
+          operation: 'get execution',
+          resourceId: '12345',
+        })
+      );
+
+      // Act
+      const response = await tool.handler({ id: '12345' });
+
+      // Assert
+      expect(response.isError).toBe(true);
+      expect(response.content).toHaveLength(1);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
+    });
+  });
 });

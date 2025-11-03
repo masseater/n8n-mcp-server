@@ -3,12 +3,14 @@
  * These tests are written BEFORE implementation to define the expected behavior
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { ToolContext } from '../../base-tool.js';
 import type { N8nApiClient } from '../../../clients/types.js';
 import type { ToolResponseBuilder } from '../../../formatters/tool-response-builder.js';
 import type { Execution } from '../../../generated/types.gen.js';
+import { ApiError } from '../../../errors/custom-errors.js';
 import { ListExecutionsTool } from '../list-executions-tool.js';
+import { logger } from '../../../utils/logger.js';
 
 describe('ListExecutionsTool', () => {
   let mockN8nClient: N8nApiClient;
@@ -33,7 +35,16 @@ describe('ListExecutionsTool', () => {
       responseBuilder: mockResponseBuilder,
     };
 
+    // Mock logger.error
+    vi.spyOn(logger, 'error').mockImplementation(() => {
+      // Mock implementation (do nothing)
+    });
+
     new ListExecutionsTool(context);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('基本機能テスト', () => {
@@ -72,5 +83,45 @@ describe('ListExecutionsTool', () => {
     });
 
 
+  });
+
+  describe('エラーハンドリングテスト', () => {
+    it('TC-ERROR-001: ApiError発生時にerror.messageを返す', async () => {
+      // Arrange
+      const errorMessage = 'Failed to fetch executions from n8n API';
+      const tool = new ListExecutionsTool(context);
+      (mockN8nClient.getExecutions as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(errorMessage, 500, {
+          operation: 'list executions',
+        })
+      );
+
+      // Act
+      const response = await tool.handler({});
+
+      // Assert
+      expect(response.isError).toBe(true);
+      expect(response.content).toHaveLength(1);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
+    });
+
+    it('TC-ERROR-002: 汎用Error発生時にerror.messageを返す', async () => {
+      // Arrange
+      const errorMessage = 'Unexpected error occurred';
+      const tool = new ListExecutionsTool(context);
+      (mockN8nClient.getExecutions as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error(errorMessage)
+      );
+
+      // Act
+      const response = await tool.handler({});
+
+      // Assert
+      expect(response.isError).toBe(true);
+      expect(response.content).toHaveLength(1);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
+    });
   });
 });
