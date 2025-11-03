@@ -191,6 +191,63 @@ npm publish
 - GitHub Actionsの手動トリガーで実行時にバージョンを指定
 - 自動pushによる発火は不要
 
+### GitHub Actions ワークフローAPI
+
+#### ワークフロー構造
+```yaml
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.10.0'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '10.19.0'
+      - run: pnpm install
+      - run: pnpm run build
+      - run: npm version ${{ inputs.version }} --no-git-tag-version
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+#### トリガー方式
+- **手動トリガー（workflow_dispatch）**: GitHubのActionsタブから手動で実行
+- **入力パラメータ**: バージョン番号（required）
+
+#### 認証
+- NPM_TOKENをGitHub Secretsに設定
+- NODE_AUTH_TOKENとして環境変数に渡す
+- 2FAは無効（シンプルな認証フローを優先）
+
+#### ジョブフロー
+1. リポジトリをチェックアウト
+2. Node.js 22.10.0をセットアップ
+3. pnpm 10.19.0をセットアップ
+4. 依存関係をインストール（pnpm install）
+5. ビルドを実行（pnpm run build）
+6. package.jsonのバージョンを更新（npm version）
+7. npmに公開（npm publish）
+
+#### エラーハンドリング
+- 各ステップが失敗した場合はワークフローを中断
+- npm publish失敗時はエラーログを出力
+- GitHub Actionsのログで詳細を確認可能
+
 ## セキュリティ
 
 ### npm公開時のセキュリティ
