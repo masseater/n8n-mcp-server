@@ -62,6 +62,15 @@ class N8nMcpError extends Error {
 
 /**
  * Error thrown when validation fails
+ * 
+ * Usage:
+ * ```typescript
+ * throw new ValidationError('Workflow ID is required', { field: 'id' });
+ * ```
+ * 
+ * @param message - Human-readable error message for AI client
+ * @param context - Optional context with field information
+ * @param options - Standard ErrorOptions for error chaining
  */
 export class ValidationError extends N8nMcpError {
   constructor(
@@ -75,6 +84,20 @@ export class ValidationError extends N8nMcpError {
 
 /**
  * Error thrown when n8n API call fails
+ * 
+ * Usage:
+ * ```typescript
+ * throw new ApiError('Failed to update workflow', 400, {
+ *   operation: 'update workflow',
+ *   resourceId: 'abc123',
+ *   errorDetails: "Field 'settings' is required"
+ * });
+ * ```
+ * 
+ * @param message - Human-readable error message for AI client
+ * @param statusCode - Optional HTTP status code
+ * @param context - Optional context with operation details
+ * @param options - Standard ErrorOptions for error chaining
  */
 export class ApiError extends N8nMcpError {
   constructor(
@@ -89,6 +112,19 @@ export class ApiError extends N8nMcpError {
 
 /**
  * Error thrown when a resource is not found
+ * 
+ * Usage:
+ * ```typescript
+ * throw new NotFoundError("Workflow 'abc123' not found", {
+ *   operation: 'get workflow',
+ *   resourceType: 'Workflow',
+ *   resourceId: 'abc123'
+ * });
+ * ```
+ * 
+ * @param message - Human-readable error message for AI client
+ * @param context - Optional context with resource information
+ * @param options - Standard ErrorOptions for error chaining
  */
 export class NotFoundError extends N8nMcpError {
   constructor(
