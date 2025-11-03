@@ -174,14 +174,15 @@ describe('Two-Tool Integration Tests', () => {
 
       const errorNode = summary.availableNodes.find((n) => n.status === 'error');
       expect(errorNode).toBeDefined();
-      expect(errorNode?.nodeName).toBe('HTTP Request');
+      if (!errorNode) return; // Type guard
+      expect(errorNode.nodeName).toBe('HTTP Request');
 
-      console.log(`🔍 AI Agent: エラーノードを発見: ${errorNode?.nodeName} (${errorNode?.nodeType})`);
+      console.log(`🔍 AI Agent: エラーノードを発見: ${errorNode.nodeName} (${errorNode.nodeType})`);
 
       // ステップ3: エラーノードの詳細を取得
       const nodeResult = (await getExecutionByNodeTool.execute({
         id: '67890',
-        nodeName: errorNode!.nodeName,
+        nodeName: errorNode.nodeName,
       })) as MCPToolResponse<NodeExecutionData>;
 
       // Assert - NodeExecutionDataを確認
@@ -331,7 +332,7 @@ describe('Two-Tool Integration Tests', () => {
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
-      console.log(`⏱️ get_execution response time: ${String(responseTime.toFixed(2))}ms`);
+      console.log(`⏱️ get_execution response time: ${responseTime.toFixed(2)}ms`);
 
       // Assert - レスポンス時間が1秒以内（目標）
       // Note: モックなので実際は数ミリ秒程度
@@ -384,7 +385,7 @@ describe('Two-Tool Integration Tests', () => {
       const endTime = performance.now();
       const responseTime = endTime - startTime;
 
-      console.log(`⏱️ get_execution_by_node response time: ${String(responseTime.toFixed(2))}ms`);
+      console.log(`⏱️ get_execution_by_node response time: ${responseTime.toFixed(2)}ms`);
 
       // Assert - レスポンス時間が2秒以内（目標）
       expect(responseTime).toBeLessThan(2000);
@@ -452,9 +453,9 @@ describe('Two-Tool Integration Tests', () => {
       const step2Time = step2End - step2Start;
       const totalTime = step1Time + step2Time;
 
-      console.log(`⏱️ Total workflow time: ${String(totalTime.toFixed(2))}ms`);
-      console.log(`  - get_execution: ${String(step1Time.toFixed(2))}ms`);
-      console.log(`  - get_execution_by_node (3 calls): ${String(step2Time.toFixed(2))}ms`);
+      console.log(`⏱️ Total workflow time: ${totalTime.toFixed(2)}ms`);
+      console.log(`  - get_execution: ${step1Time.toFixed(2)}ms`);
+      console.log(`  - get_execution_by_node (3 calls): ${step2Time.toFixed(2)}ms`);
 
       // Assert - 合計レスポンス時間が7秒以内（目標）
       expect(totalTime).toBeLessThan(7000);
