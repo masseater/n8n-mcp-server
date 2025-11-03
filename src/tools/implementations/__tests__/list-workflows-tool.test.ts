@@ -53,11 +53,10 @@ describe('ListWorkflowsTool', () => {
           id: 'wf-001',
           name: 'Test Workflow',
           active: true,
+          tags: [],
           createdAt: '2025-10-29T10:00:00Z',
           updatedAt: '2025-10-29T10:00:00Z',
-          nodes: [],
-          connections: {},
-          settings: {},
+          nodeCount: 0,
         },
       ];
 

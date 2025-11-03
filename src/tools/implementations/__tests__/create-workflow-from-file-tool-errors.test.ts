@@ -7,7 +7,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { ToolContext } from '../../base-tool.js';
 import type { N8nApiClient } from '../../../clients/types.js';
 import type { ToolResponseBuilder } from '../../../formatters/tool-response-builder.js';
-import { ApiError, ValidationError, FileError } from '../../../errors/custom-errors.js';
 import { CreateWorkflowFromFileTool } from '../create-workflow-from-file-tool.js';
 import { logger } from '../../../utils/logger.js';
 
@@ -47,7 +46,6 @@ describe('CreateWorkflowFromFileTool - Error Handling', () => {
   describe('エラーハンドリングテスト', () => {
     it('TC-ERROR-001: FileError発生時にerror.messageを返す', async () => {
       // Arrange
-      const errorMessage = 'File not found: /nonexistent/workflow.json';
       const tool = new CreateWorkflowFromFileTool(context);
 
       // Act

@@ -52,6 +52,7 @@ describe('CreateWorkflowTool', () => {
         id: 'wf-new',
         name: 'New Workflow',
         active: false,
+        tags: [],
         createdAt: '2025-10-29T10:00:00Z',
         updatedAt: '2025-10-29T10:00:00Z',
         nodes: [],
@@ -70,6 +71,7 @@ describe('CreateWorkflowTool', () => {
       // Act
       const result = await tool.execute({
         name: 'New Workflow',
+        active: false,
         nodes: [],
         connections: {},
         settings: {},
@@ -96,6 +98,7 @@ describe('CreateWorkflowTool', () => {
       // Act
       const response = await tool.handler({
         name: 'Test Workflow',
+        active: false,
         nodes: [],
         connections: {},
         settings: {},
@@ -121,6 +124,7 @@ describe('CreateWorkflowTool', () => {
       // Act
       const response = await tool.handler({
         name: '',
+        active: false,
         nodes: [],
         connections: {},
         settings: {},
