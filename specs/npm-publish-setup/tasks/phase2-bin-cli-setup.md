@@ -2,18 +2,18 @@
 
 ## タスク目次
 
-- 1. package.jsonのmainフィールド確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. package.jsonのtypeフィールド確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. dist/index.jsの存在確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. package.jsonのbinフィールド追加 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. binフィールドのパス検証 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. package.jsonのmainフィールド確認 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. package.jsonのtypeフィールド確認 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. dist/index.jsの存在確認 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. package.jsonのbinフィールド追加 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 5. binフィールドのパス検証 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て単一番号で直列実行（1 → 2 → 3 → 4 → 5）
 
 ## Phase概要
 - **Phase名**: binフィールドとCLI設定
-- **状態**: 未着手
+- **状態**: 完了
 - **目標**: npxコマンドで実行可能なCLIエントリーポイントを設定し、`npx @masseater/n8n-mcp-server` での実行を可能にする
 
 ## TDD & 設計原則の適用

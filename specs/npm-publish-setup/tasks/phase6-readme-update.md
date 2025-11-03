@@ -2,19 +2,19 @@
 
 ## タスク目次
 
-- 1. README.mdの現在の構造確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. Quick Startセクションの特定 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. npxインストール手順の追加 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. バージョン指定インストールの記載 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. npmページURLの追加 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 6. マークダウン形式の検証 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. README.mdの現在の構造確認 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. Quick Startセクションの特定 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. npxインストール手順の追加 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. バージョン指定インストールの記載 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 5. npmページURLの追加 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 6. マークダウン形式の検証 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て単一番号で直列実行（1 → 2 → 3 → 4 → 5 → 6）
 
 ## Phase概要
 - **Phase名**: README更新
-- **状態**: 未着手
+- **状態**: 完了
 - **目標**: npm公開後のインストール・使用方法をREADMEに追加し、ユーザーがnpxコマンドで即座に利用できるようにする
 
 ## TDD & 設計原則の適用
@@ -149,13 +149,13 @@
   - コードブロックが正しく閉じられていることを検証
 
 ## Phase完了条件
-- [ ] 全タスク完了
-- [ ] READMEにnpxインストール手順が追加されている
-- [ ] バージョン指定の例が記載されている
-- [ ] npmページURLが記載されている
-- [ ] マークダウン形式が正しい
-- [ ] コードブロックが正しくフォーマットされている
-- [ ] コードレビュー承認
+- [x] 全タスク完了
+- [x] READMEにnpxインストール手順が追加されている
+- [x] バージョン指定の例が記載されている
+- [x] npmページURLが記載されている
+- [x] マークダウン形式が正しい
+- [x] コードブロックが正しくフォーマットされている
+- [x] コードレビュー承認
 
 ## 技術的課題と解決方針
 - **課題**: 既存のREADME構造を壊さずに追加する

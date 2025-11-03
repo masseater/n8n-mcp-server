@@ -2,19 +2,19 @@
 
 ## タスク目次
 
-- 1. .github/workflowsディレクトリの確認・作成 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. publish.ymlファイルの作成 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. ワークフロートリガーの設定 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. ジョブステップの実装 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. NPM_TOKEN認証の設定 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 6. ワークフローYAML構文の検証 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. .github/workflowsディレクトリの確認・作成 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. publish.ymlファイルの作成 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. ワークフロートリガーの設定 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. ジョブステップの実装 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 5. NPM_TOKEN認証の設定 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 6. ワークフローYAML構文の検証 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て単一番号で直列実行（1 → 2 → 3 → 4 → 5 → 6）
 
 ## Phase概要
 - **Phase名**: GitHub Actionsワークフロー作成
-- **状態**: 未着手
+- **状態**: 完了
 - **目標**: npm公開を自動化するGitHub Actionsワークフローを作成し、手動トリガーでバージョンを指定して公開できるようにする
 
 ## TDD & 設計原則の適用
@@ -165,13 +165,13 @@
 - **ドライラン**: GitHub Actionsのワークフローエディタでプレビュー
 
 ## Phase完了条件
-- [ ] 全タスク完了
-- [ ] .github/workflows/publish.ymlが作成されている
-- [ ] ワークフロートリガーが正しく設定されている
-- [ ] 全てのジョブステップが実装されている
-- [ ] NPM_TOKEN認証が設定されている
-- [ ] YAML構文が正しい
-- [ ] コードレビュー承認
+- [x] 全タスク完了
+- [x] .github/workflows/publish.ymlが作成されている
+- [x] ワークフロートリガーが正しく設定されている
+- [x] 全てのジョブステップが実装されている
+- [x] NPM_TOKEN認証が設定されている
+- [x] YAML構文が正しい
+- [x] コードレビュー承認
 
 ## 技術的課題と解決方針
 - **課題**: npm versionコマンドがgitコミットを作成しようとする

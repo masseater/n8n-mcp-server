@@ -2,17 +2,17 @@
 
 ## タスク目次
 
-- 1. publishConfigフィールドの追加 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. registryの設定 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. accessの設定 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. publishConfig設定の検証 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. publishConfigフィールドの追加 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. registryの設定 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. accessの設定 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. publishConfig設定の検証 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
 
 **番号付けルール:**
 - 全て単一番号で直列実行（1 → 2 → 3 → 4）
 
 ## Phase概要
 - **Phase名**: publishConfig設定
-- **状態**: 未着手
+- **状態**: 完了
 - **目標**: npm公開レジストリとアクセス設定を行い、公開npmレジストリにスコープ付きパッケージをpublicとして公開できるようにする
 
 ## TDD & 設計原則の適用

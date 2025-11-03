@@ -4,13 +4,58 @@ Model Context Protocol (MCP) server for n8n workflow automation platform. This s
 
 ## Quick Start
 
+### Install via npx (Recommended)
+
+[![npm version](https://badge.fury.io/js/@masseater%2Fn8n-mcp-server.svg)](https://www.npmjs.com/package/@masseater/n8n-mcp-server)
+
+You can run n8n-mcp-server directly using npx without installing it:
+
+```bash
+npx @masseater/n8n-mcp-server
+```
+
+You can also specify a version:
+
+```bash
+# Latest version
+npx @masseater/n8n-mcp-server@latest
+
+# Specific version
+npx @masseater/n8n-mcp-server@1.0.0
+```
+
+View on npm: https://www.npmjs.com/package/@masseater/n8n-mcp-server
+
 ### Prerequisites
 
 - n8n instance running (local or remote)
 - n8n API key ([how to get API key](https://docs.n8n.io/api/authentication/))
-- Node.js 18+ and pnpm installed
+- Node.js 22.10.0+ (for npx usage)
+- Node.js 18+ and pnpm installed (for local development)
 
-### Setup and Run
+### Using with Claude Desktop (npx method)
+
+Add this configuration to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "n8n": {
+      "command": "npx",
+      "args": ["@masseater/n8n-mcp-server"],
+      "env": {
+        "N8N_URL": "http://localhost:5678",
+        "N8N_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+### Local Development Setup
 
 1. **Install dependencies**
    ```bash
@@ -35,9 +80,17 @@ Model Context Protocol (MCP) server for n8n workflow automation platform. This s
    pnpm start --transport http --port 3000
    ```
 
-### Using with Claude Desktop
+After saving, restart Claude Desktop. You can now ask Claude to manage your n8n workflows!
 
-Add this configuration to your Claude Desktop config file:
+**Example prompts**:
+- "List all my n8n workflows"
+- "Create a new workflow called 'Email Automation'"
+- "Show me the details of workflow ID abc123"
+- "Update workflow xyz456 to add a new node"
+
+### Using with Claude Desktop (local development)
+
+For local development, you can use the local build instead of npx:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -56,14 +109,6 @@ Add this configuration to your Claude Desktop config file:
   }
 }
 ```
-
-After saving, restart Claude Desktop. You can now ask Claude to manage your n8n workflows!
-
-**Example prompts**:
-- "List all my n8n workflows"
-- "Create a new workflow called 'Email Automation'"
-- "Show me the details of workflow ID abc123"
-- "Update workflow xyz456 to add a new node"
 
 ## Features
 
