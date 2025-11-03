@@ -3,7 +3,7 @@
  */
 
 /**
- * Context型定義
+ * Context型定義（内部使用のみ）
  */
 
 /**
@@ -11,7 +11,7 @@
  * 既存コードとの互換性のため、全てのフィールドをオプショナルにする
  * exactOptionalPropertyTypes対応のため、undefinedを明示的に許可
  */
-export type ApiErrorContext = {
+type ApiErrorContext = {
   operation?: string | undefined;
   resourceType?: string | undefined;
   resourceId?: string | undefined;
@@ -25,7 +25,7 @@ export type ApiErrorContext = {
  * 既存コードとの互換性のため、全てのフィールドをオプショナルにする
  * exactOptionalPropertyTypes対応のため、undefinedを明示的に許可
  */
-export type NotFoundErrorContext = {
+type NotFoundErrorContext = {
   operation?: string | undefined;
   resourceType?: string | undefined;
   resourceId?: string | undefined;
@@ -37,7 +37,7 @@ export type NotFoundErrorContext = {
  * 既存コードとの互換性のため、全てのフィールドをオプショナルにする
  * exactOptionalPropertyTypes対応のため、undefinedを明示的に許可
  */
-export type ValidationErrorContext = {
+type ValidationErrorContext = {
   field?: string | undefined;
   expectedType?: string | undefined;
   receivedType?: string | undefined;
