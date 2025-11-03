@@ -87,7 +87,7 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
-       
+
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -118,7 +118,7 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
-       
+
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -147,7 +147,7 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
-       
+
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -172,7 +172,7 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
-       
+
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -220,4 +220,3 @@ describe('BaseTool Error Handling', () => {
     });
   });
 });
-

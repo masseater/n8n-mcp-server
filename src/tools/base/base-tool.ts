@@ -41,13 +41,13 @@ export abstract class BaseTool<TArgs = Record<string, unknown>> {
   /**
    * Default handler that wraps execute() with response creation
    * Handles errors and returns error response with isError flag
-   * 
+   *
    * Error handling strategy:
    * - Catches all errors thrown by execute()
    * - Logs error details for debugging (without sensitive information)
    * - Returns error.message to AI client for appropriate action
    * - Sets isError: true to indicate error state
-   * 
+   *
    * Can be overridden if custom response handling is needed
    */
   async handler(args: TArgs): Promise<ToolResponse> {
