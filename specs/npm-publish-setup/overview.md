@@ -93,12 +93,12 @@
 
 ### Phase 8: npm公開実行
 - **開始日時**: 2025-11-03
-- **状態**: 実行可能（自動化済み、ワークフロー実行待ち）
-- **目標**: GitHub Package Registryへの実際の公開
+- **状態**: 実行可能（完全自動化済み、ワークフロー実行待ち）
+- **目標**: npm公式レジストリへの実際の公開
 - **依存関係**: Phase 7の完了が必須
 - **成果物**:
-  - npm公開完了（`npm publish`実行）
-  - GitHub Packagesページでの公開確認完了
+  - npm公開完了（`npm publish --provenance`実行）
+  - npmページでの公開確認完了
 
 **タスク番号形式について:**
 - Phase内のタスクは番号で管理されます
@@ -169,8 +169,8 @@ sequenceDiagram
 
 ## リスクと制約
 - **リスク**:
-  - ユーザー側で初回.npmrc設定が必要（@masseaterスコープのレジストリ指定）
   - 公開後のバージョン管理運用方法（GitHub Actionsの手動トリガーで対応）
+  - npm Trusted Publishingは比較的新しい機能（2023年導入）
 
 - **技術的制約**:
   - Node.js 22.10.0以上が必要（package.json enginesフィールドより）
@@ -178,6 +178,6 @@ sequenceDiagram
   - TypeScript → JavaScriptへのトランスパイルが必要
 
 - **ビジネス的制約**:
-  - GitHub Package Registry（npm.pkg.github.com）で公開
+  - npm公式レジストリ（registry.npmjs.org）で公開
   - オープンソースライセンス（MIT）で公開
-  - GITHUB_TOKENによる完全自動化（ユーザー手動作業不要）
+  - npm Trusted Publishing（OIDC）による完全自動化

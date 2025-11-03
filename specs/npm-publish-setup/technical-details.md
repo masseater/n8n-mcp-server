@@ -26,25 +26,24 @@
 
 ### インフラ構成
 - **npm公開**:
-  - GitHub Package Registry（npm.pkg.github.com）
+  - npm公式レジストリ（registry.npmjs.org）
   - パッケージ名: `@masseater/n8n-mcp-server`
   - GitHub Actionsでの完全自動化（手動トリガー、バージョン指定）
-  - GITHUB_TOKENによる認証（ユーザー手動作業不要）
+  - npm Trusted Publishing（OIDC認証）使用
+  - NPM_TOKEN不要、トークン管理不要
 - **実行環境**: ユーザーのローカル環境
 - **依存関係**: npm/npxによる自動解決
 
 ## 技術選定
 
 ### npm公開方式
-- **採用技術**: npm publish コマンド + GitHub Package Registry
+- **採用技術**: npm publish コマンド + npm Trusted Publishing (OIDC)
 - **理由**:
-  - GitHub Actionsとの完全統合（GITHUB_TOKEN使用）
-  - ユーザー手動作業不要（NPM_TOKEN取得・登録が不要）
-  - 完全自動化が可能
-  - GitHubリポジトリとの統合
-- **注意点**:
-  - ユーザー側で初回のみ.npmrc設定が必要（`@masseater:registry=https://npm.pkg.github.com`）
-  - 設定後は通常のnpxコマンドで使用可能
+  - npm公式レジストリに公開（エンドユーザーの設定不要）
+  - OIDC認証でNPM_TOKEN不要（完全自動化）
+  - Provenanceによる署名付き公開（セキュリティ向上）
+  - 長期トークンの管理リスクを排除
+  - npxコマンドで即座に使用可能
 
 ### パッケージ名の方式
 - **採用**: `@masseater/n8n-mcp-server`（スコープ付き）
@@ -164,10 +163,11 @@ npx [パッケージ名] [options]
 ### npm公開API
 
 #### 認証
-- GITHUB_TOKENを使用（GitHub Actionsのデフォルトトークン）
-- ユーザー手動作業不要（トークン取得・登録が自動）
-- GitHub Actionsでの手動トリガー実行
-- permissions設定でpackages: writeを許可
+- npm Trusted Publishing（OIDC）を使用
+- GitHub ActionsのOIDCトークンでnpmに認証
+- NPM_TOKEN不要（トークン取得・登録が完全不要）
+- permissions設定でid-token: writeを許可
+- Provenanceによる署名付き公開
 
 #### 公開コマンド
 
@@ -196,7 +196,7 @@ GitHub Actionsワークフローを手動実行（Actions タブから"Publish t
 
 #### ワークフロー構造
 ```yaml
-name: Publish to GitHub Packages
+name: Publish to npm
 
 on:
   workflow_dispatch:
@@ -211,23 +211,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22.10.0'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@masseater'
+          registry-url: 'https://registry.npmjs.org'
       - uses: pnpm/action-setup@v4
         with:
           version: '10.19.0'
       - run: pnpm install
       - run: pnpm run build
       - run: npm version ${{ inputs.version }} --no-git-tag-version
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm publish --provenance --access public
 ```
 
 #### トリガー方式
@@ -235,9 +232,11 @@ jobs:
 - **入力パラメータ**: バージョン番号（required）
 
 #### 認証
-- GITHUB_TOKENを使用（GitHub Actionsのデフォルトトークン）
-- ユーザー手動作業不要（トークン取得・登録が自動）
-- permissions設定でpackages: writeを許可
+- npm Trusted Publishing（OIDC）を使用
+- GitHub ActionsのOIDCトークンでnpmに認証
+- NPM_TOKEN不要（トークン取得・登録が完全不要）
+- permissions設定でid-token: writeを許可
+- Provenanceによる署名付き公開
 
 #### ジョブフロー
 1. リポジトリをチェックアウト

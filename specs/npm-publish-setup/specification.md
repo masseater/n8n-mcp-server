@@ -246,8 +246,9 @@
 ### セキュリティ
 - npm公開時にAPIキーなどの機密情報が含まれないこと
 - .npmignoreまたはfilesフィールドで.envファイルを除外すること
-- GitHub ActionsでのGITHUB_TOKENは自動提供（セキュリティ管理不要）
-- permissions設定でpackages: writeのみを許可
+- npm Trusted Publishing（OIDC）使用でトークン管理不要
+- Provenanceによる署名付き公開でセキュリティ向上
+- permissions設定でid-token: writeのみを許可
 
 ### パフォーマンス要件
 このプロジェクトではnpm公開設定のみを扱うため、パフォーマンス要件は該当しません。
@@ -270,12 +271,12 @@
 - Node.js 22.10.0以上が必要
 - pnpmパッケージマネージャーの使用
 - TypeScriptからJavaScriptへのトランスパイルが必須
-- GitHub Actionsでの手動トリガー実行（トークン取得不要）
-- ユーザー側で初回のみ.npmrc設定が必要
+- GitHub Actionsでの手動トリガー実行
+- npm Trusted Publishing（OIDC）使用
 
 #### ビジネス的制約
 - パッケージ名は`@masseater/n8n-mcp-server`（スコープ付き）
-- GitHub Package Registry（npm.pkg.github.com）で公開
+- npm公式レジストリ（registry.npmjs.org）で公開
 - MITライセンスで公開
 - バージョン更新はGitHub Actionsの手動トリガーで実行
 
