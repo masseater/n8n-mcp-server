@@ -324,10 +324,10 @@ Format Response → Output (ValidationResult)
           validateNodes: { type: "boolean", default: true },
           validateConnections: { type: "boolean", default: true },
           validateExpressions: { type: "boolean", default: true },
-          profile: { 
-            type: "string", 
-            enum: ["minimal", "runtime", "ai-friendly", "strict"], 
-            default: "runtime" 
+          profile: {
+            type: "string",
+            enum: ["minimal", "runtime", "ai-friendly", "strict"],
+            default: "runtime"
           }
         }
       },
