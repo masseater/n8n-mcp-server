@@ -40,7 +40,8 @@ describe('BaseTool Error Handling', () => {
   let mockN8nClient: N8nApiClient;
   let mockResponseBuilder: ToolResponseBuilder;
   let context: ToolContext;
-  let loggerErrorSpy: ReturnType<typeof vi.spyOn>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let loggerErrorSpy: any;
 
   beforeEach(() => {
     // Mock n8n API client
@@ -82,8 +83,8 @@ describe('BaseTool Error Handling', () => {
       // Assert
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
-      expect(response.content[0].text).toBe(errorMessage);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -111,8 +112,8 @@ describe('BaseTool Error Handling', () => {
       // Assert
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
-      expect(response.content[0].text).toBe(errorMessage);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -138,8 +139,8 @@ describe('BaseTool Error Handling', () => {
       // Assert
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
-      expect(response.content[0].text).toBe(errorMessage);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -161,8 +162,8 @@ describe('BaseTool Error Handling', () => {
       // Assert
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
-      expect(response.content[0].text).toBe(errorMessage);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorMessage);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
@@ -184,8 +185,8 @@ describe('BaseTool Error Handling', () => {
       // Assert
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
-      expect(response.content[0].text).toBe(errorValue);
+      expect(response.content[0]?.type).toBe('text');
+      expect(response.content[0]?.text).toBe(errorValue);
       expect(loggerErrorSpy).toHaveBeenCalled();
     });
   });
@@ -204,7 +205,7 @@ describe('BaseTool Error Handling', () => {
       // Assert
       expect(response.isError).toBeUndefined();
       expect(response.content).toHaveLength(1);
-      expect(response.content[0].type).toBe('text');
+      expect(response.content[0]?.type).toBe('text');
       expect(loggerErrorSpy).not.toHaveBeenCalled();
     });
   });

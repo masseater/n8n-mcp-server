@@ -5,6 +5,7 @@
 import type { ZodSchema } from "zod";
 import type { ToolContext, ToolDefinition, ToolResponse } from "../base-tool.js";
 import { createToolResponse, convertToJsonSchema } from "../base-tool.js";
+import { logger } from "../../utils/logger.js";
 
 /**
  * Abstract base class for all MCP tools
@@ -39,11 +40,28 @@ export abstract class BaseTool<TArgs = Record<string, unknown>> {
 
   /**
    * Default handler that wraps execute() with response creation
+   * Handles errors and returns error response with isError flag
    * Can be overridden if custom response handling is needed
    */
   async handler(args: TArgs): Promise<ToolResponse> {
-    const result = await this.execute(args);
-    return createToolResponse(result);
+    try {
+      const result = await this.execute(args);
+      return createToolResponse(result);
+    } catch (error) {
+      // エラーログ出力
+      logger.error(`[${this.name}] Error`, { error });
+
+      // エラーレスポンス返却
+      return {
+        content: [
+          {
+            type: "text",
+            text: error instanceof Error ? error.message : String(error),
+          },
+        ],
+        isError: true,
+      };
+    }
   }
 
   /**
