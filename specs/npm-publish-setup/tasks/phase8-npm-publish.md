@@ -2,21 +2,21 @@
 
 ## タスク目次
 
-- 1. NPM_TOKENの取得と確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 2. GitHub SecretsへのNPM_TOKEN登録 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 3. 最終ビルドとテストの実行 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 4. GitHub Actionsワークフローの手動実行 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 5. npm公開の確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 6. npmページでの動作確認 - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
-- 7. npxコマンドでの最終テスト - 状態: 未着手 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 1. ~~NPM_TOKENの取得と確認~~ - 状態: 不要（GITHUB_TOKEN使用） - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 2. ~~GitHub SecretsへのNPM_TOKEN登録~~ - 状態: 不要（GITHUB_TOKEN使用） - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 3. 最終ビルドとテストの実行 - 状態: 完了 - TDD: ✅ Red / ✅ Green / ✅ Refactor
+- 4. GitHub Actionsワークフローの手動実行 - 状態: 実行可能 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 5. npm公開の確認 - 状態: 未実施 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 6. GitHub Packagesページでの動作確認 - 状態: 未実施 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
+- 7. npxコマンドでの最終テスト - 状態: 未実施 - TDD: ⬜ Red / ⬜ Green / ⬜ Refactor
 
 **番号付けルール:**
 - 全て単一番号で直列実行（1 → 2 → 3 → 4 → 5 → 6 → 7）
 
 ## Phase概要
 - **Phase名**: npm公開実行
-- **状態**: 未着手
-- **目標**: npmレジストリへの実際の公開を行い、パッケージがnpmページで利用可能になることを確認する
+- **状態**: 実行可能（自動化済み、ワークフロー実行待ち）
+- **目標**: GitHub Package Registryへの実際の公開を行い、パッケージが利用可能になることを確認する
 
 ## TDD & 設計原則の適用
 
