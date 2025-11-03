@@ -253,32 +253,49 @@ Format Response → Output (ValidationResult)
 ## API設計
 ### エンドポイント一覧
 
-#### 1. validate_workflow
+#### 1. validate_workflow（czlonkowski/n8n-mcp参考）
 ```typescript
 // MCPツール定義
 {
   name: "validate_workflow",
-  description: "n8nワークフローの構文を検証する",
+  description: "n8nワークフローの構文を検証する。czlonkowski/n8n-mcpのAPIを参考に設計",
   inputSchema: {
     type: "object",
     properties: {
       workflow: {
         type: "object",
-        description: "検証するワークフロー定義"
+        description: "検証するワークフロー定義（nodes配列とconnectionsオブジェクト必須）"
       },
-      strict: {
-        type: "boolean",
-        description: "厳格モード（警告もエラーとして扱う）",
-        default: false
-      },
-      includeWarnings: {
-        type: "boolean",
-        description: "警告を結果に含める",
-        default: true
+      options: {
+        type: "object",
+        description: "検証オプション",
+        properties: {
+          validateNodes: {
+            type: "boolean",
+            description: "ノード検証の有効化（デフォルト: true）",
+            default: true
+          },
+          validateConnections: {
+            type: "boolean",
+            description: "接続検証の有効化（デフォルト: true）",
+            default: true
+          },
+          validateExpressions: {
+            type: "boolean",
+            description: "式検証の有効化（デフォルト: true）",
+            default: true
+          },
+          profile: {
+            type: "string",
+            enum: ["minimal", "runtime", "ai-friendly", "strict"],
+            description: "検証プロファイル（デフォルト: runtime）",
+            default: "runtime"
+          }
+        }
       },
       raw: {
         type: "boolean",
-        description: "詳細な結果を返す",
+        description: "詳細な結果を返す（既存MCPツールとの一貫性）",
         default: false
       }
     },
@@ -298,17 +315,21 @@ Format Response → Output (ValidationResult)
     properties: {
       filePath: {
         type: "string",
-        description: "ワークフローJSONファイルのパス"
+        description: "ワークフローJSONファイルのパス（絶対パスまたは相対パス）"
       },
-      strict: {
-        type: "boolean",
-        description: "厳格モード",
-        default: false
-      },
-      includeWarnings: {
-        type: "boolean",
-        description: "警告を結果に含める",
-        default: true
+      options: {
+        type: "object",
+        description: "検証オプション（validate_workflowと同じ）",
+        properties: {
+          validateNodes: { type: "boolean", default: true },
+          validateConnections: { type: "boolean", default: true },
+          validateExpressions: { type: "boolean", default: true },
+          profile: { 
+            type: "string", 
+            enum: ["minimal", "runtime", "ai-friendly", "strict"], 
+            default: "runtime" 
+          }
+        }
       },
       raw: {
         type: "boolean",

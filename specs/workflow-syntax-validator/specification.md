@@ -262,13 +262,18 @@
 - **既存MCPツール**: 他のワークフローツールとの連携
 
 ### API仕様概要
-#### validate_workflow
+
+#### validate_workflow（czlonkowski/n8n-mcp参考）
 ```typescript
 interface ValidateWorkflowArgs {
   workflow: WorkflowDefinition;
-  strict?: boolean;
-  includeWarnings?: boolean;
-  raw?: boolean;
+  options?: {
+    validateNodes?: boolean;      // ノード検証の有効化（デフォルト: true）
+    validateConnections?: boolean; // 接続検証の有効化（デフォルト: true）
+    validateExpressions?: boolean; // 式検証の有効化（デフォルト: true）
+    profile?: 'minimal' | 'runtime' | 'ai-friendly' | 'strict'; // 検証プロファイル（デフォルト: runtime）
+  };
+  raw?: boolean; // 詳細レスポンス制御（既存MCPツールとの一貫性）
 }
 
 interface ValidationResponse {
@@ -276,10 +281,26 @@ interface ValidationResponse {
   message: string;
   data: {
     valid: boolean;
-    errors: ValidationError[];
-    warnings: ValidationWarning[];
-    statistics: ValidationStatistics;
+    errors: ValidationIssue[];
+    warnings: ValidationIssue[];
+    statistics: {
+      totalNodes: number;
+      enabledNodes: number;
+      triggerNodes: number;
+      validConnections: number;
+      invalidConnections: number;
+      expressionsValidated: number;
+    };
+    suggestions: string[];
   };
+}
+
+interface ValidationIssue {
+  type: 'error' | 'warning';
+  nodeId?: string;
+  nodeName?: string;
+  message: string;
+  details?: any;
 }
 ```
 
@@ -287,8 +308,12 @@ interface ValidationResponse {
 ```typescript
 interface ValidateWorkflowFromFileArgs {
   filePath: string;
-  strict?: boolean;
-  includeWarnings?: boolean;
+  options?: {
+    validateNodes?: boolean;
+    validateConnections?: boolean;
+    validateExpressions?: boolean;
+    profile?: 'minimal' | 'runtime' | 'ai-friendly' | 'strict';
+  };
   raw?: boolean;
 }
 // レスポンスはvalidate_workflowと同じ
