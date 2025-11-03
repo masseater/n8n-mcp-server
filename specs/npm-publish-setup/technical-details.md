@@ -26,27 +26,25 @@
 
 ### インフラ構成
 - **npm公開**:
-  - 公開レジストリ（registry.npmjs.org）
+  - GitHub Package Registry（npm.pkg.github.com）
   - パッケージ名: `@masseater/n8n-mcp-server`
-  - GitHub Actionsでの自動化（手動トリガー、バージョン指定）
+  - GitHub Actionsでの完全自動化（手動トリガー、バージョン指定）
+  - GITHUB_TOKENによる認証（ユーザー手動作業不要）
 - **実行環境**: ユーザーのローカル環境
 - **依存関係**: npm/npxによる自動解決
 
 ## 技術選定
 
 ### npm公開方式
-- **採用技術**: npm publish コマンド
+- **採用技術**: npm publish コマンド + GitHub Package Registry
 - **理由**:
-  - 標準的なnpm公開フロー
-  - npmエコシステムとの高い互換性
-  - npxコマンドによる即座の実行サポート
-- **代替案**:
-  - **案A**: GitHub Packages Registry
-    - 利点: GitHubとの統合、プライベートパッケージの無料ホスティング
-    - 欠点: npmトークンとは別の認証が必要、ユーザー側で追加設定が必要
-  - **案B**: 独自のnpmレジストリ（Verdaccio等）
-    - 利点: 完全なコントロール、プライベート管理
-    - 欠点: インフラ維持コスト、npx実行時の追加設定
+  - GitHub Actionsとの完全統合（GITHUB_TOKEN使用）
+  - ユーザー手動作業不要（NPM_TOKEN取得・登録が不要）
+  - 完全自動化が可能
+  - GitHubリポジトリとの統合
+- **注意点**:
+  - ユーザー側で初回のみ.npmrc設定が必要（`@masseater:registry=https://npm.pkg.github.com`）
+  - 設定後は通常のnpxコマンドで使用可能
 
 ### パッケージ名の方式
 - **採用**: `@masseater/n8n-mcp-server`（スコープ付き）
@@ -166,12 +164,14 @@ npx [パッケージ名] [options]
 ### npm公開API
 
 #### 認証
-- npmトークン（NPM_TOKEN）を使用
-- 2FAは無効（シンプルな認証フローを優先）
+- GITHUB_TOKENを使用（GitHub Actionsのデフォルトトークン）
+- ユーザー手動作業不要（トークン取得・登録が自動）
 - GitHub Actionsでの手動トリガー実行
-- NPM_TOKENはGitHub Secretsで管理
+- permissions設定でpackages: writeを許可
 
 #### 公開コマンド
+
+**ローカルでのテスト**:
 ```bash
 # ローカルビルド
 pnpm run build
@@ -181,21 +181,22 @@ npm pack
 
 # 公開（ドライラン）
 npm publish --dry-run
-
-# 実際の公開
-npm publish
 ```
+
+**実際の公開**:
+GitHub Actionsワークフローを手動実行（Actions タブから"Publish to GitHub Packages"を実行）
 
 #### バージョニング
 - セマンティックバージョニングに従う（MAJOR.MINOR.PATCH）
 - GitHub Actionsの手動トリガーで実行時にバージョンを指定
 - 自動pushによる発火は不要
+- バージョン更新はワークフロー内で自動実行（npm version --no-git-tag-version）
 
 ### GitHub Actions ワークフローAPI
 
 #### ワークフロー構造
 ```yaml
-name: Publish to npm
+name: Publish to GitHub Packages
 
 on:
   workflow_dispatch:
@@ -208,12 +209,16 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22.10.0'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@masseater'
       - uses: pnpm/action-setup@v4
         with:
           version: '10.19.0'
@@ -222,7 +227,7 @@ jobs:
       - run: npm version ${{ inputs.version }} --no-git-tag-version
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 #### トリガー方式
@@ -230,9 +235,9 @@ jobs:
 - **入力パラメータ**: バージョン番号（required）
 
 #### 認証
-- NPM_TOKENをGitHub Secretsに設定
-- NODE_AUTH_TOKENとして環境変数に渡す
-- 2FAは無効（シンプルな認証フローを優先）
+- GITHUB_TOKENを使用（GitHub Actionsのデフォルトトークン）
+- ユーザー手動作業不要（トークン取得・登録が自動）
+- permissions設定でpackages: writeを許可
 
 #### ジョブフロー
 1. リポジトリをチェックアウト
