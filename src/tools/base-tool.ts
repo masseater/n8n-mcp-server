@@ -29,6 +29,7 @@ export type ToolResponse = {
     type: "text";
     text: string;
   }[];
+  isError?: boolean;
 };
 
 export function createToolResponse(data: unknown): ToolResponse {

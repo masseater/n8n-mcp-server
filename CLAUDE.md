@@ -744,7 +744,7 @@ This section documents the code quality improvements implemented in Phase 3 of t
 
 **Completed Tasks**:
 1. ✅ Code quality analysis
-2. ✅ DRY principle application  
+2. ✅ DRY principle application
 3. ✅ Design pattern application
 4. ✅ Performance optimization
 5. ✅ Type safety enhancement
@@ -836,7 +836,7 @@ createListExecutionsResponse(executions, raw) {
 minimizeContext(data) {
   const jsonString = JSON.stringify(data);  // 1st
   if (jsonString.length <= maxSize) return data;
-  
+
   if (Array.isArray(data)) {
     return minimizeArray(data, maxSize);     // calls JSON.stringify again (2nd)
   } else {
@@ -850,7 +850,7 @@ minimizeContext(data) {
 minimizeContext(data) {
   const jsonString = JSON.stringify(data);  // 1st (only)
   if (jsonString.length <= maxSize) return data;
-  
+
   if (Array.isArray(data)) {
     return minimizeArray(data, maxSize, jsonString);  // reuse
   } else {
@@ -897,7 +897,7 @@ minimizeContext(data) {
 
 **After Phase 3**:
 - Total test files: 8
-- Total tests: 37  
+- Total tests: 37
 - Code duplication: Eliminated via Remeda & Template Method
 - Custom utilities: 0 (removed object-utils.ts)
 - External dependencies: +1 (Remeda)
@@ -934,3 +934,47 @@ const filtered = pickBy(sourceObject, (value, key) => someCondition(value, key))
 ```
 
 For other common operations, check [Remeda documentation](https://remedajs.com/docs/).
+
+## Error Handling
+
+### Error Response Format
+
+When an MCP tool encounters an error, BaseTool automatically catches it and returns a ToolResponse with `isError: true`:
+
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "Workflow 'abc123' not found"
+  }],
+  "isError": true
+}
+```
+
+### Implementation
+
+**BaseTool.handler()** catches all errors thrown by tool implementations and returns `error.message` to the AI client:
+
+```typescript
+async handler(args: TArgs): Promise<ToolResponse> {
+  try {
+    const result = await this.execute(args);
+    return createToolResponse(result);
+  } catch (error) {
+    logger.error(`[${this.name}] Error`, { error });
+    return {
+      content: [{
+        type: "text",
+        text: error instanceof Error ? error.message : String(error),
+      }],
+      isError: true,
+    };
+  }
+}
+```
+
+**Key points**:
+- All tools automatically inherit error handling from BaseTool
+- No need to add try-catch blocks in tool implementations
+- Error messages are logged for debugging
+- Sensitive information (API keys, passwords) is excluded from error messages
