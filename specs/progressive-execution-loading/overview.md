@@ -91,7 +91,17 @@
 - 詳細は `specs/progressive-execution-loading/tasks/phase4-node-execution-formatter.md` を参照
 
 ### Phase 5: get_execution_by_nodeツール実装
-- **状態**: 未着手
+- **開始日時**: 2025-11-03
+- **完了日時**: 2025-11-03
+- **状態**: 完了
+- **目標**: 単一ノードの詳細データを取得するMCPツールを実装
+- **依存関係**: Phase 4完了（NodeExecutionFormatterが利用可能）
+- **成果物**:
+  - ✅ GetExecutionByNodeArgs型とスキーマの実装
+  - ✅ GetExecutionByNodeToolクラスの実装
+  - ✅ ToolResponseBuilder.createExecutionByNodeResponse()追加
+  - ✅ ユニットテスト（3テストケース）
+  - ✅ 全品質チェック通過（type-check, lint, test: 108/108テスト成功）
 - 詳細は `specs/progressive-execution-loading/tasks/phase5-get-execution-by-node-tool.md` を参照
 
 ### Phase 6: get_execution_by_node統合
