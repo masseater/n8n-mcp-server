@@ -143,4 +143,3 @@ export class NodeExecutionFormatter {
     return nodeData.error ?? null;
   }
 }
-
