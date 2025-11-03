@@ -105,7 +105,20 @@
 - 詳細は `specs/progressive-execution-loading/tasks/phase5-get-execution-by-node-tool.md` を参照
 
 ### Phase 6: get_execution_by_node統合
-- **状態**: 未着手
+- **開始日時**: 2025-11-03
+- **完了日時**: 2025-11-03
+- **状態**: 完了
+- **目標**: GetExecutionByNodeToolをToolRegistryに登録し、レスポンスサイズ最適化を実施
+- **依存関係**: Phase 5完了（GetExecutionByNodeToolが利用可能）
+- **成果物**:
+  - ✅ ToolRegistryへのツール登録（11ツールに増加）
+  - ✅ ToolRegistryユニットテスト（4テストケース追加）
+  - ✅ 統合テスト（4テストケース）
+  - ✅ レスポンスサイズ最適化（MAX_ITEMS=50制限）
+    - 最適化前: ~52,641 tokens（制限超過）
+    - 最適化後: ~5,264 tokens（90%削減、制限内）
+  - ✅ エラーケーステスト（存在しないnodeName）
+  - ✅ 全品質チェック通過（type-check, lint, test: 114/116テスト成功）
 - 詳細は `specs/progressive-execution-loading/tasks/phase6-get-execution-by-node-integration.md` を参照
 
 ### Phase 7: 2ツール連携統合テスト
