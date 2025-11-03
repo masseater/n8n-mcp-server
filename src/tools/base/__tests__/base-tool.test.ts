@@ -56,7 +56,9 @@ describe('BaseTool Error Handling', () => {
     };
 
     // Spy on logger.error
-    loggerErrorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    loggerErrorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {
+      // Mock implementation (do nothing)
+    });
   });
 
   afterEach(() => {
@@ -85,9 +87,11 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
+       
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           error: expect.any(NotFoundError),
         })
       );
@@ -114,9 +118,11 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
+       
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           error: expect.any(ApiError),
         })
       );
@@ -141,9 +147,11 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
+       
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           error: expect.any(ValidationError),
         })
       );
@@ -164,9 +172,11 @@ describe('BaseTool Error Handling', () => {
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
       expect(response.content[0]?.text).toBe(errorMessage);
+       
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           error: expect.any(Error),
         })
       );
