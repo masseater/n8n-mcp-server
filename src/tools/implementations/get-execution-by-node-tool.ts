@@ -52,4 +52,3 @@ export class GetExecutionByNodeTool extends BaseTool<GetExecutionByNodeArgs> {
     return this.context.responseBuilder.createExecutionByNodeResponse(nodeData);
   }
 }
-

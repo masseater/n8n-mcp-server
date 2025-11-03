@@ -34,6 +34,12 @@ type ExecutionData = {
 };
 
 /**
+ * Maximum number of items to include in input/output
+ * Prevents MCP response size from exceeding 25,000 token limit
+ */
+const MAX_ITEMS = 50;
+
+/**
  * NodeExecutionFormatter class
  * Extracts and formats single node execution data from Execution
  */
@@ -115,6 +121,7 @@ export class NodeExecutionFormatter {
 
   /**
    * Extract input/output items from node data
+   * Limits items to MAX_ITEMS to prevent MCP response size from exceeding limit
    * @private
    */
   private extractInputOutputItems(nodeData: NodeRunData): {
@@ -122,9 +129,12 @@ export class NodeExecutionFormatter {
     output: unknown[];
   } {
     const outputData = nodeData.data?.main;
-    const outputItems = Array.isArray(outputData) && outputData.length > 0
+    const allOutputItems = Array.isArray(outputData) && outputData.length > 0
       ? (Array.isArray(outputData[0]) ? outputData[0] : [])
       : [];
+
+    // Limit items to MAX_ITEMS (50) to prevent response size from exceeding 25,000 tokens
+    const outputItems = allOutputItems.slice(0, MAX_ITEMS);
 
     // 入力データは出力データと同じ構造を想定（n8nの仕様）
     const inputItems = outputItems;

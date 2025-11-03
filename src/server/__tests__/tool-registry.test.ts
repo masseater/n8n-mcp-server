@@ -1,6 +1,7 @@
 /**
  * ToolRegistry Unit Tests
  * Phase 3 Task 1: Verify GetExecutionTool is registered correctly
+ * Phase 6 Task 1: Verify GetExecutionByNodeTool is registered correctly
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -56,11 +57,11 @@ describe('ToolRegistry', () => {
       expect(registeredTools).toContain('get_execution');
     });
 
-    it('TC-REGISTRY-003: should initialize with 10 tools including get_execution', () => {
+    it('TC-REGISTRY-003: should initialize with 11 tools including get_execution', () => {
       // Act
       toolRegistry.initialize();
 
-      // Assert - Should have exactly 10 tools
+      // Assert - Should have exactly 11 tools
       const getExecutionTool = toolRegistry.getToolByName('get_execution');
       const listExecutionsTool = toolRegistry.getToolByName('list_executions');
       const deleteWorkflowTool = toolRegistry.getToolByName('delete_workflow');
@@ -71,6 +72,7 @@ describe('ToolRegistry', () => {
       const createWorkflowFromFileTool = toolRegistry.getToolByName('create_workflow_from_file');
       const updateWorkflowTool = toolRegistry.getToolByName('update_workflow');
       const replaceWorkflowFromFileTool = toolRegistry.getToolByName('replace_workflow_from_file');
+      const getExecutionByNodeTool = toolRegistry.getToolByName('get_execution_by_node');
 
       expect(getExecutionTool).toBeDefined();
       expect(listExecutionsTool).toBeDefined();
@@ -82,6 +84,7 @@ describe('ToolRegistry', () => {
       expect(createWorkflowFromFileTool).toBeDefined();
       expect(updateWorkflowTool).toBeDefined();
       expect(replaceWorkflowFromFileTool).toBeDefined();
+      expect(getExecutionByNodeTool).toBeDefined();
     });
 
     it('TC-REGISTRY-004: GetExecutionTool should have correct description', () => {
@@ -92,6 +95,68 @@ describe('ToolRegistry', () => {
       const getExecutionTool = toolRegistry.getToolByName('get_execution');
       expect(getExecutionTool?.description).toContain('サマリー情報');
       expect(getExecutionTool?.description).toContain('get_execution_by_node');
+    });
+  });
+
+  describe('Phase 6 Task 1: GetExecutionByNodeTool registration', () => {
+    it('TC-REGISTRY-005: should initialize with GetExecutionByNodeTool in tool instances', () => {
+      // Act
+      toolRegistry.initialize();
+
+      // Assert - GetExecutionByNodeTool should be in the tool instances
+      const getExecutionByNodeTool = toolRegistry.getToolByName('get_execution_by_node');
+      expect(getExecutionByNodeTool).toBeDefined();
+      expect(getExecutionByNodeTool?.name).toBe('get_execution_by_node');
+    });
+
+    it('TC-REGISTRY-006: should register GetExecutionByNodeTool with MCP server when setupToolHandlers is called', () => {
+      // Arrange
+      toolRegistry.initialize();
+
+      // Act
+      toolRegistry.setupToolHandlers();
+
+      // Assert - registerTool should be called for get_execution_by_node
+      expect(mockServer.registerTool).toHaveBeenCalled();
+
+      // Verify get_execution_by_node is in registered tools
+      const registeredTools = toolRegistry.getRegisteredTools();
+      expect(registeredTools).toContain('get_execution_by_node');
+    });
+
+    it('TC-REGISTRY-007: GetExecutionByNodeTool should have correct description', () => {
+      // Act
+      toolRegistry.initialize();
+
+      // Assert
+      const getExecutionByNodeTool = toolRegistry.getToolByName('get_execution_by_node');
+      expect(getExecutionByNodeTool?.description).toContain('ノードの実行詳細データ');
+      expect(getExecutionByNodeTool?.description).toContain('availableNodes');
+    });
+
+    it('TC-REGISTRY-008: should initialize with 11 tools total', () => {
+      // Act
+      toolRegistry.initialize();
+
+      // Assert - All 11 tools should be registered
+      const allTools = [
+        'delete_workflow',
+        'list_workflows',
+        'get_workflow',
+        'get_workflow_connections',
+        'create_workflow',
+        'create_workflow_from_file',
+        'update_workflow',
+        'replace_workflow_from_file',
+        'list_executions',
+        'get_execution',
+        'get_execution_by_node',
+      ];
+
+      for (const toolName of allTools) {
+        const tool = toolRegistry.getToolByName(toolName);
+        expect(tool).toBeDefined();
+      }
     });
   });
 });
