@@ -74,3 +74,25 @@ export type ExecutionSummary = {
     example: string; // Next tool call example with nodeName
   };
 }
+
+/**
+ * Node execution data response (for Progressive Execution Loading)
+ * Provides detailed execution data for a single node
+ */
+export type NodeExecutionData = {
+  executionId: string;
+  nodeName: string; // Node name from runData keys (user-defined name)
+  nodeType: string;
+  status: "success" | "error";
+  executionTime: number; // milliseconds
+  startTime: string;
+  endTime: string;
+  input: {
+    items: unknown[]; // JSON data (type depends on workflow)
+  };
+  output: {
+    items: unknown[]; // JSON data (type depends on workflow)
+  };
+  parameters: Record<string, unknown>;
+  error: unknown;
+}

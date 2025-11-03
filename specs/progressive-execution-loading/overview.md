@@ -78,7 +78,16 @@
   - ✅ 全品質チェック通過（type-check, lint, test）
 
 ### Phase 4: NodeExecutionFormatter実装
-- **状態**: 未着手
+- **開始日時**: 2025-11-03
+- **完了日時**: 2025-11-03
+- **状態**: 完了
+- **目標**: 単一ノードの実行データを抽出・整形する機能を実装
+- **依存関係**: なし（Phase 1-3と並行実行可能）
+- **成果物**:
+  - ✅ NodeExecutionData型の実装
+  - ✅ NodeExecutionFormatterクラスの実装
+  - ✅ ユニットテスト（6テストケース）
+  - ✅ 全品質チェック通過（type-check, lint, test）
 - 詳細は `specs/progressive-execution-loading/tasks/phase4-node-execution-formatter.md` を参照
 
 ### Phase 5: get_execution_by_nodeツール実装
