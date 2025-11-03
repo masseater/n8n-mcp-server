@@ -169,7 +169,7 @@ sequenceDiagram
 
 ## リスクと制約
 - **リスク**:
-  - スコープ（@masseater/）の所有権確認が必要
+  - ユーザー側で初回.npmrc設定が必要（@masseaterスコープのレジストリ指定）
   - 公開後のバージョン管理運用方法（GitHub Actionsの手動トリガーで対応）
 
 - **技術的制約**:
@@ -178,6 +178,6 @@ sequenceDiagram
   - TypeScript → JavaScriptへのトランスパイルが必要
 
 - **ビジネス的制約**:
-  - 公開npmレジストリ（registry.npmjs.org）で公開
+  - GitHub Package Registry（npm.pkg.github.com）で公開
   - オープンソースライセンス（MIT）で公開
-  - 2FAは無効（シンプルな認証フローを優先）
+  - GITHUB_TOKENによる完全自動化（ユーザー手動作業不要）
