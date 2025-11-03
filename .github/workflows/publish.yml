@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Publish to npm
 
 on:
   workflow_dispatch:
@@ -13,15 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       
       - uses: actions/setup-node@v4
         with:
           node-version: '22.10.0'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@masseater'
+          registry-url: 'https://registry.npmjs.org'
       
       - uses: pnpm/action-setup@v4
         with:
@@ -36,7 +35,5 @@ jobs:
       - name: Update version
         run: npm version ${{ inputs.version }} --no-git-tag-version
       
-      - name: Publish to GitHub Packages
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public

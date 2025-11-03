@@ -99,4 +99,3 @@ echo "@masseater:registry=https://npm.pkg.github.com" >> ~/.npmrc
 ```
 
 この設定は一度だけ実行すれば、以降は通常のnpxコマンドで使用できます。
-

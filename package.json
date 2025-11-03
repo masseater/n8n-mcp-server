@@ -13,8 +13,9 @@
     "LICENSE"
   ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/",
-    "access": "public"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "provenance": true
   },
   "engines": {
     "node": "^22.10.0"

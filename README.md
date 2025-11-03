@@ -8,14 +8,6 @@ Model Context Protocol (MCP) server for n8n workflow automation platform. This s
 
 You can run n8n-mcp-server directly using npx without installing it:
 
-**First-time setup** - Configure npm to use GitHub Packages for @masseater scope:
-
-```bash
-echo "@masseater:registry=https://npm.pkg.github.com" >> ~/.npmrc
-```
-
-**Then run**:
-
 ```bash
 npx @masseater/n8n-mcp-server
 ```
@@ -29,6 +21,8 @@ npx @masseater/n8n-mcp-server@latest
 # Specific version
 npx @masseater/n8n-mcp-server@1.0.0
 ```
+
+View on npm: https://www.npmjs.com/package/@masseater/n8n-mcp-server
 
 ### Prerequisites
 
