@@ -9,6 +9,10 @@ const config: KnipConfig = {
     '**/*.test.ts',
     '**/*.spec.ts',
   ],
+  ignoreExportsUsedInFile: {
+    interface: true,
+    type: true,
+  },
 };
 
 export default config;
