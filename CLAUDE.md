@@ -934,3 +934,207 @@ const filtered = pickBy(sourceObject, (value, key) => someCondition(value, key))
 ```
 
 For other common operations, check [Remeda documentation](https://remedajs.com/docs/).
+
+## Error Handling
+
+This section describes how errors are handled and returned to AI clients.
+
+### Error Response Format
+
+When an MCP tool encounters an error, it returns a ToolResponse with `isError: true`:
+
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "Workflow 'abc123' not found"
+  }],
+  "isError": true
+}
+```
+
+The error message (`text` field) contains a human-readable description of what went wrong, enabling the AI client to:
+- Understand the cause of the error
+- Take appropriate corrective action
+- Provide meaningful feedback to users
+
+### CustomError Classes
+
+This server uses custom error classes with strict type definitions for context information:
+
+#### 1. NotFoundError
+
+Thrown when a requested resource is not found (HTTP 404).
+
+**Context Type**: `NotFoundErrorContext`
+```typescript
+{
+  operation?: string;        // e.g., "get workflow"
+  resourceType?: string;     // e.g., "Workflow"
+  resourceId?: string;       // e.g., "abc123"
+}
+```
+
+**Example**:
+```typescript
+throw new NotFoundError(
+  "Workflow 'abc123' not found",
+  {
+    operation: "update workflow",
+    resourceType: "Workflow",
+    resourceId: "abc123"
+  }
+);
+```
+
+**AI Client receives**: `"Workflow 'abc123' not found"`
+
+#### 2. ApiError
+
+Thrown when an n8n API call fails (HTTP 4xx, 5xx).
+
+**Context Type**: `ApiErrorContext`
+```typescript
+{
+  operation?: string;        // e.g., "update workflow"
+  resourceType?: string;     // e.g., "Workflow"
+  resourceId?: string;       // e.g., "abc123"
+  statusCode?: number;       // e.g., 400
+  errorDetails?: string;     // e.g., "Field 'settings' is required"
+}
+```
+
+**Example**:
+```typescript
+throw new ApiError(
+  "Failed to update workflow",
+  400,
+  {
+    operation: "update workflow",
+    resourceId: "abc123",
+    errorDetails: "Field 'settings' is required"
+  }
+);
+```
+
+**AI Client receives**: `"Failed to update workflow"`
+
+#### 3. ValidationError
+
+Thrown when input validation fails.
+
+**Context Type**: `ValidationErrorContext`
+```typescript
+{
+  field?: string;            // e.g., "id"
+  expectedType?: string;     // e.g., "string"
+  receivedType?: string;     // e.g., "number"
+  constraint?: string;       // e.g., "must be at least 1"
+}
+```
+
+**Example**:
+```typescript
+throw new ValidationError(
+  "Workflow ID is required",
+  { field: "id" }
+);
+```
+
+**AI Client receives**: `"Workflow ID is required"`
+
+#### 4. FileError
+
+Thrown when file operations fail.
+
+**Example**:
+```typescript
+throw new FileError(
+  "File not found: /path/to/workflow.json",
+  "/path/to/workflow.json"
+);
+```
+
+**AI Client receives**: `"File not found: /path/to/workflow.json"`
+
+#### 5. AuthenticationError
+
+Thrown when authentication fails.
+
+**Example**:
+```typescript
+throw new AuthenticationError(
+  "Invalid API key"
+);
+```
+
+**AI Client receives**: `"Invalid API key"`
+
+### Error Handling Best Practices
+
+1. **BaseTool automatically catches errors**
+   - All tools inherit error handling from BaseTool
+   - No need to add try-catch blocks in tool implementations
+   - Errors are automatically logged and returned to AI client
+
+2. **Always use CustomError classes**
+   - Throw `NotFoundError`, `ApiError`, `ValidationError`, etc.
+   - Include appropriate context information
+   - Write clear, actionable error messages
+
+3. **Error messages are returned to AI client**
+   - Ensure `error.message` is clear and specific
+   - Include relevant resource identifiers (IDs, names)
+   - Avoid technical jargon when possible
+   - Example: ✅ "Workflow 'abc123' not found" vs ❌ "Resource not found"
+
+4. **Logs include full context**
+   - `logger.error()` captures detailed error information
+   - Stack traces are logged for debugging
+   - Context properties provide additional debugging details
+
+5. **No sensitive information in errors**
+   - API keys, passwords, and internal paths are excluded from error messages
+   - Sensitive data should only appear in server logs, not in AI client responses
+   - Example: ✅ "Authentication failed" vs ❌ "API key 'sk_abc123' is invalid"
+
+6. **Error context is optional but recommended**
+   - Context provides debugging information without cluttering the error message
+   - AI clients only see `error.message`, not `error.context`
+   - Context is logged for developer debugging
+
+### Example Error Handling Flow
+
+```typescript
+// In a tool implementation (e.g., UpdateWorkflowTool)
+
+async executeCore(args: UpdateWorkflowCoreArgs): Promise<WorkflowDetailInternal> {
+  const { id, ...workflowData } = args;
+  
+  // N8nApiClient throws CustomError on failure
+  return await this.context.n8nClient.updateWorkflow(id, workflowData);
+  // ↓ If updateWorkflow fails...
+}
+
+// BaseTool.handler() catches the error:
+async handler(args: TArgs): Promise<ToolResponse> {
+  try {
+    const result = await this.execute(args);
+    return createToolResponse(result);
+  } catch (error) {
+    // Log error for debugging (error object does not contain sensitive args)
+    logger.error(`[${this.name}] Error`, { error });
+
+    // Return error message to AI client
+    return {
+      content: [{
+        type: "text",
+        text: error instanceof Error ? error.message : String(error),
+      }],
+      isError: true,
+    };
+  }
+}
+```
+
+**Result**: AI client receives a clear error message and can decide how to proceed.
