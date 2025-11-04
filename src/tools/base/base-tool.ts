@@ -6,6 +6,13 @@ import type { ZodSchema } from "zod";
 import type { ToolContext, ToolDefinition, ToolResponse } from "../base-tool.js";
 import { createToolResponse, convertToJsonSchema } from "../base-tool.js";
 import { logger } from "../../utils/logger.js";
+import { SENSITIVE_KEYS } from "../../constants/security.js";
+import type { ErrorWithContext } from "../../errors/custom-errors.js";
+
+/**
+ * JSON indentation for error serialization
+ */
+const JSON_INDENT_SPACES = 2;
 
 /**
  * Abstract base class for all MCP tools
@@ -58,17 +65,59 @@ export abstract class BaseTool<TArgs = Record<string, unknown>> {
       // Log error for debugging (error object does not contain sensitive args)
       logger.error(`[${this.name}] Error`, { error });
 
-      // Return error message to AI client
+      // Return the same error information that's logged to terminal
       return {
         content: [
           {
             type: "text",
-            text: error instanceof Error ? error.message : String(error),
+            text: this.serializeError(error),
           },
         ],
         isError: true,
       };
     }
+  }
+
+  /**
+   * Serialize error object to JSON string (same format as terminal logs)
+   * Includes all error properties: name, message, statusCode, context, stack
+   */
+  private serializeError(error: unknown): string {
+    if (!(error instanceof Error)) {
+      return JSON.stringify({ error: String(error) }, null, JSON_INDENT_SPACES);
+    }
+
+    // Serialize error with all enumerable and non-enumerable properties
+    const errorObj: Record<string, unknown> = {
+      name: error.name,
+      message: error.message,
+    };
+
+    // Add custom properties from CustomError classes
+    const errorWithContext = error as ErrorWithContext;
+
+    if (errorWithContext.statusCode !== undefined) {
+      errorObj.statusCode = errorWithContext.statusCode;
+    }
+
+    if (errorWithContext.context) {
+      // Filter out sensitive information using functional approach
+      const filteredContext = Object.entries(errorWithContext.context)
+        .filter(([key]) => !SENSITIVE_KEYS.has(key))
+        .reduce<Record<string, unknown>>((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {});
+
+      errorObj.context = filteredContext;
+    }
+
+    // Include stack trace in development mode
+    if (process.env.NODE_ENV === 'development' && error.stack) {
+      errorObj.stack = error.stack;
+    }
+
+    return JSON.stringify(errorObj, null, JSON_INDENT_SPACES);
   }
 
   /**

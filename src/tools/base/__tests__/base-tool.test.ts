@@ -66,7 +66,7 @@ describe('BaseTool Error Handling', () => {
   });
 
   describe('エラーハンドリングテスト', () => {
-    it('TC-ERROR-001: NotFoundError発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-001: NotFoundError発生時にJSON形式でエラー情報を返す', async () => {
       // Arrange
       const errorMessage = "Workflow 'abc123' not found";
       const mockExecute = vi.fn().mockRejectedValue(
@@ -86,7 +86,19 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+
+      // Parse JSON response
+      const responseText = response.content[0]?.text ?? '';
+      const errorObj = JSON.parse(responseText) as { name: string; message: string; context: Record<string, unknown> };
+
+      // Verify error structure (same as terminal logs)
+      expect(errorObj.name).toBe('NotFoundError');
+      expect(errorObj.message).toBe(errorMessage);
+      expect(errorObj.context).toEqual({
+        operation: 'get workflow',
+        resourceType: 'Workflow',
+        resourceId: 'abc123',
+      });
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -97,7 +109,7 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-002: ApiError発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-002: ApiError発生時にJSON形式でエラー情報を返す', async () => {
       // Arrange
       const errorMessage = 'Failed to update workflow';
       const mockExecute = vi.fn().mockRejectedValue(
@@ -117,7 +129,20 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+
+      // Parse JSON response
+      const responseText = response.content[0]?.text ?? '';
+      const errorObj = JSON.parse(responseText) as { name: string; message: string; statusCode: number; context: Record<string, unknown> };
+
+      // Verify error structure (same as terminal logs)
+      expect(errorObj.name).toBe('ApiError');
+      expect(errorObj.message).toBe(errorMessage);
+      expect(errorObj.statusCode).toBe(400);
+      expect(errorObj.context).toEqual({
+        operation: 'update workflow',
+        resourceId: 'abc123',
+        errorDetails: "Field 'settings' is required",
+      });
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -128,7 +153,7 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-003: ValidationError発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-003: ValidationError発生時にJSON形式でエラー情報を返す', async () => {
       // Arrange
       const errorMessage = 'Workflow ID is required';
       const mockExecute = vi.fn().mockRejectedValue(
@@ -146,7 +171,17 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+
+      // Parse JSON response
+      const responseText = response.content[0]?.text ?? '';
+      const errorObj = JSON.parse(responseText) as { name: string; message: string; context: Record<string, unknown> };
+
+      // Verify error structure (same as terminal logs)
+      expect(errorObj.name).toBe('ValidationError');
+      expect(errorObj.message).toBe(errorMessage);
+      expect(errorObj.context).toEqual({
+        field: 'id',
+      });
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -157,7 +192,7 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-004: Unknown Error発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-004: Unknown Error発生時にJSON形式でエラー情報を返す', async () => {
       // Arrange
       const errorMessage = 'Unexpected error occurred';
       const mockExecute = vi.fn().mockRejectedValue(new Error(errorMessage));
@@ -171,7 +206,14 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+
+      // Parse JSON response
+      const responseText = response.content[0]?.text ?? '';
+      const errorObj = JSON.parse(responseText) as { name: string; message: string };
+
+      // Verify error structure
+      expect(errorObj.name).toBe('Error');
+      expect(errorObj.message).toBe(errorMessage);
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -182,7 +224,7 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-005: 非Errorオブジェクトがthrowされた場合にStringに変換する', async () => {
+    it('TC-ERROR-005: 非Errorオブジェクトがthrowされた場合にJSON形式で返す', async () => {
       // Arrange
       const errorValue = 'String error';
       const mockExecute = vi.fn().mockRejectedValue(errorValue);
@@ -196,7 +238,14 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorValue);
+
+      // Parse JSON response
+      const responseText = response.content[0]?.text ?? '';
+      const errorObj = JSON.parse(responseText) as { error: string };
+
+      // Verify error structure
+      expect(errorObj.error).toBe(errorValue);
+
       expect(loggerErrorSpy).toHaveBeenCalled();
     });
   });

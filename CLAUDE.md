@@ -1035,13 +1035,36 @@ For other common operations, check [Remeda documentation](https://remedajs.com/d
 
 ### Error Response Format
 
-When an MCP tool encounters an error, BaseTool automatically catches it and returns a ToolResponse with `isError: true`:
+When an MCP tool encounters an error, BaseTool automatically catches it and returns a ToolResponse with `isError: true` containing the same JSON-formatted error information that appears in terminal logs:
 
+#### NotFoundError Example
 ```json
 {
   "content": [{
     "type": "text",
-    "text": "Workflow 'abc123' not found"
+    "text": "{\n  \"name\": \"NotFoundError\",\n  \"message\": \"Workflow 'abc123' not found\",\n  \"context\": {\n    \"operation\": \"get workflow\",\n    \"resourceType\": \"Workflow\",\n    \"resourceId\": \"abc123\"\n  }\n}"
+  }],
+  "isError": true
+}
+```
+
+#### ApiError Example
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "{\n  \"name\": \"ApiError\",\n  \"message\": \"Failed to update workflow for Workflow 'abc123' (HTTP 400)\",\n  \"statusCode\": 400,\n  \"context\": {\n    \"operation\": \"update workflow\",\n    \"resourceType\": \"Workflow\",\n    \"resourceId\": \"abc123\",\n    \"errorDetails\": \"Field 'settings' is required\"\n  }\n}"
+  }],
+  "isError": true
+}
+```
+
+#### ValidationError Example
+```json
+{
+  "content": [{
+    "type": "text",
+    "text": "{\n  \"name\": \"ValidationError\",\n  \"message\": \"Workflow ID is required\",\n  \"context\": {\n    \"field\": \"id\"\n  }\n}"
   }],
   "isError": true
 }
@@ -1049,7 +1072,7 @@ When an MCP tool encounters an error, BaseTool automatically catches it and retu
 
 ### Implementation
 
-**BaseTool.handler()** catches all errors thrown by tool implementations and returns `error.message` to the AI client:
+**BaseTool.handler()** catches all errors and serializes them to JSON format (identical to terminal logs):
 
 ```typescript
 async handler(args: TArgs): Promise<ToolResponse> {
@@ -1061,7 +1084,7 @@ async handler(args: TArgs): Promise<ToolResponse> {
     return {
       content: [{
         type: "text",
-        text: error instanceof Error ? error.message : String(error),
+        text: this.serializeError(error),
       }],
       isError: true,
     };
@@ -1069,8 +1092,17 @@ async handler(args: TArgs): Promise<ToolResponse> {
 }
 ```
 
+**serializeError()** converts error objects to JSON with all properties:
+- **name**: Error class name (NotFoundError, ApiError, ValidationError, etc.)
+- **message**: Human-readable error message
+- **statusCode**: HTTP status code (for ApiError)
+- **context**: Object containing operation, resourceType, resourceId, errorDetails, etc.
+- **stack**: Stack trace (only in development mode with `NODE_ENV=development`)
+
 **Key points**:
+- **Terminal and MCP responses show identical error information** - no discrepancy
 - All tools automatically inherit error handling from BaseTool
 - No need to add try-catch blocks in tool implementations
-- Error messages are logged for debugging
-- Sensitive information (API keys, passwords) is excluded from error messages
+- Error format is structured JSON, easy to parse programmatically
+- Sensitive information (API keys, passwords, tokens) is automatically excluded from context
+- Both terminal logs and MCP responses use the same error serialization

@@ -3,6 +3,15 @@
  */
 
 /**
+ * Type for errors with context information
+ * Used for type-safe error serialization
+ */
+export type ErrorWithContext = Error & {
+  context?: Record<string, unknown>;
+  statusCode?: number;
+};
+
+/**
  * Base error class for all custom errors
  */
 class N8nMcpError extends Error {

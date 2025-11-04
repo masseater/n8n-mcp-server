@@ -65,31 +65,51 @@ function handleApiError(
 ): never {
   const errorObj = error && typeof error === 'object' ? error as Record<string, unknown> : {};
   const status = typeof errorObj.status === 'number' ? errorObj.status : undefined;
-  const message = typeof errorObj.message === 'string' ? errorObj.message : 'Unknown error';
+  const apiErrorMessage = typeof errorObj.message === 'string' ? errorObj.message : 'Unknown error';
 
   if (status === 404) {
-    throw new NotFoundError(
-      `${context.resourceType ?? 'Resource'} not found${context.resourceId ? `: ${context.resourceId}` : ''}`,
-      {
-        operation: context.operation,
-        resourceType: context.resourceType,
-        resourceId: context.resourceId,
-        ...context.additionalInfo,
-      }
-    );
-  }
+    // Build detailed not found message using array approach
+    const baseMessage = `${context.resourceType ?? 'Resource'} not found`;
+    const messageParts = [
+      context.resourceId ? `${baseMessage}: ${context.resourceId}` : baseMessage
+    ];
 
-  throw new ApiError(
-    `Failed to ${context.operation}`,
-    status,
-    {
+    if (apiErrorMessage !== 'Unknown error' && !apiErrorMessage.includes('404')) {
+      messageParts.push(`(${apiErrorMessage})`);
+    }
+
+    throw new NotFoundError(messageParts.join(' '), {
       operation: context.operation,
       resourceType: context.resourceType,
       resourceId: context.resourceId,
-      errorDetails: message,
       ...context.additionalInfo,
+    });
+  }
+
+  // Build detailed error message using array approach
+  const messageParts = [`Failed to ${context.operation}`];
+
+  // Add resource info if available
+  if (context.resourceType) {
+    const resourceParts = [`for ${context.resourceType}`];
+    if (context.resourceId) {
+      resourceParts.push(`'${context.resourceId}'`);
     }
-  );
+    messageParts.push(resourceParts.join(' '));
+  }
+
+  // Add HTTP status if available
+  if (status !== undefined) {
+    messageParts.push(`(HTTP ${String(status)})`);
+  }
+
+  throw new ApiError(messageParts.join(' '), status, {
+    operation: context.operation,
+    resourceType: context.resourceType,
+    resourceId: context.resourceId,
+    errorDetails: apiErrorMessage,
+    ...context.additionalInfo,
+  });
 }
 
 /**
