@@ -90,7 +90,7 @@ If you want to develop or contribute to this project:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/masseater/n8n-mcp-server.git
 cd n8n-mcp-server
 
 # Install dependencies

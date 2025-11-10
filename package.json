@@ -42,10 +42,24 @@
     "mcp",
     "model-context-protocol",
     "workflow",
-    "automation"
+    "automation",
+    "ai",
+    "llm",
+    "claude",
+    "workflow-automation",
+    "n8n-integration",
+    "mcp-server"
   ],
-  "author": "",
+  "author": "masseater",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/masseater/n8n-mcp-server.git"
+  },
+  "homepage": "https://github.com/masseater/n8n-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/masseater/n8n-mcp-server/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.1",
     "commander": "^14.0.1",
