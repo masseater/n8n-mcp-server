@@ -15,7 +15,7 @@ Model Context Protocol (MCP) server for n8n workflow automation platform. This s
 Install and run directly using npx (no local clone required):
 
 ```bash
-npx @masseater/n8n-mcp-server --n8n-url "http://localhost:5678" --api-key "your-api-key"
+npx @r_masseater/n8n-mcp-server --n8n-url "http://localhost:5678" --api-key "your-api-key"
 ```
 
 ### Using with Claude Desktop
@@ -30,7 +30,7 @@ Add this configuration to your Claude Desktop config file:
   "mcpServers": {
     "n8n": {
       "command": "npx",
-      "args": ["@masseater/n8n-mcp-server"],
+      "args": ["@r_masseater/n8n-mcp-server"],
       "env": {
         "N8N_URL": "http://localhost:5678",
         "N8N_API_KEY": "your-api-key"
@@ -62,13 +62,13 @@ After saving, restart Claude Desktop. You can now ask Claude to manage your n8n 
 
 ```bash
 # Basic usage (uses environment variables)
-npx @masseater/n8n-mcp-server
+npx @r_masseater/n8n-mcp-server
 
 # With CLI options
-npx @masseater/n8n-mcp-server --n8n-url http://localhost:5678 --api-key your-key --log-level debug
+npx @r_masseater/n8n-mcp-server --n8n-url http://localhost:5678 --api-key your-key --log-level debug
 
 # HTTP transport (for development/testing)
-npx @masseater/n8n-mcp-server --transport http --port 3000
+npx @r_masseater/n8n-mcp-server --transport http --port 3000
 ```
 
 ### Environment Variables
