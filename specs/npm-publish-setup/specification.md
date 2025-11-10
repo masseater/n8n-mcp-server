@@ -40,25 +40,29 @@
   - **アクター**: エンドユーザー
   - **前提条件**: パッケージがnpmに公開されている
   - **基本フロー**:
-    1. ユーザーが`npx [パッケージ名]`を実行
+    1. ユーザーが`npx @masseater/n8n-mcp-server`を実行
     2. npmが最新バージョンをダウンロード
     3. `bin`フィールドに指定されたファイルが実行される
-    4. MCPサーバーが起動する
+    4. MCPサーバーがstdio transportで起動する（デフォルト）
   - **代替フロー**:
-    - オプション引数が指定された場合、Commanderによる引数解析を実行
+    - `npx @masseater/n8n-mcp-server --transport http --port 3000`でHTTP transportで起動
+    - `npx @masseater/n8n-mcp-server --n8n-url <URL> --api-key <KEY>`で環境変数なしで起動
   - **事後条件**: MCPサーバーが実行中の状態
 - **入力**:
-  - コマンドライン引数（--n8n-url, --api-key, --transport等）
+  - コマンドライン引数（--n8n-url, --api-key, --transport, --port等）
   - 環境変数（N8N_URL, N8N_API_KEY等）
 - **出力**:
   - 起動したMCPサーバープロセス
   - ログ出力（stdoutまたはファイル）
 - **ビジネスルール**:
   - `dist/index.js`をエントリーポイントとする
-  - shebangは追加しない（npmの自動処理に任せる）
+  - shebang (`#!/usr/bin/env node`) は既にsrc/index.tsに含まれており、そのまま維持する
+  - デフォルトtransportはstdio
+  - `--transport stdio`でstdio transport、`--transport http`でHTTP transportを選択可能
 - **バリデーション**:
   - dist/index.jsが存在すること
   - dist/index.jsが実行可能であること
+  - transportオプションは"stdio"または"http"のみ受け付ける
 
 ### 機能3: パッケージ内容の最適化
 - **概要**: npm公開時に不要なファイルを除外し、パッケージサイズを最小化する
@@ -94,9 +98,10 @@
   - **前提条件**: パッケージがnpmに公開されている
   - **基本フロー**:
     1. ユーザーがREADME.mdを閲覧
-    2. `npx [パッケージ名]`でのインストール手順を確認
+    2. `npx @masseater/n8n-mcp-server`での実行手順を確認
     3. 環境変数の設定方法を確認
-    4. 使用例を参照
+    4. stdio/http transportの切り替え方法を確認
+    5. 使用例を参照
   - **代替フロー**: なし
   - **事後条件**: ユーザーがnpxコマンドで即座に利用可能
 - **入力**:
@@ -106,11 +111,14 @@
   - 更新されたREADME.md
 - **ビジネスルール**:
   - 既存のローカルインストール手順は残す
-  - npxインストール手順をQuick Startセクションの最初に追加
+  - npx実行手順をQuick Startセクションの最初に追加
+  - stdio transport（デフォルト）とHTTP transportの両方の例を記載
+  - 環境変数とコマンドライン引数の両方の使用方法を記載
   - バージョン指定（`npx @masseater/n8n-mcp-server@latest`）も記載する
 - **バリデーション**:
   - マークダウン形式が正しいこと
   - コードブロックが正しくフォーマットされていること
+  - 実行例が実際に動作すること
 
 ## 非機能要件
 
@@ -138,7 +146,7 @@
 ### 制約条件
 
 #### 技術的制約
-- Node.js 22.10.0以上が必要
+- Node.js 22.10.0以上が必要（engines: `>=22.10.0`）
 - pnpmパッケージマネージャーの使用
 - TypeScriptからJavaScriptへのトランスパイルが必須
 - npmアカウントとアクセストークン（NPM_TOKEN）の事前取得が必要

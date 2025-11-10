@@ -121,7 +121,7 @@ sequenceDiagram
   - 公開後のバージョン管理運用方法（GitHub Actionsの手動トリガーで対応）
 
 - **技術的制約**:
-  - Node.js 22.10.0以上が必要（package.json enginesフィールドより）
+  - Node.js 22.10.0以上が必要（package.json engines: `>=22.10.0`）
   - pnpmパッケージマネージャー使用
   - TypeScript → JavaScriptへのトランスパイルが必要
 

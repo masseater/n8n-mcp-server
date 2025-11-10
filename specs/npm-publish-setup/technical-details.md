@@ -84,19 +84,20 @@
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "n8n-mcp-server": "./dist/index.js"
+    "n8n-mcp-server": "dist/index.js"
   },
   "files": [
-    "dist/",
-    "README.md",
-    "LICENSE"
+    "dist/"
   ],
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/masseater/n8n-mcp-server.git"
+  },
   "engines": {
-    "node": "^22.10.0"
+    "node": ">=22.10.0"
   },
   "keywords": [
     "n8n",
@@ -111,19 +112,22 @@
 ```
 
 #### publishConfig
-公開レジストリでスコープ付きパッケージを公開するため、publishConfigは必須フィールドに含まれています（上記参照）。
+公開レジストリでスコープ付きパッケージを公開するため、`access: "public"`の指定が必須です。`registry`フィールドはデフォルト（https://registry.npmjs.org/）を使用するため省略します。
+
+#### repository
+npmページに「Repository」リンクを表示し、ユーザーがソースコードにアクセスしやすくするため、repositoryフィールドを必須としています。
 
 #### files フィールド
-公開に含めるファイルを明示的に指定:
+公開に含めるファイルを明示的に指定します。`README.md`、`LICENSE`、`package.json`はnpmがデフォルトで含めるため、記載不要です:
 ```json
 {
   "files": [
-    "dist/",
-    "README.md",
-    "LICENSE"
+    "dist/"
   ]
 }
 ```
+
+**注**: TypeScriptの型定義ファイル（`.d.ts`）はdist/ディレクトリ内に生成されるため、上記設定で自動的に公開されます（tsconfig.jsonで`"declaration": true`が設定済み）。
 
 除外されるファイル（デフォルトまたは.npmignore）:
 - src/
@@ -138,7 +142,7 @@
 - .env.*
 
 ### dist/index.js の要件
-- **shebang**: 追加しない（npmの自動処理に任せる）
+- **shebang**: `#!/usr/bin/env node` が既にsrc/index.tsに含まれており、ビルド後のdist/index.jsにも保持される。npmは既存のshebangを尊重する
 - **実行権限**: chmod +x不要（npmが自動で設定）
 - **ES Module形式**: package.jsonに`"type": "module"`が設定済み
 
@@ -148,20 +152,51 @@
 
 #### コマンド形式
 ```bash
-npx [パッケージ名] [options]
+npx @masseater/n8n-mcp-server [options]
 ```
 
-#### オプション（既存のComamnder.js設定を継承）
-- `--n8n-url <url>`: n8n instance URL
-- `--api-key <key>`: n8n API key
-- `--log-level <level>`: Log level (error|warn|info|debug)
-- `--transport <type>`: Transport type (stdio|http)
-- `--port <number>`: Port number for HTTP transport
+#### 実行例
+
+**stdio transport（デフォルト）**:
+```bash
+# 環境変数を使用
+export N8N_URL=http://localhost:5678
+export N8N_API_KEY=your-api-key
+npx @masseater/n8n-mcp-server
+
+# コマンドライン引数を使用
+npx @masseater/n8n-mcp-server --n8n-url http://localhost:5678 --api-key your-api-key
+```
+
+**HTTP transport**:
+```bash
+# デフォルトポート（3000）で起動
+npx @masseater/n8n-mcp-server --transport http
+
+# カスタムポートで起動
+npx @masseater/n8n-mcp-server --transport http --port 8080
+```
+
+**特定バージョンの指定**:
+```bash
+# 最新バージョン
+npx @masseater/n8n-mcp-server@latest
+
+# 特定バージョン
+npx @masseater/n8n-mcp-server@1.0.0
+```
+
+#### オプション（既存のCommander.js設定を継承）
+- `--n8n-url <url>`: n8n instance URL（必須、または環境変数N8N_URL）
+- `--api-key <key>`: n8n API key（必須、または環境変数N8N_API_KEY）
+- `--log-level <level>`: Log level (error|warn|info|debug)、デフォルト: info
+- `--transport <type>`: Transport type (stdio|http)、デフォルト: stdio
+- `--port <number>`: Port number for HTTP transport、デフォルト: 3000
 
 #### 環境変数（既存設定を継承）
-- `N8N_URL`: n8n instance URL
-- `N8N_API_KEY`: n8n API key
-- `LOG_LEVEL`: Log level
+- `N8N_URL`: n8n instance URL（必須）
+- `N8N_API_KEY`: n8n API key（必須）
+- `LOG_LEVEL`: Log level（オプション、デフォルト: info）
 
 ### npm公開API
 
@@ -365,9 +400,105 @@ npm publish
    npm view @masseater/n8n-mcp-server versions
    ```
 
+## GitHub Actions ワークフロー設計
+
+### 公開ワークフロー (.github/workflows/publish.yml)
+
+```yaml
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0, 1.0.1)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.10.0'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run type check
+        run: pnpm run type-check
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Update package version
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+          git tag v${{ github.event.inputs.version }}
+          git push origin main --tags
+```
+
+### ワークフローの特徴
+
+1. **手動トリガー**: `workflow_dispatch`でGitHub UI、CLI、APIから手動実行
+2. **バージョン指定**: 入力パラメータでバージョン番号を指定（例: 1.0.1）
+3. **品質チェック**: 公開前にtype-check、lint、buildを実行
+4. **自動バージョン更新**: `npm version`コマンドでpackage.jsonを更新
+5. **自動タグ作成**: バージョンタグ（v1.0.1等）を作成してpush
+
+### セットアップ手順
+
+1. **NPM_TOKENの登録**:
+   - npmアカウントでAccess Tokenを生成（https://www.npmjs.com/settings/[username]/tokens）
+   - GitHub リポジトリの Settings → Secrets and variables → Actions → New repository secret
+   - Name: `NPM_TOKEN`、Secret: 生成したトークン
+
+2. **実行方法**:
+   - GitHub リポジトリの Actions タブ → "Publish to npm" ワークフロー → "Run workflow"
+   - バージョン番号を入力（例: 1.0.1）
+   - "Run workflow" ボタンをクリック
+
 ## 継続的な更新フロー
 
-### バージョンアップ手順
+### バージョンアップ手順（GitHub Actions使用）
+
+1. コード変更を実施し、mainブランチにマージ
+2. GitHub ActionsでPublish to npmワークフローを手動実行
+   - バージョン番号を指定（例: 1.0.1）
+   - ワークフローが自動的に以下を実行:
+     - 品質チェック（type-check、lint）
+     - ビルド
+     - package.jsonバージョン更新
+     - npm公開
+     - バージョンタグ作成とpush
+
+### ローカルでの公開手順（GitHub Actions不使用の場合）
+
 1. コード変更を実施
 2. `package.json`のバージョンを更新
    ```bash
@@ -406,15 +537,19 @@ npm deprecate @masseater/n8n-mcp-server "メッセージ"
 
 ## 技術的決定事項のまとめ
 
-全ての不明箇所が明確化されました:
+全ての不明箇所が明確化され、npmベストプラクティスに準拠しました:
 
 1. **パッケージ名**: `@masseater/n8n-mcp-server`（スコープ付き）
-2. **npmレジストリ**: 公開レジストリ（registry.npmjs.org）
-3. **shebang**: 追加しない（npmの自動処理に任せる）
+2. **npmレジストリ**: 公開レジストリ（registry.npmjs.org、publishConfigでは省略）
+3. **shebang**: `#!/usr/bin/env node` が既存コードに存在、そのまま維持
 4. **認証方式**: npmトークン（NPM_TOKEN）、2FAは無効
 5. **バージョニング戦略**: GitHub Actionsの手動トリガーでバージョン指定
-6. **CI/CD**: GitHub Actionsで自動化（手動トリガー、自動pushによる発火は不要）
-7. **CHANGELOG**: 今回のスコープ外（将来的に作成する可能性あり）
-8. **binコマンド**: 単一コマンド（n8n-mcp-server）
+6. **CI/CD**: GitHub Actionsで自動化（workflow_dispatch、品質チェック込み）
+7. **repository**: GitHubリポジトリURLをpackage.jsonに必須で設定
+8. **binコマンド**: 単一コマンド（n8n-mcp-server）、パスは`dist/index.js`
+9. **filesフィールド**: `dist/`のみ（README.md、LICENSEは自動包含）
+10. **型定義**: TypeScript .d.tsファイルをdist/に含めて公開
+11. **Node.jsバージョン**: `>=22.10.0`（voltaとの整合性確保）
+12. **CHANGELOG**: 今回のスコープ外（将来的に作成する可能性あり）
 
 次のステップ: Phase 1（npm公開設定の準備）の実装を開始可能
