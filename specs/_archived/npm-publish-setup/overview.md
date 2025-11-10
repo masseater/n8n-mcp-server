@@ -8,6 +8,9 @@
   - `npx @masseater/n8n-mcp-server` で実行できるようにする
   - ユーザーがローカルクローン不要で即座に利用可能にする
 
+## プロジェクトステータス
+- **ステータス**: 完了
+
 ## スコープ
 - **対象範囲**:
   - package.json の npm公開用設定（files, bin, publishConfigなど）
