@@ -9,7 +9,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, type ChildProcess } from 'child_process';
 import { setTimeout } from 'timers/promises';
 
-describe('GetExecutionTool E2E Tests (MCP Server)', () => {
+describe.skipIf(process.env.SKIP_E2E === 'true')('GetExecutionTool E2E Tests (MCP Server)', () => {
   let serverProcess: ChildProcess;
   const serverPort = 3006;
   const serverUrl = `http://localhost:${String(serverPort)}`;

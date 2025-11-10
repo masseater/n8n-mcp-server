@@ -8,32 +8,15 @@ Model Context Protocol (MCP) server for n8n workflow automation platform. This s
 
 - n8n instance running (local or remote)
 - n8n API key ([how to get API key](https://docs.n8n.io/api/authentication/))
-- Node.js 18+ and pnpm installed
+- Node.js 22.10.0 or higher
 
-### Setup and Run
+### Installation
 
-1. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+Install and run directly using npx (no local clone required):
 
-2. **Configure environment variables**
-   ```bash
-   export N8N_URL="http://localhost:5678"
-   export N8N_API_KEY="your-api-key"
-   ```
-
-3. **Build and start**
-   ```bash
-   # Build the project
-   pnpm run build
-
-   # Start the server (stdio transport - for MCP clients)
-   pnpm start
-
-   # Or start with HTTP transport (for development/testing)
-   pnpm start --transport http --port 3000
-   ```
+```bash
+npx @masseater/n8n-mcp-server --n8n-url "http://localhost:5678" --api-key "your-api-key"
+```
 
 ### Using with Claude Desktop
 
@@ -46,8 +29,8 @@ Add this configuration to your Claude Desktop config file:
 {
   "mcpServers": {
     "n8n": {
-      "command": "node",
-      "args": ["/absolute/path/to/n8n-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["@masseater/n8n-mcp-server"],
       "env": {
         "N8N_URL": "http://localhost:5678",
         "N8N_API_KEY": "your-api-key"
@@ -73,25 +56,24 @@ After saving, restart Claude Desktop. You can now ask Claude to manage your n8n 
 - **Dual Transport Support**: stdio and HTTP transports
 - **Comprehensive Error Handling**: Structured error responses with meaningful messages
 
-## Installation
+## Configuration
+
+### CLI Options
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd n8n-mcp-server
+# Basic usage (uses environment variables)
+npx @masseater/n8n-mcp-server
 
-# Install dependencies
-pnpm install
+# With CLI options
+npx @masseater/n8n-mcp-server --n8n-url http://localhost:5678 --api-key your-key --log-level debug
 
-# Build the project
-pnpm run build
+# HTTP transport (for development/testing)
+npx @masseater/n8n-mcp-server --transport http --port 3000
 ```
-
-## Configuration
 
 ### Environment Variables
 
-Set the following environment variables:
+Alternatively, you can use environment variables:
 
 ```bash
 # Required
@@ -102,17 +84,26 @@ export N8N_API_KEY="your-api-key"              # n8n API key
 export LOG_LEVEL="info"                         # Log level (error|warn|info|debug)
 ```
 
-### CLI Options
+## Development
+
+If you want to develop or contribute to this project:
 
 ```bash
-# Basic usage
-pnpm start
+# Clone the repository
+git clone https://github.com/masseater/n8n-mcp-server.git
+cd n8n-mcp-server
 
-# With CLI options
-pnpm start --n8n-url http://localhost:5678 --api-key your-key --log-level debug
+# Install dependencies
+pnpm install
 
-# HTTP transport
-pnpm start --transport http --port 3000
+# Build the project
+pnpm run build
+
+# Run in development mode with auto-reload
+pnpm run dev
+
+# Run tests
+pnpm test
 ```
 
 ## Available MCP Tools
