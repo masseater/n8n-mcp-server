@@ -25,6 +25,64 @@ HTTPモードでMCPサーバーをホスティングする際に、クライア�
 - テストコード（ヘッダーなし、無効な認証情報、正しい認証情報のケース）
 - CLAUDE.mdへのクライアント側実装ガイド追加（必要なヘッダー仕様など）
 
----
+## Phase概要と依存関係
 
-**次のステップ**: `/sdd:plan-implementation http-authentication` で実装概要と調査項目を特定してください
+### Phase 1: HTTP認証機能の実装とテスト
+- **開始日時**: （空欄）
+- **状態**: 未着手
+- **目標**: POST /mcpエンドポイントでX-N8N-API-KEYヘッダーを受け取り、リクエストごとにN8nApiClientを動的に初期化する機能を実装し、動作を保証する
+- **依存関係**: なし
+- **成果物**:
+  - ヘッダー抽出ロジック（src/server/mcp-server.ts）
+  - リクエストスコープのN8nApiClientインスタンス生成
+  - リクエストスコープのToolRegistry生成
+  - エラーハンドリング（ヘッダー不足時の400エラー）
+  - 単体テスト（ヘッダーなし、無効な認証情報、正しい認証情報のケース）
+  - 統合テスト（n8n APIとの実際の接続）
+  - CLAUDE.mdの更新（HTTP認証の使用方法、必要なヘッダー仕様）
+
+## Phase依存関係図
+
+```mermaid
+graph TB
+    P1[Phase 1: HTTP認証機能の実装とテスト]
+```
+
+## シーケンス図
+
+```mermaid
+sequenceDiagram
+    participant Client as MCPクライアント
+    participant Express as Express App
+    participant Handler as POST /mcp Handler
+    participant N8nClient as N8nApiClientImpl
+    participant ToolRegistry as ToolRegistry
+    participant Transport as StreamableHTTPServerTransport
+    participant Server as McpServer
+    participant Tool as Tool Instance
+
+    Client->>Express: POST /mcp<br/>Header: X-N8N-API-KEY
+    Express->>Handler: Request
+    Handler->>Handler: ヘッダー抽出・検証
+    alt ヘッダーなし
+        Handler-->>Client: 400 Bad Request
+    end
+    Handler->>N8nClient: 新規インスタンス生成(apiKey)
+    Handler->>ToolRegistry: 新規ToolRegistry生成
+    ToolRegistry->>ToolRegistry: initialize()
+    ToolRegistry->>Server: setupToolHandlers()
+    Handler->>Transport: 新規Transport生成
+    Handler->>Server: connect(transport)
+    Server->>Tool: ツール呼び出し
+    Tool->>N8nClient: n8n API呼び出し
+    alt n8n認証失敗
+        N8nClient-->>Tool: 401 Unauthorized
+        Tool-->>Server: エラー
+        Server-->>Client: MCPエラーレスポンス
+    end
+    N8nClient-->>Tool: レスポンス
+    Tool-->>Server: ツール結果
+    Server-->>Transport: MCP レスポンス
+    Transport-->>Express: HTTP レスポンス
+    Express-->>Client: 200 OK
+```
