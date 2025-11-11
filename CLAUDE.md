@@ -55,6 +55,71 @@ pnpm run dev:http
 - ログ出力でツール登録状態を確認可能
 - stdio transportと異なり、複数のクライアントから同時接続可能
 
+## HTTP Mode Authentication
+
+**HTTPモードでの認証方法**
+
+HTTPモードでは、リクエストヘッダー経由でn8n API認証を行います。クライアント（AIツール）は各リクエストに`X-N8N-API-KEY`ヘッダーを含める必要があります。
+
+### クライアント側の実装
+
+**必須ヘッダー**:
+```
+X-N8N-API-KEY: <your-n8n-api-key>
+```
+
+**curlコマンドの例**:
+```bash
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -H "X-N8N-API-KEY: n8n_api_xxxxxxxxxxxxxxxxxxxxx" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "list_workflows",
+      "arguments": {}
+    },
+    "id": 1
+  }'
+```
+
+### 認証フロー
+
+1. クライアントがPOST /mcpリクエストを送信（X-N8N-API-KEYヘッダー付き）
+2. サーバーがヘッダーからAPI Keyを抽出・検証
+3. リクエストごとに新しいN8nApiClientとToolRegistryを生成
+4. 抽出したAPI Keyを使用してn8n APIを呼び出し
+5. レスポンスをクライアントに返却
+
+### エラーケース
+
+**ヘッダーが存在しない場合**:
+```json
+{
+  "error": "X-N8N-API-KEY header is required"
+}
+```
+HTTP Status: 400 Bad Request
+
+**ヘッダーが空文字の場合**:
+```json
+{
+  "error": "X-N8N-API-KEY cannot be empty"
+}
+```
+HTTP Status: 400 Bad Request
+
+**無効なAPI Key（n8n認証失敗）**:
+n8n APIからのエラーレスポンスがそのまま返されます。
+
+### 注意事項
+
+- **stdio transportでは認証は不要**です（環境変数N8N_API_KEYを使用）
+- HTTPモードでは起動時のN8N_API_KEY環境変数は無視され、リクエストヘッダーの値が使用されます
+- 各リクエストは独立したMcpServerインスタンスを持ち、異なるAPI Keyで並行処理可能です
+- マルチテナント対応により、単一のサーバーで複数のn8nアカウントに対応できます
+
 ## Architecture Overview
 
 This is a Model Context Protocol (MCP) server that bridges AI models with n8n workflow automation platform.
