@@ -5,7 +5,7 @@
 /**
  * Base error class for all custom errors
  */
-class N8nMcpError extends Error {
+export class N8nMcpError extends Error {
   constructor(
     message: string,
     public readonly context?: Record<string, unknown>,

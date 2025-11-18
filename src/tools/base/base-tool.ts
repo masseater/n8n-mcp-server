@@ -55,15 +55,15 @@ export abstract class BaseTool<TArgs = Record<string, unknown>> {
       const result = await this.execute(args);
       return createToolResponse(result);
     } catch (error) {
-      // Log error for debugging (error object does not contain sensitive args)
-      logger.error(`[${this.name}] Error`, { error });
+      const logPayload = { error };
+      logger.error(`[${this.name}] Error`, logPayload);
+      const responsePayload = this.extractResponsePayload(logPayload);
 
-      // Return error message to AI client
       return {
         content: [
           {
             type: "text",
-            text: error instanceof Error ? error.message : String(error),
+            text: JSON.stringify(responsePayload, null, 2),
           },
         ],
         isError: true,
@@ -82,5 +82,18 @@ export abstract class BaseTool<TArgs = Record<string, unknown>> {
       inputSchema: convertToJsonSchema(this.getInputSchema()),
       handler: this.handler.bind(this),
     };
+  }
+
+  private extractResponsePayload(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const error = payload.error as Record<string, unknown> | undefined;
+    const context = error?.context as Record<string, unknown> | undefined;
+
+    if (context) {
+      return context;
+    }
+
+    return payload;
   }
 }
