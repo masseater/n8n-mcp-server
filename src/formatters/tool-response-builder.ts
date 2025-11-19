@@ -14,6 +14,7 @@ import type {
 } from "../types/index.js";
 import type { Execution } from "../generated/types.gen.js";
 import type { WorkflowDetailInternal } from "../clients/n8n-api-client.js";
+import type { INode } from "../types/n8n-types.js";
 import { WorkflowFormatter } from "./workflow-formatter.js";
 import { ContextMinimizer } from "./context-minimizer.js";
 
@@ -21,8 +22,8 @@ import { ContextMinimizer } from "./context-minimizer.js";
  * Tool response builder implementation
  */
 export class ToolResponseBuilder {
-  private workflowFormatter: WorkflowFormatter;
-  private contextMinimizer: ContextMinimizer;
+  private readonly workflowFormatter: WorkflowFormatter;
+  private readonly contextMinimizer: ContextMinimizer;
 
   constructor() {
     this.workflowFormatter = new WorkflowFormatter();
@@ -34,16 +35,11 @@ export class ToolResponseBuilder {
    * Handles the common pattern of raw vs minimal responses
    */
   private createResponse<TRaw, TMinimal = TRaw>(
-    message: string,
     rawData: TRaw,
     minimalData: TMinimal,
     raw: boolean
   ): MCPToolResponse<TRaw | TMinimal> {
-    return {
-      success: true,
-      message,
-      data: raw ? rawData : minimalData,
-    };
+    return raw ? rawData : minimalData;
   }
 
   /**
@@ -54,11 +50,7 @@ export class ToolResponseBuilder {
     raw = false
   ): MCPToolResponse<WorkflowListResponse | WorkflowSummary[]> {
     if (raw) {
-      return {
-        success: true,
-        message: `${String(workflows.length)}件のワークフローを取得しました`,
-        data: workflows,
-      };
+      return workflows;
     }
 
     // Default: minimal response
@@ -69,12 +61,8 @@ export class ToolResponseBuilder {
     }));
 
     return {
-      success: true,
-      message: `${String(workflows.length)}件のワークフローを取得しました`,
-      data: {
-        count: workflows.length,
-        workflows: minimalWorkflows,
-      },
+      count: workflows.length,
+      workflows: minimalWorkflows,
     };
   }
 
@@ -88,25 +76,16 @@ export class ToolResponseBuilder {
     if (raw) {
       // Return formatted workflow detail (current behavior)
       const formattedWorkflow = this.workflowFormatter.formatWorkflowDetail(workflow);
-      const minimizedWorkflow = this.contextMinimizer.minimizeContext(formattedWorkflow);
-      return {
-        success: true,
-        message: "ワークフローを取得しました",
-        data: minimizedWorkflow,
-      };
+      return this.contextMinimizer.minimizeContext(formattedWorkflow);
     }
 
     // Default: minimal response
     return {
-      success: true,
-      message: "ワークフローを取得しました",
-      data: {
-        id: workflow.id,
-        name: workflow.name,
-        active: workflow.active,
-        nodeCount: workflow.nodes.length,
-        tags: workflow.tags,
-      },
+      id: workflow.id,
+      name: workflow.name,
+      active: workflow.active,
+      nodeCount: workflow.nodes.length,
+      tags: workflow.tags,
     };
   }
 
@@ -117,15 +96,13 @@ export class ToolResponseBuilder {
     workflow: WorkflowDetailInternal,
     raw = false
   ): MCPToolResponse {
-    const message = "ワークフローを作成しました";
-
     const minimalData = {
       id: workflow.id,
       name: workflow.name,
       active: workflow.active,
     };
 
-    return this.createResponse(message, workflow, minimalData, raw);
+    return this.createResponse(workflow, minimalData, raw);
   }
 
   /**
@@ -135,14 +112,12 @@ export class ToolResponseBuilder {
     workflow: WorkflowDetailInternal,
     raw = false
   ): MCPToolResponse {
-    const message = "ワークフローを更新しました";
-
     const minimalData = {
       id: workflow.id,
       name: workflow.name,
     };
 
-    return this.createResponse(message, workflow, minimalData, raw);
+    return this.createResponse(workflow, minimalData, raw);
   }
 
   /**
@@ -152,11 +127,7 @@ export class ToolResponseBuilder {
     workflowId: string
   ): MCPToolResponse<WorkflowDeleteResponse> {
     return {
-      success: true,
-      message: "ワークフローを削除しました",
-      data: {
-        id: workflowId,
-      },
+      id: workflowId,
     };
   }
 
@@ -171,26 +142,36 @@ export class ToolResponseBuilder {
 
     if (raw) {
       return {
-        success: true,
-        message: "ワークフロー接続情報を取得しました",
-        data: {
-          id: workflow.id,
-          name: workflow.name,
-          graph,
-          rawConnections: workflow.connections,
-        },
+        id: workflow.id,
+        name: workflow.name,
+        graph,
+        rawConnections: workflow.connections,
       };
     }
 
     return {
-      success: true,
-      message: "ワークフロー接続情報を取得しました",
-      data: {
-        id: workflow.id,
-        name: workflow.name,
-        graph,
-      },
+      id: workflow.id,
+      name: workflow.name,
+      graph,
     };
+  }
+
+  /**
+   * Create response for get_workflow_node tool
+   */
+  createGetWorkflowNodeResponse(
+    node: INode,
+    raw = false
+  ): MCPToolResponse<INode> {
+    if (raw) {
+      return node;
+    }
+
+    // Minimal response: remove UI-only fields
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { position, notesInFlow, ...minimalNode } = node;
+
+    return minimalNode as INode;
   }
 
   /**
@@ -200,8 +181,6 @@ export class ToolResponseBuilder {
     executions: Execution[],
     raw = false
   ): MCPToolResponse {
-    const message = `${String(executions.length)}件の実行履歴を取得しました`;
-
     // Minimal response: extract only essential fields
     const minimalExecutions = executions.map(e => ({
       id: e.id,
@@ -215,7 +194,7 @@ export class ToolResponseBuilder {
       executions: minimalExecutions,
     };
 
-    return this.createResponse(message, executions, minimalData, raw);
+    return this.createResponse(executions, minimalData, raw);
   }
 
   /**
@@ -225,11 +204,7 @@ export class ToolResponseBuilder {
   createExecutionSummaryResponse(
     summary: ExecutionSummary
   ): MCPToolResponse<ExecutionSummary> {
-    return {
-      success: true,
-      message: '実行サマリーを取得しました',
-      data: summary,
-    };
+    return summary;
   }
 
   /**
@@ -239,11 +214,7 @@ export class ToolResponseBuilder {
   createExecutionByNodeResponse(
     nodeData: NodeExecutionData
   ): MCPToolResponse<NodeExecutionData> {
-    return {
-      success: true,
-      message: `ノード '${nodeData.nodeName}' の実行詳細を取得しました`,
-      data: nodeData,
-    };
+    return nodeData;
   }
 
   /**
@@ -254,8 +225,6 @@ export class ToolResponseBuilder {
     execution: Execution,
     raw = false
   ): MCPToolResponse {
-    const message = '実行詳細を取得しました';
-
     // Minimal response: extract only essential fields
     const minimalData = {
       id: execution.id,
@@ -265,7 +234,7 @@ export class ToolResponseBuilder {
       stoppedAt: execution.stoppedAt,
     };
 
-    return this.createResponse(message, execution, minimalData, raw);
+    return this.createResponse(execution, minimalData, raw);
   }
 }
 
@@ -281,11 +250,10 @@ if (import.meta.vitest) {
           { id: "1", name: "Workflow 1", active: true, tags: [], createdAt: "2024-01-01", updatedAt: "2024-01-01", nodeCount: 0 },
         ];
 
-        const result = builder.createListWorkflowsResponse(workflows, false);
+        const result = builder.createListWorkflowsResponse(workflows, false) as WorkflowListResponse;
 
-        expect(result.success).toBe(true);
-        expect(result.data).toHaveProperty("count");
-        expect(result.data).toHaveProperty("workflows");
+        expect(result).toHaveProperty("count");
+        expect(result).toHaveProperty("workflows");
       });
 
       it("should create full response with raw=true", () => {
@@ -303,8 +271,7 @@ if (import.meta.vitest) {
 
         const result = builder.createListWorkflowsResponse(workflows, true);
 
-        expect(result.success).toBe(true);
-        expect(Array.isArray(result.data)).toBe(true);
+        expect(Array.isArray(result)).toBe(true);
       });
     });
 
@@ -328,13 +295,12 @@ if (import.meta.vitest) {
           },
         };
 
-        const result = builder.createGetWorkflowConnectionsResponse(workflow, false);
+        const result = builder.createGetWorkflowConnectionsResponse(workflow, false) as Record<string, unknown>;
 
-        expect(result.success).toBe(true);
-        expect(result.data).toHaveProperty("id");
-        expect(result.data).toHaveProperty("name");
-        expect(result.data).toHaveProperty("graph");
-        expect(Array.isArray((result.data as Record<string, unknown>).graph)).toBe(true);
+        expect(result).toHaveProperty("id");
+        expect(result).toHaveProperty("name");
+        expect(result).toHaveProperty("graph");
+        expect(Array.isArray(result.graph)).toBe(true);
       });
 
       it("should create full response with raw=true", () => {
@@ -351,13 +317,50 @@ if (import.meta.vitest) {
           connections: {},
         };
 
-        const result = builder.createGetWorkflowConnectionsResponse(workflow, true);
+        const result = builder.createGetWorkflowConnectionsResponse(workflow, true) as Record<string, unknown>;
 
-        expect(result.success).toBe(true);
-        expect(result.data).toHaveProperty("id");
-        expect(result.data).toHaveProperty("name");
-        expect(result.data).toHaveProperty("graph");
-        expect(result.data).toHaveProperty("rawConnections");
+        expect(result).toHaveProperty("id");
+        expect(result).toHaveProperty("name");
+        expect(result).toHaveProperty("graph");
+        expect(result).toHaveProperty("rawConnections");
+      });
+    });
+
+    describe("createGetWorkflowNodeResponse", () => {
+      it("should create minimal response by default", () => {
+        const node: INode = {
+          id: "node1",
+          name: "Start",
+          type: "n8n-nodes-base.start",
+          typeVersion: 1,
+          position: [250, 300],
+          parameters: {},
+          notesInFlow: true,
+        };
+
+        const result = builder.createGetWorkflowNodeResponse(node, false);
+
+        expect(result).toHaveProperty("id");
+        expect(result).toHaveProperty("name");
+        expect(result).not.toHaveProperty("position");
+        expect(result).not.toHaveProperty("notesInFlow");
+      });
+
+      it("should create full response with raw=true", () => {
+        const node: INode = {
+          id: "node1",
+          name: "Start",
+          type: "n8n-nodes-base.start",
+          typeVersion: 1,
+          position: [250, 300],
+          parameters: {},
+          notesInFlow: true,
+        };
+
+        const result = builder.createGetWorkflowNodeResponse(node, true);
+
+        expect(result).toHaveProperty("position");
+        expect(result).toHaveProperty("notesInFlow");
       });
     });
   });
