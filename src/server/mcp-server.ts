@@ -107,17 +107,7 @@ export class MCPServerImpl {
 
       // MCP Streamable HTTP endpoint
       app.post("/mcp", async (req, res) => {
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: undefined,
-          enableJsonResponse: true,
-        });
-
-        res.on("close", () => {
-          void transport.close();
-        });
-
-        await this.server.connect(transport);
-        await transport.handleRequest(req, res, req.body);
+        await this.handleMcpRequest(req, res);
       });
 
       app.listen(port, () => {
@@ -135,6 +125,92 @@ export class MCPServerImpl {
       await new Promise<void>(() => {
         // Process will be kept alive by HTTP server
       });
+    }
+  }
+
+  /**
+   * Extract API key from request headers
+   */
+  private extractApiKeyFromHeader(headers: Record<string, string | string[] | undefined>): string {
+    const apiKey = headers['x-n8n-api-key'];
+
+    if (apiKey === undefined) {
+      throw new Error('X-N8N-API-KEY header is required');
+    }
+
+    // Handle array case (multiple headers with same name)
+    const keyValue = Array.isArray(apiKey) ? apiKey[0] : apiKey;
+
+    if (!keyValue || keyValue === '') {
+      throw new Error('X-N8N-API-KEY cannot be empty');
+    }
+
+    return keyValue;
+  }
+
+  /**
+   * Handle MCP request (HTTP transport)
+   */
+  private async handleMcpRequest(req: express.Request, res: express.Response): Promise<void> {
+    // Extract API key from header
+    try {
+      const apiKey = this.extractApiKeyFromHeader(req.headers);
+
+      if (!this.config) {
+        res.status(500).json({ error: 'Server not initialized' });
+        return;
+      }
+
+      // Create request-scoped N8nApiClient
+      const n8nClient = new N8nApiClientImpl(
+        this.config.n8n.baseUrl,
+        this.config.n8n.timeout,
+        this.config.n8n.retryAttempts
+      );
+
+      // Set API key for this request
+      // Note: We're importing the generated client to set config directly
+      const generatedModule = await import('../generated/client.gen.js');
+      generatedModule.client.setConfig({
+        baseUrl: this.config.n8n.baseUrl.replace(/\/$/, ''),
+        headers: {
+          'X-N8N-API-KEY': apiKey,
+        },
+      });
+
+      // Create request-scoped MCP server and ToolRegistry
+      const requestServer = new McpServer({
+        name: "n8n-mcp-server",
+        version: "1.0.0",
+      });
+
+      const toolRegistry = new ToolRegistry(
+        requestServer,
+        n8nClient,
+        this.responseBuilder
+      );
+      toolRegistry.initialize();
+      toolRegistry.setupToolHandlers();
+
+      // Handle the MCP request
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+        enableJsonResponse: true,
+      });
+
+      res.on("close", () => {
+        void transport.close();
+      });
+
+      await requestServer.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+      // Handle header extraction errors
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal server error' });
+      }
     }
   }
 
