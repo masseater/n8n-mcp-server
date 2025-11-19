@@ -4,16 +4,9 @@
 
 /**
  * Common response structure for all MCP tools
+ * Simplified to return data directly without wrapper
  */
-export type MCPToolResponse<T = unknown> = {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: {
-    code: string;
-    details: string;
-  };
-}
+export type MCPToolResponse<T = unknown> = T;
 
 /**
  * Response for list_workflows tool
