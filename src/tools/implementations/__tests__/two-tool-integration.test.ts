@@ -8,7 +8,7 @@ import type { ToolContext } from '../../base-tool.js';
 import type { N8nApiClient } from '../../../clients/types.js';
 import { ToolResponseBuilder } from '../../../formatters/tool-response-builder.js';
 import type { Execution } from '../../../generated/types.gen.js';
-import type { MCPToolResponse, ExecutionSummary, NodeExecutionData } from '../../../types/index.js';
+import type { ExecutionSummary, NodeExecutionData } from '../../../types/index.js';
 import { GetExecutionTool } from '../get-execution-tool.js';
 import { GetExecutionByNodeTool } from '../get-execution-by-node-tool.js';
 
@@ -89,15 +89,10 @@ describe('Two-Tool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act - ステップ1: get_executionを呼び出し
-      const summaryResult = (await getExecutionTool.execute({
+      // createExecutionSummaryResponse returns ExecutionSummary directly (not wrapped in MCPToolResponse)
+      const summary = (await getExecutionTool.execute({
         id: '12345',
-      })) as MCPToolResponse<ExecutionSummary>;
-
-      // Assert - ExecutionSummaryを確認
-      expect(summaryResult.success).toBe(true);
-      const summary = summaryResult.data;
-      expect(summary).toBeDefined();
-      if (!summary) return;
+      })) as ExecutionSummary;
 
       // ステップ2: 全ノードが正常であることを確認（AIエージェントの判断）
       expect(summary.status).toBe('success');
@@ -158,38 +153,29 @@ describe('Two-Tool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act - ステップ1: get_executionを呼び出し
-      const summaryResult = (await getExecutionTool.execute({
+      // createExecutionSummaryResponse returns ExecutionSummary directly (not wrapped in MCPToolResponse)
+      const summary = (await getExecutionTool.execute({
         id: '67890',
-      })) as MCPToolResponse<ExecutionSummary>;
-
-      // Assert - ExecutionSummaryを確認
-      expect(summaryResult.success).toBe(true);
-      const summary = summaryResult.data;
-      expect(summary).toBeDefined();
-      if (!summary) return;
+      })) as ExecutionSummary;
 
       // ステップ2: エラーノードを特定（AIエージェントの判断）
       expect(summary.status).toBe('error');
       expect(summary.statistics.failedNodes).toBe(1);
 
       const errorNode = summary.availableNodes.find((n) => n.status === 'error');
-      expect(errorNode).toBeDefined();
-      if (!errorNode) return; // Type guard
+      if (!errorNode) {
+        throw new Error('Error node not found');
+      }
       expect(errorNode.nodeName).toBe('HTTP Request');
 
       console.log(`🔍 AI Agent: エラーノードを発見: ${errorNode.nodeName} (${errorNode.nodeType})`);
 
       // ステップ3: エラーノードの詳細を取得
-      const nodeResult = (await getExecutionByNodeTool.execute({
+      // createExecutionByNodeResponse returns NodeExecutionData directly (not wrapped in MCPToolResponse)
+      const nodeData = (await getExecutionByNodeTool.execute({
         id: '67890',
         nodeName: errorNode.nodeName,
-      })) as MCPToolResponse<NodeExecutionData>;
-
-      // Assert - NodeExecutionDataを確認
-      expect(nodeResult.success).toBe(true);
-      const nodeData = nodeResult.data;
-      expect(nodeData).toBeDefined();
-      if (!nodeData) return;
+      })) as NodeExecutionData;
 
       // ステップ4: エラー詳細を確認（AIエージェントの分析）
       expect(nodeData.status).toBe('error');
@@ -257,15 +243,12 @@ describe('Two-Tool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act - ステップ1: get_executionを呼び出し
-      const summaryResult = (await getExecutionTool.execute({
+      // createExecutionSummaryResponse returns ExecutionSummary directly (not wrapped in MCPToolResponse)
+      const summary = (await getExecutionTool.execute({
         id: '11111',
-      })) as MCPToolResponse<ExecutionSummary>;
+      })) as ExecutionSummary;
 
       // Assert - ステップ2: availableNodesを確認
-      const summary = summaryResult.data;
-      expect(summary).toBeDefined();
-      if (!summary) return;
-
       expect(summary.availableNodes).toHaveLength(3);
       const nodeNames = summary.availableNodes.map((n) => n.nodeName);
       expect(nodeNames).toContain('Node1');
@@ -273,19 +256,16 @@ describe('Two-Tool Integration Tests', () => {
       expect(nodeNames).toContain('Node3');
 
       // ステップ3-5: 各ノードの詳細を順番に取得（AIエージェントが複数回呼び出し）
+      // createExecutionByNodeResponse returns NodeExecutionData directly (not wrapped in MCPToolResponse)
       const nodeDataList: NodeExecutionData[] = [];
 
       for (const node of summary.availableNodes) {
-        const nodeResult = (await getExecutionByNodeTool.execute({
+        const nodeData = (await getExecutionByNodeTool.execute({
           id: '11111',
           nodeName: node.nodeName,
-        })) as MCPToolResponse<NodeExecutionData>;
+        })) as NodeExecutionData;
 
-        expect(nodeResult.success).toBe(true);
-        expect(nodeResult.data).toBeDefined();
-        if (nodeResult.data) {
-          nodeDataList.push(nodeResult.data);
-        }
+        nodeDataList.push(nodeData);
       }
 
       // ステップ6: AIエージェントが全ノードの情報を統合して報告
@@ -424,16 +404,13 @@ describe('Two-Tool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act - ステップ1: get_execution
+      // createExecutionSummaryResponse returns ExecutionSummary directly (not wrapped in MCPToolResponse)
       const step1Start = performance.now();
-      const summaryResult = (await getExecutionTool.execute({
+      const summary = (await getExecutionTool.execute({
         id: '11111',
-      })) as MCPToolResponse<ExecutionSummary>;
+      })) as ExecutionSummary;
       const step1End = performance.now();
       const step1Time = step1End - step1Start;
-
-      const summary = summaryResult.data;
-      expect(summary).toBeDefined();
-      if (!summary) return;
 
       // ステップ2-4: 各ノードの詳細を取得
       const step2Start = performance.now();

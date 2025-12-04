@@ -8,7 +8,7 @@ import type { ToolContext } from '../../base-tool.js';
 import type { N8nApiClient } from '../../../clients/types.js';
 import { ToolResponseBuilder } from '../../../formatters/tool-response-builder.js';
 import type { Execution } from '../../../generated/types.gen.js';
-import type { MCPToolResponse, ExecutionSummary } from '../../../types/index.js';
+import type { ExecutionSummary } from '../../../types/index.js';
 import { GetExecutionTool } from '../get-execution-tool.js';
 
 describe('GetExecutionTool Integration Tests', () => {
@@ -117,18 +117,10 @@ describe('GetExecutionTool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act
-      const result = (await tool.execute({ id: '12345' })) as MCPToolResponse<ExecutionSummary>;
-
-      // Assert - Verify MCPToolResponse structure
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('実行サマリーを取得しました');
-      expect(result.data).toBeDefined();
+      // createExecutionSummaryResponse returns ExecutionSummary directly (not wrapped in MCPToolResponse)
+      const summary = (await tool.execute({ id: '12345' })) as ExecutionSummary;
 
       // Assert - Verify ExecutionSummary fields
-      const summary = result.data;
-      expect(summary).toBeDefined();
-      if (!summary) return; // Type guard
-
       expect(summary.id).toBe('12345');
       expect(summary.workflowId).toBe('1');
       expect(summary.workflowName).toBe('Unknown Workflow');
@@ -193,14 +185,10 @@ describe('GetExecutionTool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act
-      const result = (await tool.execute({ id: '12346' })) as MCPToolResponse<ExecutionSummary>;
+      // createExecutionSummaryResponse returns ExecutionSummary directly (not wrapped in MCPToolResponse)
+      const summary = (await tool.execute({ id: '12346' })) as ExecutionSummary;
 
       // Assert
-      expect(result.success).toBe(true);
-      const summary = result.data;
-      expect(summary).toBeDefined();
-      if (!summary) return; // Type guard
-
       expect(summary.status).toBe('error');
       expect(summary.statistics.failedNodes).toBe(1);
       expect(summary.statistics.successfulNodes).toBe(1);

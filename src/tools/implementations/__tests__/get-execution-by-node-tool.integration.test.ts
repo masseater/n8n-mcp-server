@@ -8,7 +8,7 @@ import type { ToolContext } from '../../base-tool.js';
 import type { N8nApiClient } from '../../../clients/types.js';
 import { ToolResponseBuilder } from '../../../formatters/tool-response-builder.js';
 import type { Execution } from '../../../generated/types.gen.js';
-import type { MCPToolResponse, NodeExecutionData } from '../../../types/index.js';
+import type { NodeExecutionData } from '../../../types/index.js';
 import { GetExecutionByNodeTool } from '../get-execution-by-node-tool.js';
 
 describe('GetExecutionByNodeTool Integration Tests', () => {
@@ -117,21 +117,13 @@ describe('GetExecutionByNodeTool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act
-      const result = (await tool.execute({
+      // createExecutionByNodeResponse returns NodeExecutionData directly (not wrapped in MCPToolResponse)
+      const nodeData = (await tool.execute({
         id: '12345',
         nodeName: 'HTTP Request',
-      })) as MCPToolResponse<NodeExecutionData>;
-
-      // Assert - Verify MCPToolResponse structure
-      expect(result.success).toBe(true);
-      expect(result.message).toContain("ノード 'HTTP Request' の実行詳細を取得しました");
-      expect(result.data).toBeDefined();
+      })) as NodeExecutionData;
 
       // Assert - Verify NodeExecutionData fields
-      const nodeData = result.data;
-      expect(nodeData).toBeDefined();
-      if (!nodeData) return; // Type guard
-
       expect(nodeData.executionId).toBe('12345');
       expect(nodeData.nodeName).toBe('HTTP Request');
       expect(nodeData.nodeType).toBe('n8n-nodes-base.httpRequest');
@@ -212,17 +204,13 @@ describe('GetExecutionByNodeTool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act
-      const result = (await tool.execute({
+      // createExecutionByNodeResponse returns NodeExecutionData directly (not wrapped in MCPToolResponse)
+      const nodeData = (await tool.execute({
         id: '67890',
         nodeName: 'HTTP Request',
-      })) as MCPToolResponse<NodeExecutionData>;
+      })) as NodeExecutionData;
 
       // Assert
-      expect(result.success).toBe(true);
-      const nodeData = result.data;
-      expect(nodeData).toBeDefined();
-      if (!nodeData) return; // Type guard
-
       expect(nodeData.status).toBe('error');
       expect(nodeData.error).toBeDefined();
       expect(nodeData.error).toHaveProperty('message', 'ETIMEDOUT: Connection timeout after 30000ms');
@@ -314,22 +302,17 @@ describe('GetExecutionByNodeTool Integration Tests', () => {
       vi.mocked(mockN8nClient.getExecution).mockResolvedValue(mockExecution);
 
       // Act
-      const result = (await tool.execute({
+      // createExecutionByNodeResponse returns NodeExecutionData directly (not wrapped in MCPToolResponse)
+      const nodeData = (await tool.execute({
         id: '99999',
         nodeName: 'HTTP Request',
-      })) as MCPToolResponse<NodeExecutionData>;
-
-      // Assert
-      expect(result.success).toBe(true);
-      const nodeData = result.data;
-      expect(nodeData).toBeDefined();
-      if (!nodeData) return; // Type guard
+      })) as NodeExecutionData;
 
       // Assert - Items should be limited to MAX_ITEMS (50)
       expect(nodeData.output.items).toHaveLength(50);
 
       // Verify response size (Phase 6 Task 4: Response size validation)
-      const responseJson = JSON.stringify(result);
+      const responseJson = JSON.stringify(nodeData);
       const responseSizeBytes = Buffer.byteLength(responseJson, 'utf8');
       const responseSizeTokens = Math.ceil(responseSizeBytes / 4); // Rough token estimate
 

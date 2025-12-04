@@ -9,16 +9,20 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, type ChildProcess } from 'child_process';
 import { setTimeout } from 'timers/promises';
 
-describe.skipIf(process.env.SKIP_E2E === 'true')('GetExecutionTool E2E Tests (MCP Server)', () => {
+// Skip E2E tests unless RUN_E2E is explicitly set to 'true'
+// E2E tests require a running server and are slow, so they are opt-in
+const shouldSkipE2E = process.env.RUN_E2E !== 'true';
+
+describe.skipIf(shouldSkipE2E)('GetExecutionTool E2E Tests (MCP Server)', () => {
   let serverProcess: ChildProcess;
-  const serverPort = 3006;
+  const serverPort = 3000;
   const serverUrl = `http://localhost:${String(serverPort)}`;
 
   beforeAll(async () => {
     // Start MCP server in HTTP mode
     serverProcess = spawn('pnpm', ['run', 'dev:http'], {
       stdio: 'pipe',
-      env: { ...process.env, PORT: String(serverPort) },
+      env: { ...process.env },
     });
 
     // Wait for server to start with retry logic

@@ -66,15 +66,16 @@ describe('BaseTool Error Handling', () => {
   });
 
   describe('エラーハンドリングテスト', () => {
-    it('TC-ERROR-001: NotFoundError発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-001: NotFoundError発生時にcontextをJSON形式で返す', async () => {
       // Arrange
       const errorMessage = "Workflow 'abc123' not found";
+      const errorContext = {
+        operation: 'get workflow',
+        resourceType: 'Workflow',
+        resourceId: 'abc123',
+      };
       const mockExecute = vi.fn().mockRejectedValue(
-        new NotFoundError(errorMessage, {
-          operation: 'get workflow',
-          resourceType: 'Workflow',
-          resourceId: 'abc123',
-        })
+        new NotFoundError(errorMessage, errorContext)
       );
 
       const tool = new TestTool(context, mockExecute);
@@ -86,7 +87,8 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+      // contextがある場合はcontextをJSON形式で返す
+      expect(response.content[0]?.text).toBe(JSON.stringify(errorContext, null, 2));
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -97,15 +99,16 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-002: ApiError発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-002: ApiError発生時にcontextをJSON形式で返す', async () => {
       // Arrange
       const errorMessage = 'Failed to update workflow';
+      const errorContext = {
+        operation: 'update workflow',
+        resourceId: 'abc123',
+        errorDetails: "Field 'settings' is required",
+      };
       const mockExecute = vi.fn().mockRejectedValue(
-        new ApiError(errorMessage, 400, {
-          operation: 'update workflow',
-          resourceId: 'abc123',
-          errorDetails: "Field 'settings' is required",
-        })
+        new ApiError(errorMessage, 400, errorContext)
       );
 
       const tool = new TestTool(context, mockExecute);
@@ -117,7 +120,8 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+      // contextがある場合はcontextをJSON形式で返す
+      expect(response.content[0]?.text).toBe(JSON.stringify(errorContext, null, 2));
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -128,13 +132,14 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-003: ValidationError発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-003: ValidationError発生時にcontextをJSON形式で返す', async () => {
       // Arrange
       const errorMessage = 'Workflow ID is required';
+      const errorContext = {
+        field: 'id',
+      };
       const mockExecute = vi.fn().mockRejectedValue(
-        new ValidationError(errorMessage, {
-          field: 'id',
-        })
+        new ValidationError(errorMessage, errorContext)
       );
 
       const tool = new TestTool(context, mockExecute);
@@ -146,7 +151,8 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+      // contextがある場合はcontextをJSON形式で返す
+      expect(response.content[0]?.text).toBe(JSON.stringify(errorContext, null, 2));
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -157,7 +163,7 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-004: Unknown Error発生時にerror.messageを返す', async () => {
+    it('TC-ERROR-004: Unknown Error発生時にエラーオブジェクト全体をJSON形式で返す', async () => {
       // Arrange
       const errorMessage = 'Unexpected error occurred';
       const mockExecute = vi.fn().mockRejectedValue(new Error(errorMessage));
@@ -171,7 +177,9 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorMessage);
+      // contextがない通常のErrorの場合は{ error }全体をJSON形式で返す
+      const parsed = JSON.parse(response.content[0]?.text ?? '{}') as { error: unknown };
+      expect(parsed).toHaveProperty('error');
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         '[test_tool] Error',
@@ -182,7 +190,7 @@ describe('BaseTool Error Handling', () => {
       );
     });
 
-    it('TC-ERROR-005: 非Errorオブジェクトがthrowされた場合にStringに変換する', async () => {
+    it('TC-ERROR-005: 非Errorオブジェクトがthrowされた場合にJSON形式で返す', async () => {
       // Arrange
       const errorValue = 'String error';
       const mockExecute = vi.fn().mockRejectedValue(errorValue);
@@ -196,7 +204,9 @@ describe('BaseTool Error Handling', () => {
       expect(response.isError).toBe(true);
       expect(response.content).toHaveLength(1);
       expect(response.content[0]?.type).toBe('text');
-      expect(response.content[0]?.text).toBe(errorValue);
+      // 非Errorオブジェクトの場合は{ error: value }をJSON形式で返す
+      const parsed = JSON.parse(response.content[0]?.text ?? '{}') as { error: unknown };
+      expect(parsed).toHaveProperty('error');
       expect(loggerErrorSpy).toHaveBeenCalled();
     });
   });
